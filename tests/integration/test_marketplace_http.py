@@ -111,7 +111,7 @@ async def test_health_is_public(stack: Stack) -> None:
 
 async def test_each_agent_gets_only_its_allowlisted_tools(stack: Stack) -> None:
     box = stack.toolbox()
-    assert [tool.name for tool in await box.tools_for("scout")] == ["search_jobs"]
+    assert {tool.name for tool in await box.tools_for("scout")} == {"search_jobs", "get_job"}
     assert await box.tools_for("analyst") == []
     submission = {tool.name for tool in await box.tools_for("submission")}
     assert submission == {
