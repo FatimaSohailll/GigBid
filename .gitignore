@@ -1,14 +1,25 @@
+# Secrets
 .env
+.env.*
+!.env.example
+
+# Python
 .venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Node
 node_modules/
 .next/
+
+# Build output
 dist/
 build/
-data/processed/
-evals/results/*
-!evals/results/.gitkeep
+
+# Generated data (results in evals/results/ are committed on purpose)
+data/processed/*
+!data/processed/.gitkeep

@@ -11,15 +11,14 @@ GigSim API is unknown, so only the GigBid adapter should depend on these routes.
 
 ## Run
 
-From this folder, in PowerShell:
+From the repository root, in PowerShell:
 
 ```powershell
-python -m venv .venv
-.venv\Scripts\python -m pip install -e ".[dev]"
-.venv\Scripts\python -m pytest
+make install
+make test
 $env:DEVSIM_API_TOKENS = "dev-token-ai=ai_ml_engineer"
 $env:DEVSIM_ADMIN_TOKEN = "dev-admin"
-.venv\Scripts\python -m devsim
+uv run --locked python -m devsim
 ```
 
 The API listens on `http://127.0.0.1:8081`, with interactive docs at `/docs`. The example tokens
