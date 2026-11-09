@@ -1,0 +1,18 @@
+# Default DevSim behaviour. Override with DEVSIM_CONFIG=/path/to/file.yaml.
+# Secrets are never stored here: API tokens come from the environment.
+start_time: "2026-11-01T00:00:00Z"
+seed_dir: null # null uses the packaged seed/core data
+
+rate_limit:
+  requests_per_minute: 60
+
+faults:
+  seed: 1234
+  error_rate: 0.02 # 503 returned before a request has any effect
+  post_commit_error_rate: 0.01 # 503 returned after a write has already been applied
+  retry_after_seconds: 1
+
+limits:
+  max_cover_letter_chars: 5000
+  max_message_chars: 4000
+  max_page_size: 100
