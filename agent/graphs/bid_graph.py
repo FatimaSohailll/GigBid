@@ -5,5 +5,8 @@
 #
 # Do not replace the required graph with a linear chain labelled "multi-agent".
 
-def build_bid_graph():
+from typing import NoReturn
+
+
+def build_bid_graph() -> NoReturn:
     raise NotImplementedError("Implement the bid graph as specified in the assignment.")
