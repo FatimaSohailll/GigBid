@@ -23,8 +23,8 @@ agent_tools:
   writer: [search_evidence, get_case_study]
   critic: [search_evidence, get_case_study]
   compliance: []
-  client_liaison: [list_conversations, list_messages, get_job, free_slots, create_interview_hold, create_email_draft]
-  submission: [create_proposal_draft, submit_proposal, send_message, get_connects_balance]
+  client_liaison: [list_conversations, list_messages, get_job, free_slots]
+  submission: [create_proposal_draft, submit_proposal, send_message, get_connects_balance, create_interview_hold, create_email_draft]
 
 models:
   active_profile: open
@@ -101,6 +101,19 @@ writing:
 pricing:
   connect_value_usd: 0.15
   max_connects_share_of_bid: 0.02
+
+memory:
+  style_min_edits: 3 # separate drafts showing the same edit
+  style_min_consistency: 0.6 # share of drafts where the edit could apply and was made
+  outcome_min_samples: 5
+  outcome_min_reply_rate: 0.4
+
+workspace:
+  work_start_hour: 9
+  work_end_hour: 17
+  interview_minutes: 30
+  slots_offered: 3
+  days_ahead: 7
 
 compliance:
   policy_path: devsim/src/devsim/datagen/policy_pack.md # stand-in until the real pack exists

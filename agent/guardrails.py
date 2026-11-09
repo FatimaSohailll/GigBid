@@ -47,7 +47,7 @@ _SCAM_FLAGS = {
     RiskFlag.CREDENTIAL_REQUEST,
 }
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
-_PHONE = re.compile(r"(?<![\w(])\+?\(?\d[\d ()-]{7,}\d(?!\w)")
+_PHONE = re.compile(r"(?<![\w(])(?!\d{4}-\d{2}-\d{2})\+?\(?\d[\d ()-]{7,}\d(?!\w)")
 _URL = re.compile(r"\bhttps?://\S+|\bwww\.\S+", re.IGNORECASE)
 _HANDLE = re.compile(r"\b(?:telegram|whatsapp|skype|signal|discord)\b[^.!?\n]*", re.IGNORECASE)
 _GUARANTEE = re.compile(

@@ -78,7 +78,7 @@ def connections_from_env(environ: Mapping[str, str] | None = None) -> dict[str, 
     """Build one connection for each MCP server that has a URL configured."""
     env = os.environ if environ is None else environ
     connections: dict[str, Any] = {}
-    for server in ("marketplace", "portfolio"):
+    for server in ("marketplace", "portfolio", "workspace"):
         prefix = f"MCP_{server.upper()}"
         url = env.get(f"{prefix}_URL")
         if url:

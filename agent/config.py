@@ -147,6 +147,21 @@ class PricingConfig(_Strict):
     max_connects_share_of_bid: float = Field(gt=0, le=1)
 
 
+class MemoryConfig(_Strict):
+    style_min_edits: int = Field(ge=2)
+    style_min_consistency: float = Field(gt=0, le=1)
+    outcome_min_samples: int = Field(ge=2)
+    outcome_min_reply_rate: float = Field(gt=0, le=1)
+
+
+class WorkspaceConfig(_Strict):
+    work_start_hour: int = Field(ge=0, le=23)
+    work_end_hour: int = Field(ge=1, le=24)
+    interview_minutes: int = Field(ge=15, le=240)
+    slots_offered: int = Field(ge=1, le=10)
+    days_ahead: int = Field(ge=1, le=30)
+
+
 class ComplianceConfig(_Strict):
     policy_path: Path
     rule_ids: dict[Literal["contact", "payment", "guarantee", "credentials", "fabrication"], str]
@@ -164,6 +179,8 @@ class AppConfig(_Strict):
     writing: WritingConfig
     pricing: PricingConfig
     compliance: ComplianceConfig
+    memory: MemoryConfig
+    workspace: WorkspaceConfig
     prompt_versions: dict[str, int] = Field(default_factory=dict)
     budgets: Budgets
     thresholds: Thresholds
