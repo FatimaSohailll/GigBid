@@ -38,7 +38,7 @@ members = ["devsim"]
 gigbid-devsim = { workspace = true }
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "devsim/tests"]
+testpaths = ["tests", "devsim/tests", "mcp_servers"]
 pythonpath = ["."]
 addopts = "-q"
 asyncio_mode = "auto"
@@ -59,3 +59,4 @@ files = ["agent", "apps/api", "rag", "mcp_servers", "scripts", "devsim/src"]
 mypy_path = ".,devsim/src"
 explicit_package_bases = true
 namespace_packages = true
+exclude = ["/tests/"]
