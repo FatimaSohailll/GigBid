@@ -28,7 +28,7 @@ agent_tools:
 
 models:
   active_profile: open
-  embeddings: nomic-embed-text
+  embeddings: nomic-ai/nomic-embed-text-v1.5-Q
   reranker: bge-reranker-v2-m3
   profiles:
     # Open-weight models only. Choices are a starting point until measured on the dev set.
@@ -67,6 +67,19 @@ models:
         writer: {tier: strong}
         critic: {tier: strong}
         client_liaison: {tier: strong}
+
+rag:
+  variant: v0_naive # chosen by evaluation (R6); V0 until other variants are measured
+  collection: portfolio_chunks
+  chunk_size_words: 180
+  chunk_overlap_words: 30
+  candidate_multiplier: 4 # chunks fetched per requested item, before merging by item
+  embedding_query_prefix: "search_query: "
+  embedding_document_prefix: "search_document: "
+
+verification:
+  supported_coverage: 0.75
+  partly_supported_coverage: 0.4
 
 # Pinned prompt version per node. A node without a pin uses its highest version.
 prompt_versions: {}

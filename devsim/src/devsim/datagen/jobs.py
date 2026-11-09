@@ -1,6 +1,7 @@
 """Generate clients, price history, the labelled dev set and the live job stream."""
 
 import random
+from collections import Counter
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -10,6 +11,7 @@ from devsim.datagen.catalog import Persona, Project
 BID_COVERAGE_THRESHOLD = 0.6
 _RATE_BY_CATEGORY = {"machine_learning": 60, "web_development": 48, "data_analysis": 42}
 _BAND_WIDTH = 0.18
+_GOLD_PROJECTS = 3
 
 # Fractions of each persona's dev set. Together they determine gold label balance.
 DEV_MIX = {
@@ -252,6 +254,14 @@ def _gold(
     bid = (
         scam_type is None and coverage >= BID_COVERAGE_THRESHOLD and budget_max >= persona.floor_usd
     )
+    # A common skill such as Python appears in every project, so treating all of its items as
+    # relevant would put perfect recall out of reach. Relevance means the best-matching projects.
+    covering = Counter(
+        slug for row in rows for slug in {item.split(":")[2] for item in row["evidence"]}
+    )
+    best = {
+        slug for slug, _ in sorted(covering.items(), key=lambda p: (-p[1], p[0]))[:_GOLD_PROJECTS]
+    }
     return {
         "job_id": job_id,
         "persona": persona.persona_id,
@@ -263,7 +273,9 @@ def _gold(
         "requirements": rows,
         "requirement_count": len(rows),
         "coverage": round(coverage, 3),
-        "relevant_evidence": sorted({item for row in rows for item in row["evidence"]}),
+        "relevant_evidence": sorted(
+            {item for row in rows for item in row["evidence"] if item.split(":")[2] in best}
+        ),
         "fair_price_band": (
             {"min": band[0], "max": band[1], "currency": "USD"} if band is not None else None
         ),

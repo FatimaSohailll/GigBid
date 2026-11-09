@@ -58,7 +58,8 @@ set `DEVSIM_SEED_DIR=data/processed/devsim/marketplace` before starting the simu
 
 Gold labels are stored apart from the marketplace files, so the API cannot expose them. A job's
 gold decision follows one rule: bid only if it is not a scam, at least 60% of its requirements have
-portfolio evidence, and its budget meets the persona's minimum.
+portfolio evidence, and its budget meets the persona's minimum. A job's relevant evidence is the
+items from the three projects that cover the most of its requirements.
 
 Limitation: job posts and corpus text come from templates and a hand-written catalog. They are
 more regular than real marketplace text, so scores measured here are likely to be optimistic.

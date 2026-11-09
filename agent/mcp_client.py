@@ -75,15 +75,16 @@ def connections_from_env(environ: Mapping[str, str] | None = None) -> dict[str, 
     """Build one connection for each MCP server that has a URL configured."""
     env = os.environ if environ is None else environ
     connections: dict[str, Any] = {}
-    url = env.get("MCP_MARKETPLACE_URL")
-    if url:
-        token = env.get("MCP_MARKETPLACE_BEARER_TOKEN", "")
-        connection: StreamableHttpConnection = {
-            "transport": "streamable_http",
-            "url": url,
-            "headers": {"Authorization": f"Bearer {token}"},
-        }
-        connections["marketplace"] = connection
+    for server in ("marketplace", "portfolio"):
+        prefix = f"MCP_{server.upper()}"
+        url = env.get(f"{prefix}_URL")
+        if url:
+            connection: StreamableHttpConnection = {
+                "transport": "streamable_http",
+                "url": url,
+                "headers": {"Authorization": f"Bearer {env.get(f'{prefix}_BEARER_TOKEN', '')}"},
+            }
+            connections[server] = connection
     return connections
 
 

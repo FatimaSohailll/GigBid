@@ -1,4 +1,4 @@
-.PHONY: install dev test eval seed demo lint format guards api
+.PHONY: install dev test eval seed ingest demo lint format guards api
 
 install:
 	uv sync --locked
@@ -29,6 +29,9 @@ dev:
 
 seed:
 	uv run --locked python -m devsim.datagen --out data/processed/devsim
+
+ingest:
+	uv run --locked python -m rag.ingest.pipeline --personas data/processed/devsim/personas
 
 eval:
 	@echo make eval is not built yet. It arrives with the evaluation pipelines in Phase 11.

@@ -17,5 +17,11 @@ output schemas and record to the append-only audit log.
 | `create_proposal_draft` | Marketplace | Write (`idempotency_key`, `dry_run`) | no / no / yes | Bearer |
 | `submit_proposal` | Marketplace | Write, spends Connects (`idempotency_key`, `dry_run`) | no / yes / yes | Bearer |
 | `send_message` | Marketplace | Write (`idempotency_key`, `dry_run`) | no / yes / yes | Bearer |
+| `search_evidence` | Portfolio | Read | yes / no / yes | Bearer, or stdio for a local host |
+| `get_case_study` | Portfolio | Read | yes / no / yes | Bearer, or stdio for a local host |
+| `list_skills` | Portfolio | Read | yes / no / yes | Bearer, or stdio for a local host |
 
-Portfolio, Workspace, Upwork and the second third-party server are added in their phases.
+The Portfolio server also exposes the resource templates `portfolio://case/{id}` and
+`portfolio://proposal/{id}`, and the prompts `answer_screening_question` and `prove_requirement`.
+
+Workspace, Upwork and the second third-party server are added in their phases.
