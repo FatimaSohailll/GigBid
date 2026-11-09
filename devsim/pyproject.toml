@@ -27,7 +27,7 @@ dev = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-devsim = ["config.default.yaml", "seed/core/*.json"]
+devsim = ["config.default.yaml", "seed/core/*.json", "datagen/catalog.yaml", "datagen/policy_pack.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

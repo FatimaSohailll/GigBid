@@ -76,8 +76,12 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     environ = os.environ if env is None else env
     raw_tokens = environ.get("DEVSIM_API_TOKENS", "")
     config_path = environ.get("DEVSIM_CONFIG")
+    config = load_config(Path(config_path) if config_path else None)
+    seed_dir = environ.get("DEVSIM_SEED_DIR")
+    if seed_dir:
+        config = config.model_copy(update={"seed_dir": Path(seed_dir)})
     return Settings(
-        config=load_config(Path(config_path) if config_path else None),
+        config=config,
         api_tokens=parse_api_tokens(raw_tokens),
         admin_token=environ.get("DEVSIM_ADMIN_TOKEN") or None,
     )
