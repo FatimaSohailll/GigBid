@@ -1,10 +1,17 @@
-.PHONY: install dev test eval seed ingest db graphs demo lint format guards api worker
+.PHONY: install dev test eval seed ingest db graphs openapi e2e demo lint format guards api worker
 
 db:
 	docker compose -f infra/docker-compose.yml up -d --wait postgres redis
 
 worker:
 	uv run --locked arq worker.main.WorkerSettings
+
+openapi:
+	uv run --locked python -m scripts.export_openapi
+	npm --prefix apps/web run gen:api
+
+e2e:
+	npm --prefix apps/web run test:e2e
 
 graphs:
 	uv run --locked python -m scripts.render_graphs

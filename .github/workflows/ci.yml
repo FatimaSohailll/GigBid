@@ -10,7 +10,7 @@ permissions:
 jobs:
   checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     services:
       postgres:
         image: postgres:17-alpine
@@ -43,3 +43,22 @@ jobs:
         run: make lint
       - name: Unit, contract and simulator tests
         run: make test
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install web dependencies
+        working-directory: apps/web
+        run: npm ci && npx playwright install --with-deps chromium
+      - name: Check the generated API client is current
+        run: |
+          uv run --locked python -m scripts.export_openapi
+          npm --prefix apps/web run gen:api
+          git diff --exit-code apps/web/openapi.json apps/web/src/lib/api/schema.d.ts
+      - name: Playwright
+        working-directory: apps/web
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
