@@ -3,13 +3,13 @@
 import json
 from collections import Counter
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib import resources
 from importlib.resources.abc import Traversable
 from pathlib import Path
 from typing import Any
 
-from devsim.models import ClientRecord, Freelancer, Job
+from devsim.models import ClientRecord, Freelancer, HistoricalJob, Job
 
 
 @dataclass(frozen=True)
@@ -17,6 +17,7 @@ class SeedData:
     jobs: list[Job]
     clients: list[ClientRecord]
     freelancers: list[Freelancer]
+    history: list[HistoricalJob] = field(default_factory=list)
 
 
 def _assert_unique(kind: str, ids: Iterable[str]) -> None:
@@ -50,6 +51,11 @@ def load_seed(seed_dir: Path | None = None) -> SeedData:
         jobs=[Job.model_validate(item) for item in read("jobs.json")],
         clients=[ClientRecord.model_validate(item) for item in read("clients.json")],
         freelancers=[Freelancer.model_validate(item) for item in read("freelancers.json")],
+        history=(
+            [HistoricalJob.model_validate(item) for item in read("history.json")]
+            if root.joinpath("history.json").is_file()
+            else []
+        ),
     )
     validate_seed(seed)
     return seed

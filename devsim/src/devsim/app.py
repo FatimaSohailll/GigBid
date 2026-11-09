@@ -24,6 +24,7 @@ from devsim.models import (
     JobPage,
     Message,
     MessageIn,
+    PriceStats,
     Proposal,
     ProposalDraftIn,
     StatusChangeIn,
@@ -217,6 +218,14 @@ def create_app(settings: Settings, monotonic: Monotonic = time.monotonic) -> Fas
     @app.get("/v1/events", response_model=list[Event], tags=["events"])
     async def list_events(freelancer: Freelancer, after: int = 0, limit: int = 50) -> list[Event]:
         return store.list_events(freelancer, after, limit)
+
+    @app.get("/v1/market/price-stats", response_model=PriceStats, tags=["market"])
+    async def get_price_stats(
+        _: Freelancer,
+        category: str,
+        skills: Annotated[list[str] | None, Query()] = None,
+    ) -> PriceStats:
+        return store.price_stats(category, skills or [])
 
     # ---- Writes ------------------------------------------------------------------------
 

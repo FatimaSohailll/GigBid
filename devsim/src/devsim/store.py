@@ -6,6 +6,7 @@ State is deliberately lost on restart: seed data is the reproducible starting po
 
 import hashlib
 import json
+import statistics
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -24,6 +25,7 @@ from devsim.models import (
     JobPage,
     Message,
     MessageSender,
+    PriceStats,
     Proposal,
     ProposalDraftIn,
     ProposalStatus,
@@ -203,6 +205,27 @@ class MarketplaceStore:
             freelancer_id=freelancer_id,
             balance=self._balances[freelancer_id],
             spent=self._spent[freelancer_id],
+        )
+
+    def price_stats(self, category: str, skills: list[str]) -> PriceStats:
+        """Quartiles of prices paid in a category, narrowed to jobs sharing any given skill."""
+        wanted = {skill.lower() for skill in skills}
+        prices = [
+            job.final_price_usd
+            for job in self._seed.history
+            if job.category == category
+            and (not wanted or wanted & {skill.lower() for skill in job.required_skills})
+        ]
+        if not prices:
+            raise ApiError(404, "no_market_data", "No historical jobs match this request.")
+        p25, p50, p75 = statistics.quantiles(prices, n=4) if len(prices) > 1 else (prices[0],) * 3
+        return PriceStats(
+            category=category,
+            skills=skills,
+            sample_size=len(prices),
+            p25=round(p25, 2),
+            p50=round(p50, 2),
+            p75=round(p75, 2),
         )
 
     def _owned_proposal(self, freelancer_id: str, proposal_id: str) -> Proposal:

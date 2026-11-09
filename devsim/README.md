@@ -42,7 +42,27 @@ in the seed, and unknown seed fields are rejected. State is in memory and resets
 
 Settings are in `src/devsim/config.default.yaml`; set `DEVSIM_CONFIG` to use another file.
 
+## Generated data
+
+`make seed` writes everything to `data/processed/devsim/` (git-ignored). The same seed always
+produces byte-identical files, and `MANIFEST.json` records their hashes. To serve this data, also
+set `DEVSIM_SEED_DIR=data/processed/devsim/marketplace` before starting the simulator.
+
+| Output | Contents |
+|---|---|
+| `marketplace/` | 750 jobs, 450 clients, 1,500 closed jobs for price statistics, 3 freelancers |
+| `personas/<id>/` | PDF CV, 16 case studies, 16 repositories with code, reviews, 150 labelled proposals, `index.json` metadata |
+| `dev_set/<id>.jsonl` | 200 gold-labelled jobs per persona: decision, scam, injection, evidence, fair price band |
+| `stream_gold.jsonl` | Labels for the 150 live jobs, including which are duplicates |
+| `policy_pack/` | Stand-in marketplace rules with stable ids |
+
+Gold labels are stored apart from the marketplace files, so the API cannot expose them. A job's
+gold decision follows one rule: bid only if it is not a scam, at least 60% of its requirements have
+portfolio evidence, and its budget meets the persona's minimum.
+
+Limitation: job posts and corpus text come from templates and a hand-written catalog. They are
+more regular than real marketplace text, so scores measured here are likely to be optimistic.
+
 ## Not built yet
 
-The larger job stream, persona corpora, dev evaluation set, LLM-driven simulated clients, policy
-pack and rehearsal change request are later steps.
+LLM-driven simulated clients and the rehearsal change request are later steps.

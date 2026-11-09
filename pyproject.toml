@@ -24,6 +24,7 @@ dev = [
   "ruff==0.17.4",
   "mypy==2.4.1",
   "types-PyYAML==6.0.12.20261103",
+  "pypdf==7.0.0",
 ]
 
 # GigBid is an application, not an installable library: uv installs its dependencies only.

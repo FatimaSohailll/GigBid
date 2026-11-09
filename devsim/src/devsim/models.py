@@ -147,6 +147,27 @@ class Event(_Strict):
     at: AwareDatetime
 
 
+class HistoricalJob(_Strict):
+    job_id: str
+    category: str
+    required_skills: list[str]
+    budget: Budget
+    final_price_usd: float = Field(gt=0)
+    duration_days: int = Field(gt=0)
+    proposals_received: int = Field(ge=0)
+    posted_at: AwareDatetime
+
+
+class PriceStats(_Strict):
+    category: str
+    skills: list[str]
+    sample_size: int
+    p25: float
+    p50: float
+    p75: float
+    currency: str = "USD"
+
+
 class Health(_Strict):
     status: str
     simulator: str

@@ -38,6 +38,11 @@ def test_settings_require_tokens() -> None:
         load_settings({})
 
 
+def test_seed_dir_can_come_from_the_environment() -> None:
+    env = {"DEVSIM_API_TOKENS": "a=ai_ml_engineer", "DEVSIM_SEED_DIR": "some/dir"}
+    assert load_settings(env).config.seed_dir == Path("some/dir")
+
+
 def test_settings_repr_does_not_expose_tokens() -> None:
     settings = load_settings(
         {"DEVSIM_API_TOKENS": "api-secret=ai_ml_engineer", "DEVSIM_ADMIN_TOKEN": "admin-secret"}

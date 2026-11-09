@@ -28,8 +28,7 @@ dev:
 	@exit 1
 
 seed:
-	@echo make seed is not built yet. It arrives with the DevSim data and ingestion steps.
-	@exit 1
+	uv run --locked python -m devsim.datagen --out data/processed/devsim
 
 eval:
 	@echo make eval is not built yet. It arrives with the evaluation pipelines in Phase 11.
