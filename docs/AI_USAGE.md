@@ -1,4 +1,20 @@
 # AI Usage Disclosure
 
-Record the AI coding assistant/tool used, the files or tasks it helped with, and at least
-one incorrect suggestion you identified and corrected. You remain responsible for all code.
+The student remains accountable for every line in this repository.
+
+## Tools and files
+
+| Tool | Model | Files or tasks | Reviewed and run by the student |
+|---|---|---|---|
+| Claude Code (desktop app) | Claude Opus 5.5 | Assignment assessment and roadmap | Student to confirm |
+| Claude Code (desktop app) | Claude Opus 5.5 | `devsim/`: stand-in marketplace simulator and tests | Student to confirm |
+| Claude Code (desktop app) | Claude Opus 5.5 | Step 0: `pyproject.toml`, `uv.lock`, `Makefile`, `.gitignore`, `.env.example`, `.github/workflows/ci.yml`, `scripts/ci/guards.py`, `tests/unit/test_ci_guards.py`, `docs/REQUIREMENTS.md` | Pending |
+
+## One thing the AI got wrong that I caught
+
+The assignment requires this to be the student's own finding. To be completed by the student.
+
+## Errors the AI found in its own work
+
+- DevSim's first version used plain `def` routes. FastAPI runs those in a thread pool, so two
+  simultaneous submits could both spend Connects. They were changed to `async def`.
