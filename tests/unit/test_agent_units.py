@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage
+from langgraph.store.memory import InMemoryStore
 from pydantic import BaseModel
 
 from agent.checkpoint import normalise_url
@@ -167,6 +168,10 @@ def test_outgoing_scan_redacts_contact_details() -> None:
     assert not scan.blocked
 
 
+def test_outgoing_scan_keeps_interview_dates() -> None:
+    assert scan_outgoing_text("Are you free on 2026-11-10 at 14:00?").findings == []
+
+
 def test_outgoing_scan_removes_only_the_guarantee_sentence() -> None:
     scan = scan_outgoing_text("I built the model. I guarantee top rankings. Happy to discuss.")
     assert scan.text == "I built the model. Happy to discuss."
@@ -261,7 +266,7 @@ def test_every_configured_model_builds_a_real_provider_client(
 
 def test_default_runtime_wires_the_router_and_gateway(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("MCP_MARKETPLACE_URL", "http://127.0.0.1:1/mcp")
-    runtime = default_runtime(CONFIG)
+    runtime = default_runtime(InMemoryStore(), CONFIG)
     assert isinstance(runtime.llm, ModelRouter)
     assert runtime.prompt("writer").startswith("You write a freelance proposal")
 

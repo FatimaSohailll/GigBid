@@ -82,9 +82,24 @@ def default_answers() -> dict[str, Responder]:
     }
 
 
+def _intent(_: str, schema: type[BaseModel]) -> BaseModel:
+    return schema.model_validate(
+        {
+            "conversation_id": "model",
+            "intent": "question",
+            "confidence": 0.9,
+            "explanation": "The client asked something.",
+        }
+    )
+
+
+def _reply(_: str, schema: type[BaseModel]) -> BaseModel:
+    return schema.model_validate({"body": "Thanks for asking. Monday works well for a start."})
+
+
 class ScriptedLlm:
     def __init__(self, tokens_per_call: int = 10) -> None:
-        self.answers = default_answers()
+        self.answers = {**default_answers(), "intent": _intent, "client_liaison": _reply}
         self.calls: Counter[str] = Counter()
         self.seen: defaultdict[str, list[str]] = defaultdict(list)
         self.tokens_per_call = tokens_per_call

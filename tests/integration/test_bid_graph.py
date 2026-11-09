@@ -16,7 +16,7 @@ from agent.handoffs import BidAction, ComplianceAction, CritiqueVerdict, RiskFla
 from agent.mcp_client import ToolServerUnavailable
 from agent.runtime import AgentRuntime
 from agent.state import ThreadStatus, UserSettings
-from tests.support.graph_stack import USER, GraphStack, fast_config, start_stack
+from tests.support.graph_stack import USER, GraphStack, fast_config, new_memory, start_stack
 from tests.support.scripted_llm import GOOD_LETTER, ScriptedLlm
 
 
@@ -32,8 +32,9 @@ class Run:
         self.stack = stack
         self.llm = ScriptedLlm()
         self.config = config or fast_config()
+        self.memory = new_memory(self.config)
         self.graph = build_bid_graph(
-            AgentRuntime(self.config, self.llm, stack.gateway(self.config)),
+            AgentRuntime(self.config, self.llm, stack.gateway(self.config), self.memory),
             InMemorySaver(serde=checkpoint_serde()),
         )
         self.thread = {"configurable": {"thread_id": "thread-1"}}
@@ -452,6 +453,24 @@ async def test_replay_from_a_node_after_submission_does_not_submit_again(
     await replay_from(run.graph, "thread-1", "submit")
     assert run.balance()["spent"] == 8
     assert len(run.proposals()) == 1
+
+
+async def test_promoted_style_rules_reach_the_writer_and_submissions_are_recorded(
+    stack: GraphStack,
+) -> None:
+    run = Run(stack)
+    for number in range(3):
+        await run.memory.record_edits(
+            USER,
+            f"earlier-{number}",
+            [{"before": "We are passionate engineers.", "after": "We are engineers."}],
+        )
+    await run.start()
+    assert "Never use the word 'passionate'." in run.llm.seen["writer"][0]
+
+    result = await run.resume({"action": "approve"})
+    await run.memory.record_outcome(USER, result["proposal_id"], "replied")
+    assert result["status"] is ThreadStatus.SUBMITTED
 
 
 async def test_replay_requires_a_known_node(stack: GraphStack) -> None:
