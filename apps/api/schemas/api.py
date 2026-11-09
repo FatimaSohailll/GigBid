@@ -111,6 +111,15 @@ class ProposalStudio(BaseModel):
     pending_approval: dict[str, Any] | None = None
 
 
+class RegenerateIn(_Input):
+    paragraph: str = Field(min_length=1, max_length=5000)
+
+
+class RegenerateOut(BaseModel):
+    text: str
+    removed_claims: list[str]
+
+
 class PipelineCard(BaseModel):
     proposal_id: str
     job_id: str

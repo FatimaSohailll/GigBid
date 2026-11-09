@@ -23,6 +23,7 @@ REQUIRED_NODES = frozenset(
         "compliance",
         "intent",
         "client_liaison",
+        "rewrite",
     }
 )
 

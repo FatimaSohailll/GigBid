@@ -11,6 +11,7 @@ from langgraph.graph.state import CompiledStateGraph
 from redis.asyncio import Redis
 
 from agent.config import AppConfig
+from agent.llm import LlmGateway
 from agent.memory.store import LongTermMemory
 from apps.api.auth.security import TokenVault, hash_token
 from apps.api.db import Repository
@@ -31,6 +32,7 @@ class ApiServices:
     upload_dir: Path
     marketplace_health_url: str | None
     cookie_secure: bool = False
+    llm: LlmGateway | None = None
 
     @property
     def redis(self) -> Redis:

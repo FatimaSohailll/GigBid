@@ -1,8 +1,8 @@
 """Sign-up, sign-in and sessions."""
 
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Cookie, HTTPException, Response
 
 from apps.api.auth.security import (
     hash_password,
@@ -52,7 +52,14 @@ async def login(body: LoginIn, response: Response, services: Services) -> dict[s
 
 
 @router.post("/logout", status_code=204)
-async def logout(response: Response, user: CurrentUser, services: Services) -> None:
+async def logout(
+    response: Response,
+    user: CurrentUser,
+    services: Services,
+    session: Annotated[str | None, Cookie(alias=SESSION_COOKIE)] = None,
+) -> None:
+    if session:
+        await services.repository.delete_session(hash_token(session))
     response.delete_cookie(SESSION_COOKIE)
 
 

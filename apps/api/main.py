@@ -19,6 +19,7 @@ from agent.checkpoint import checkpoint_serde
 from agent.config import get_config
 from agent.graphs.bid_graph import build_bid_graph
 from agent.graphs.conversation_graph import build_conversation_graph
+from agent.llm import ModelRouter
 from agent.marketplace_port import current_trace_id
 from agent.memory.store import LongTermMemory
 from agent.runtime import AgentRuntime
@@ -57,6 +58,7 @@ async def build_services() -> tuple[ApiServices, Callable[[], Awaitable[None]]]:
         upload_dir=Path(os.environ.get("UPLOAD_DIR", "data/processed/uploads")),
         marketplace_health_url=marketplace_health_url(),
         cookie_secure=os.environ.get("APP_ENV") == "production",
+        llm=ModelRouter(config),
     )
 
     async def close() -> None:

@@ -48,6 +48,7 @@ models:
         compliance: {tier: small, fallback: small_fallback}
         intent: {tier: small, fallback: small_fallback}
         writer: {tier: strong}
+        rewrite: {tier: strong}
         critic: {tier: strong}
         client_liaison: {tier: strong}
     # Optional. Used only where it beats the open profile enough to justify its cost.
@@ -66,6 +67,7 @@ models:
         compliance: {tier: small, fallback: small_fallback}
         intent: {tier: small, fallback: small_fallback}
         writer: {tier: strong}
+        rewrite: {tier: strong}
         critic: {tier: strong}
         client_liaison: {tier: strong}
 
