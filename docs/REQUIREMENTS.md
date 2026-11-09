@@ -13,7 +13,7 @@ make a requirement complete.
 | Tested | Automated tests pass |
 | Verified | Demonstrated end to end in the conditions the assignment describes |
 
-Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0, DevSim data.
+Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0, DevSim data, contracts and Marketplace MCP.
 
 ## Instructor resources
 
@@ -31,8 +31,8 @@ Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace A
 
 | ID | Requirement | Files | Status | Tests | Outstanding |
 |---|---|---|---|---|---|
-| R1 | One marketplace port, two adapters, switched by config | `agent/marketplace_port.py` | Stub | None | Phases 2, 13 |
-| R2 | Portfolio, Marketplace, Workspace, Upwork and one more MCP server | `mcp_servers/` | Stub | None | Phases 2, 3, 6, 13 |
+| R1 | One marketplace port, two adapters, switched by config | `agent/marketplace_port.py`, `mcp_servers/marketplace/adapters/gigsim.py` | Partial, GigSim adapter Tested | `mcp_servers/marketplace/tests/` | Upwork adapter, Phase 13 |
+| R2 | Portfolio, Marketplace, Workspace, Upwork and one more MCP server | `mcp_servers/marketplace/` | Partial, Marketplace Tested | `mcp_servers/marketplace/tests/`, `tests/integration/` | Phases 3, 6, 13 |
 | R3 | Roles in a hand-written StateGraph with parallel analysis | `agent/graphs/`, `agent/nodes/` | Stub | None | Phase 5 |
 | R4 | Human approval through LangGraph interrupts in the web UI | None | Missing | None | Phases 5, 9 |
 | R5 | No unsupported claims; rate measured and reported | `rag/verify.py` | Stub | None | Phases 3, 11 |
@@ -47,12 +47,12 @@ Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace A
 | ID | Requirement | Files | Status | Tests | Outstanding |
 |---|---|---|---|---|---|
 | A1 | Portfolio tools, resource templates, prompt templates | `mcp_servers/portfolio/server.py` | Stub | None | Phase 3 |
-| A2 | Marketplace read and write tools, schemas, annotations, idempotency, `dry_run`, auth, rate limit, audit log | `mcp_servers/marketplace/server.py`; idempotency exists in DevSim only | Stub | None | Phase 2 |
+| A2 | Marketplace read and write tools, schemas, annotations, idempotency, `dry_run`, auth, rate limit, audit log | `mcp_servers/marketplace/` | Tested | `mcp_servers/marketplace/tests/`, `tests/integration/` | Tested on DevSim, not the real GigSim |
 | A3 | Workspace calendar and email drafts | `mcp_servers/workspace/server.py` | Stub | None | Phase 6 |
 | A4 | Upwork adapter, OAuth, encrypted per-user tokens, drafts only | None | Missing | None | Phase 13; needs an Upwork account |
 | A5 | Two third-party servers with trust rationale | `docs/TOOLS.md` is TODO | Missing | None | Phase 13 |
-| A6 | Per-agent allowlists, timeouts, retries, degraded mode | None | Missing | None | Phases 2, 8 |
-| A7 | In-memory tests, Inspector screenshots, schema snapshot | `tests/contract/` is TODO | Missing | None | Phases 2, 3, 6; screenshots by student |
+| A6 | Per-agent allowlists, timeouts, retries, degraded mode | `agent/mcp_client.py`, `agent/config.yaml` | Partial, client side Tested | `tests/integration/test_marketplace_http.py` | Queue and UI banner, Phases 8, 9 |
+| A7 | In-memory tests, Inspector screenshots, schema snapshot | `tests/contract/` | Partial, Marketplace Tested | `mcp_servers/marketplace/tests/`, `tests/contract/` | Other servers; screenshots by student |
 | RQ-A | Tool granularity study on 40 tasks | None | Missing | None | Phase 14 |
 
 ## Part B: Advanced RAG
@@ -71,8 +71,8 @@ Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace A
 | ID | Requirement | Files | Status | Tests | Outstanding |
 |---|---|---|---|---|---|
 | C1 | Bid and conversation graphs | `agent/graphs/` | Stub | None | Phases 5, 6 |
-| C2 | Typed state, reducers, trace and memory separation, two stores | `agent/state.py` | Stub | None | Phases 1, 6 |
-| C3 | Eight Pydantic hand-offs | `agent/handoffs.py` has 4 of 8 | Partial | `tests/unit/test_handoffs.py` covers score bounds only | Phase 1 |
+| C2 | Typed state, reducers, trace and memory separation, two stores | `agent/state.py` | Partial, state and reducers Tested | `tests/unit/test_contracts.py` | Memory stores, Phase 6 |
+| C3 | Eight Pydantic hand-offs | `agent/handoffs.py` | Tested | `tests/unit/test_contracts.py` | Used by nodes from Phase 4 |
 | C4 | Critic limit, Compliance block, step and token budgets | `agent/config.yaml` has values | Stub | None | Phase 5 |
 | C5 | Interrupts with full payload; approve, edit, reject | None | Missing | None | Phase 5 |
 | C6 | Postgres checkpointer, crash and resume, replay | None | Missing | None | Phase 5 |
@@ -103,7 +103,7 @@ Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace A
 |---|---|---|---|---|---|
 | E1 | Redis worker, schedules, idempotent jobs | `worker/` is TODO | Missing | None | Phase 8 |
 | E2 | `make eval`; CI runs tests and a 30-job gated smoke eval | `Makefile` fails clearly; `eval.yml` absent | Missing | None | Phases 9, 11 |
-| E3 | One trace id across UI, API, graph, MCP and audit log | None | Missing | None | Phases 2, 7, 12 |
+| E3 | One trace id across UI, API, graph, MCP and audit log | `agent/mcp_client.py`, Marketplace server and adapter | Partial, MCP to audit log Tested | `tests/integration/test_marketplace_http.py` | UI, API, graph and tracing tool, Phases 5, 7, 12 |
 | E4 | Delimited untrusted data, attack rate, masking, encrypted tokens, tenancy | None | Missing | None | Phases 7, 12, 13 |
 | E5 | Declared and measured budgets; one optimisation | None | Missing | None | Phases 12, 14 |
 | E6 | Full Docker stack and stable public deployment | `infra/` empty | Missing | None | Phase 16 |
@@ -120,7 +120,7 @@ Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace A
 | S6 | CI rule: `gigsim/` unchanged | `scripts/ci/guards.py` | Tested | `tests/unit/test_ci_guards.py` | Confirm on GitHub; record a manifest if the real bundle arrives |
 | S7 | CI rule: every prompt in `agent/prompts/` | `scripts/ci/guards.py` | Tested | `tests/unit/test_ci_guards.py` | Confirm on GitHub. Decide how the published Portfolio server ships its prompts (Phase 3) |
 | S8 | CI rule: every reported number traces to `evals/results/` | None | Missing | None | Phase 11 |
-| S9 | `ci.yml`: lint, unit, contract, Playwright | `.github/workflows/ci.yml` | Partial | Not yet run on GitHub | Contract tests Phase 2, Playwright Phase 9 |
+| S9 | `ci.yml`: lint, unit, contract, Playwright | `.github/workflows/ci.yml` | Partial | Runs through `make test` | Playwright, Phase 9 |
 | S10 | `eval.yml`: smoke eval with thresholds | None | Missing | None | Phase 11 |
 | S11 | Evaluation results are committed | `.gitignore` fixed | Implemented | None | Results arrive in Phase 11 |
 
