@@ -148,7 +148,14 @@ class ConversationState(_ThreadState, total=False):
     """One thread per client conversation."""
 
     conversation_id: str
+    conversation: dict[str, Any]
+    job: dict[str, Any]
     client_messages: list[dict[str, Any]]
+    latest_message: dict[str, Any]
+    injected_text: list[str]
+    proposed_slots: list[dict[str, Any]]
+    selected_slot: datetime | None
+    style_edits: Annotated[list[dict[str, Any]], operator.add]
     intent: IntentClassification
     reply_drafts: Annotated[list[ReplyDraft], operator.add]
     compliance_verdicts: Annotated[list[ComplianceVerdict], operator.add]

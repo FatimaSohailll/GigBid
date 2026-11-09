@@ -127,6 +127,18 @@ async def approval(state: BidState) -> dict[str, Any]:
     }
 
 
+async def learn(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
+    """Pass this thread's signals to the promotion rules. Safe to repeat on a replay."""
+    job = state["job"]
+    await runtime.memory.record_edits(state["user_id"], job["job_id"], state.get("style_edits", []))
+    proposal_id = state.get("proposal_id")
+    if proposal_id:
+        await runtime.memory.record_submission(
+            state["user_id"], proposal_id, job["category"], state["drafts"][-1].evidence_ids
+        )
+    return {}
+
+
 async def submit(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
     """Send the approved draft. Each key is stable, so a re-run after a crash cannot repeat it."""
     latest = state.get("approvals", [])[-1:]

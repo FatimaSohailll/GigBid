@@ -4,11 +4,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from langgraph.store.memory import InMemoryStore
 from mcp.server.auth.settings import AuthSettings
 from pydantic import AnyHttpUrl
 
 from agent.config import AppConfig, get_config
 from agent.mcp_client import Toolbox, ToolGateway, connections_from_env
+from agent.memory.store import LongTermMemory
 from mcp_servers.marketplace.server import (
     StaticBearerVerifier,
     UserAccess,
@@ -19,6 +21,8 @@ from mcp_servers.marketplace.store import ServerStore
 from mcp_servers.marketplace.tests.harness import LiveServer, devsim_app, free_port
 from mcp_servers.portfolio.server import TenantBearerVerifier
 from mcp_servers.portfolio.server import build_server as build_portfolio
+from mcp_servers.workspace.server import WorkspaceStore
+from mcp_servers.workspace.server import build_server as build_workspace
 from rag.ingest.pipeline import ingest_documents
 from tests.support.rag_fakes import document, memory_components
 
@@ -47,6 +51,10 @@ def fast_config() -> AppConfig:
     )
 
 
+def new_memory(config: AppConfig | None = None) -> LongTermMemory:
+    return LongTermMemory(InMemoryStore(), (config or fast_config()).memory)
+
+
 @dataclass
 class GraphStack:
     simulator: LiveServer
@@ -55,6 +63,8 @@ class GraphStack:
     store: ServerStore
     env: dict[str, str]
     build_marketplace_app: Any
+    workspace: LiveServer
+    workspace_store: WorkspaceStore
 
     def gateway(self, config: AppConfig | None = None) -> ToolGateway:
         toolbox = Toolbox(
@@ -69,6 +79,7 @@ class GraphStack:
         self.marketplace.start()
 
     def stop(self) -> None:
+        self.workspace.stop()
         self.portfolio.stop()
         self.marketplace.stop()
         self.simulator.stop()
@@ -124,10 +135,33 @@ def start_stack(tmp_path: Path) -> GraphStack:
     )
     portfolio.start()
 
+    workspace_store = WorkspaceStore(tmp_path / "workspace.sqlite3")
+    workspace_port = free_port()
+    workspace_url = AnyHttpUrl(f"http://127.0.0.1:{workspace_port}")
+    workspace = LiveServer(
+        build_workspace(
+            workspace_store,
+            token_verifier=TenantBearerVerifier({"ws-ai": USER}),
+            auth=AuthSettings(
+                issuer_url=workspace_url,
+                resource_server_url=workspace_url,
+                validate_token_resource=False,
+            ),
+            host="127.0.0.1",
+            port=workspace_port,
+        ).streamable_http_app(),
+        workspace_port,
+    )
+    workspace.start()
+
     env = {
+        "MCP_WORKSPACE_URL": f"http://127.0.0.1:{workspace_port}/mcp",
+        "MCP_WORKSPACE_BEARER_TOKEN": "ws-ai",
         "MCP_MARKETPLACE_URL": f"http://127.0.0.1:{market_port}/mcp",
         "MCP_MARKETPLACE_BEARER_TOKEN": "mcp-ai",
         "MCP_PORTFOLIO_URL": f"http://127.0.0.1:{portfolio_port}/mcp",
         "MCP_PORTFOLIO_BEARER_TOKEN": "pf-ai",
     }
-    return GraphStack(simulator, marketplace, portfolio, store, env, build_market_app)
+    return GraphStack(
+        simulator, marketplace, portfolio, store, env, build_market_app, workspace, workspace_store
+    )

@@ -8,7 +8,7 @@ from agent.checkpoint import checkpoint_serde
 from agent.graphs.bid_graph import build_bid_graph
 from agent.runtime import AgentRuntime
 from agent.state import ThreadStatus, UserSettings
-from tests.support.graph_stack import USER, fast_config, start_stack
+from tests.support.graph_stack import USER, fast_config, new_memory, start_stack
 from tests.support.scripted_llm import ScriptedLlm
 
 
@@ -21,7 +21,7 @@ async def test_llm_judge_runs_through_the_router_and_counts_tokens(tmp_path: Pat
         )
         llm = ScriptedLlm()
         graph = build_bid_graph(
-            AgentRuntime(config, llm, stack.gateway(config)),
+            AgentRuntime(config, llm, stack.gateway(config), new_memory(config)),
             InMemorySaver(serde=checkpoint_serde()),
         )
         result = await graph.ainvoke(

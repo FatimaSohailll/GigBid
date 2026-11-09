@@ -17,7 +17,7 @@ from agent.graphs.bid_graph import build_bid_graph
 from agent.mcp_client import Toolbox, ToolGateway, connections_from_env
 from agent.runtime import AgentRuntime
 from agent.state import UserSettings
-from tests.support.graph_stack import USER, fast_config
+from tests.support.graph_stack import USER, fast_config, new_memory
 from tests.support.scripted_llm import ScriptedLlm
 
 
@@ -37,7 +37,7 @@ async def main(command: str, thread_id: str) -> None:
     tools = CrashingTools(
         ToolGateway(Toolbox(connections_from_env(), config, handle_tool_errors=False))
     )
-    runtime = AgentRuntime(config, ScriptedLlm(), tools)
+    runtime = AgentRuntime(config, ScriptedLlm(), tools, new_memory(config))
     thread = {"configurable": {"thread_id": thread_id}}
     async with postgres_checkpointer(os.environ["TEST_DATABASE_URL"]) as saver:
         graph = build_bid_graph(runtime, saver)

@@ -12,6 +12,7 @@ The student remains accountable for every line in this repository.
 | Claude Code (desktop app) | Claude Opus 5.5 | `agent/` contracts, config and MCP client; `mcp_servers/marketplace/`; tests; `docs/TOOLS.md` | Student to confirm |
 | Claude Code (desktop app) | Claude Opus 5.5 | `rag/`, `mcp_servers/portfolio/`, `evals/`, prompts and tests | Student to confirm |
 | Claude Code (desktop app) | Claude Opus 5.5 | `agent/llm.py`, `agent/guardrails.py`, `agent/checkpoint.py`, `agent/nodes/`, `agent/graphs/bid_graph.py`, prompts and tests | Student to confirm |
+| Claude Code (desktop app) | Claude Opus 5.5 | `mcp_servers/workspace/`, `agent/memory/`, `agent/graphs/conversation_graph.py`, `agent/nodes/client_liaison.py`, tests | Student to confirm |
 
 ## One thing the AI got wrong that I caught
 

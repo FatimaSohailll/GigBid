@@ -5,7 +5,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from agent.guardrails import scan_outgoing_text
+from agent.guardrails import ComplianceScan, scan_outgoing_text
 from agent.handoffs import ComplianceAction, ComplianceVerdict, PolicyViolation, ScreeningAnswer
 from agent.runtime import AgentRuntime
 from agent.state import BidState, ThreadStatus
@@ -26,13 +26,9 @@ class _ModelVerdict(BaseModel):
     reason: str = ""
 
 
-async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
-    draft = state["drafts"][-1]
+def rule_violations(scans: list[ComplianceScan], runtime: AgentRuntime) -> list[PolicyViolation]:
     rules = runtime.config.compliance
-    letter = scan_outgoing_text(draft.cover_letter)
-    answers = [(item, scan_outgoing_text(item.answer)) for item in draft.screening_answers]
-    scans = [letter, *(scan for _, scan in answers)]
-    violations = [
+    return [
         PolicyViolation(
             rule_id=rules.rule_ids[rule],  # type: ignore[index]
             excerpt=excerpt,
@@ -41,27 +37,46 @@ async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
         for scan in scans
         for rule, excerpt in scan.findings
     ]
-    combined = "\n".join(scan.text for scan in scans)
+
+
+async def model_review(
+    text: str,
+    runtime: AgentRuntime,
+) -> tuple[list[PolicyViolation], bool, str, int]:
+    """Ask the model about policy. Returns (violations, block, reason, tokens)."""
+    rules = runtime.config.compliance
     policy = Path(rules.policy_path).read_text(encoding="utf-8")
     result = await runtime.llm.structured(
         "compliance",
         runtime.prompt("compliance"),
-        f"<policy>\n{policy}\n</policy>\n<draft>\n{combined}\n</draft>",
+        f"<policy>\n{policy}\n</policy>\n<draft>\n{text}\n</draft>",
         _ModelVerdict,
     )
     # This model cannot see the portfolio. Whether a claim is true is the claim verifier's job.
-    model_violations = [
+    found = [
         item for item in result.value.violations if item.rule_id != rules.rule_ids["fabrication"]
     ]
-    violations += model_violations
+    return found, result.value.block and bool(found), result.value.reason, result.tokens
+
+
+async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
+    draft = state["drafts"][-1]
+    letter = scan_outgoing_text(draft.cover_letter)
+    answers = [(item, scan_outgoing_text(item.answer)) for item in draft.screening_answers]
+    scans = [letter, *(scan for _, scan in answers)]
+    violations = rule_violations(scans, runtime)
+    model_found, model_block, model_reason, tokens = await model_review(
+        "\n".join(scan.text for scan in scans), runtime
+    )
+    violations += model_found
     changed = any(scan.text != item.answer for item, scan in answers) or (
         letter.text != draft.cover_letter
     )
-    block = (result.value.block and bool(model_violations)) or any(s.blocked for s in scans)
+    block = model_block or any(s.blocked for s in scans)
 
-    update: dict[str, Any] = {"tokens_used": result.tokens}
+    update: dict[str, Any] = {"tokens_used": tokens}
     if block:
-        reason = result.value.reason or "This draft breaks a marketplace rule and cannot be sent."
+        reason = model_reason or "This draft breaks a marketplace rule and cannot be sent."
         action = ComplianceAction.BLOCK
         update["status"] = ThreadStatus.BLOCKED
     elif changed:

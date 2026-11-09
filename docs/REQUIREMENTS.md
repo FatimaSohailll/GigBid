@@ -13,7 +13,7 @@ make a requirement complete.
 | Tested | Automated tests pass |
 | Verified | Demonstrated end to end in the conditions the assignment describes |
 
-Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0, DevSim data, contracts and Marketplace MCP, Portfolio MCP and RAG core, model routing and bid graph.
+Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0, DevSim data, contracts and Marketplace MCP, Portfolio MCP and RAG core, model routing and bid graph, conversation graph and memory.
 
 Automated graph tests use scripted model replies, so that they are repeatable and free. The graph
 has also been run by hand on real open models through Groq, on DevSim data. Part A's single-agent
@@ -36,12 +36,12 @@ proposal has not been built separately yet.
 | ID | Requirement | Files | Status | Tests | Outstanding |
 |---|---|---|---|---|---|
 | R1 | One marketplace port, two adapters, switched by config | `agent/marketplace_port.py`, `mcp_servers/marketplace/adapters/gigsim.py` | Partial, GigSim adapter Tested | `mcp_servers/marketplace/tests/` | Upwork adapter, Phase 13 |
-| R2 | Portfolio, Marketplace, Workspace, Upwork and one more MCP server | `mcp_servers/marketplace/`, `mcp_servers/portfolio/` | Partial, Marketplace and Portfolio Tested | `mcp_servers/*/tests/`, `tests/integration/` | Phases 6, 13 |
-| R3 | Roles in a hand-written StateGraph with parallel analysis | `agent/graphs/bid_graph.py`, `agent/nodes/` | Partial, bid graph Tested | `tests/integration/test_bid_graph.py` | Client Liaison, Phase 6; real-model run needs a key |
+| R2 | Portfolio, Marketplace, Workspace, Upwork and one more MCP server | `mcp_servers/` | Partial, three own servers Tested | `mcp_servers/*/tests/`, `tests/integration/` | Upwork and GitHub, Phase 13 |
+| R3 | Roles in a hand-written StateGraph with parallel analysis | `agent/graphs/`, `agent/nodes/` | Tested | `tests/integration/test_bid_graph.py`, `test_conversation_graph.py` | Real GigSim run |
 | R4 | Human approval through LangGraph interrupts in the web UI | `agent/nodes/approval.py` | Partial, graph side Tested | `tests/integration/test_bid_graph.py` | Web UI, Phase 9 |
 | R5 | No unsupported claims; rate measured and reported | `rag/verify.py` | Partial, Tested | `tests/unit/test_claim_verification.py` | LLM judge not run on a real model yet; reporting in Phase 11 |
 | R6 | Deployed RAG design chosen by evaluation | `rag/retriever.py`, `evals/runners/rag_eval.py` | Partial | V0 measured on DevSim | Other variants, Phases 10, 14 |
-| R7 | Memory updated only through an explicit promotion rule | `agent/memory/promotion_rules.py` | Stub | None | Phase 6 |
+| R7 | Memory updated only through an explicit promotion rule | `agent/memory/` | Tested | `tests/unit/test_memory.py` | Marketplace event feed, Phase 8; memory viewer UI, Phase 9 |
 | R8 | Every run traced; p95 latency and cost reported | `agent/config.yaml` has budgets | Stub | None | Phases 2, 12 |
 | R9 | Injection defence, PII masking, polite scheduling, no scraping | Policy text only | Missing | None | Phases 8, 12 |
 | R10 | `docker compose up` and a public URL with reviewer login | `infra/docker-compose.yml` empty | Stub | None | Phase 16 |
@@ -52,7 +52,7 @@ proposal has not been built separately yet.
 |---|---|---|---|---|---|
 | A1 | Portfolio tools, resource templates, prompt templates | `mcp_servers/portfolio/` | Tested | `mcp_servers/portfolio/tests/`, `tests/integration/test_portfolio_http.py` | Publishing, Phase 16 |
 | A2 | Marketplace read and write tools, schemas, annotations, idempotency, `dry_run`, auth, rate limit, audit log | `mcp_servers/marketplace/` | Tested | `mcp_servers/marketplace/tests/`, `tests/integration/` | Tested on DevSim, not the real GigSim |
-| A3 | Workspace calendar and email drafts | `mcp_servers/workspace/server.py` | Stub | None | Phase 6 |
+| A3 | Workspace calendar and email drafts | `mcp_servers/workspace/server.py` (local backend) | Tested | `mcp_servers/workspace/tests/` | None |
 | A4 | Upwork adapter, OAuth, encrypted per-user tokens, drafts only | None | Missing | None | Phase 13; needs an Upwork account |
 | A5 | Two third-party servers with trust rationale | `docs/TOOLS.md` is TODO | Missing | None | Phase 13 |
 | A6 | Per-agent allowlists, timeouts, retries, degraded mode | `agent/mcp_client.py`, `agent/config.yaml` | Partial, client side Tested | `tests/integration/test_marketplace_http.py` | Queue and UI banner, Phases 8, 9 |
@@ -74,8 +74,8 @@ proposal has not been built separately yet.
 
 | ID | Requirement | Files | Status | Tests | Outstanding |
 |---|---|---|---|---|---|
-| C1 | Bid and conversation graphs | `agent/graphs/bid_graph.py` | Partial, bid graph Tested | `tests/integration/test_bid_graph.py` | Conversation graph, Phase 6 |
-| C2 | Typed state, reducers, trace and memory separation, two stores | `agent/state.py` | Partial, state and reducers Tested | `tests/unit/test_contracts.py` | Memory stores, Phase 6 |
+| C1 | Bid and conversation graphs | `agent/graphs/` | Tested | `tests/integration/test_bid_graph.py`, `test_conversation_graph.py` | None |
+| C2 | Typed state, reducers, trace and memory separation, two stores | `agent/state.py`, `agent/memory/store.py` | Tested | `tests/unit/test_contracts.py`, `test_memory.py` | Tracing tool, Phase 12 |
 | C3 | Eight Pydantic hand-offs | `agent/handoffs.py` | Tested | `tests/unit/test_contracts.py` | Used by nodes from Phase 4 |
 | C4 | Critic limit, Compliance block, step and token budgets | `agent/graphs/bid_graph.py`, `agent/nodes/` | Tested | `tests/integration/test_bid_graph.py` | Show in UI, Phase 9 |
 | C5 | Interrupts with full payload; approve, edit, reject | `agent/nodes/approval.py` | Partial, graph side Tested | `tests/integration/test_bid_graph.py` | Web UI, Phase 9; per-user autonomy setting, Phase 7 |

@@ -4,17 +4,13 @@ Runs over Streamable HTTP with bearer auth (for GigBid) or stdio (for a desktop 
 PORTFOLIO_TRANSPORT=stdio PORTFOLIO_TENANT=<id> python -m mcp_servers.portfolio.server
 """
 
-import hmac
 import os
 import threading
 from collections.abc import Mapping
 from typing import Any
 
-from mcp.server.auth.middleware.auth_context import get_access_token
-from mcp.server.auth.provider import AccessToken, TokenVerifier
 from mcp.server.auth.settings import AuthSettings
-from mcp.server.fastmcp import Context, FastMCP
-from mcp.server.fastmcp.exceptions import ToolError
+from mcp.server.fastmcp import FastMCP
 from pydantic import AnyHttpUrl
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -22,39 +18,9 @@ from starlette.responses import JSONResponse
 from mcp_servers.portfolio.prompts import register_prompts
 from mcp_servers.portfolio.resources import register_resources
 from mcp_servers.portfolio.tools import PortfolioBackend, TenantResolver, register_tools
+from mcp_servers.tenant_auth import TenantBearerVerifier, bearer_tenant, parse_tenants
 from rag.retriever import build_retriever, open_components
 from rag.types import RagComponents
-
-
-def bearer_tenant(_: Context[Any, Any, Any]) -> str:
-    token = get_access_token()
-    if token is None:
-        raise ToolError("unauthorized: a valid bearer token is required")
-    return token.client_id
-
-
-class TenantBearerVerifier(TokenVerifier):
-    def __init__(self, tenants: Mapping[str, str]) -> None:
-        self._tenants = tenants
-
-    async def verify_token(self, token: str) -> AccessToken | None:
-        for known, tenant in self._tenants.items():
-            if hmac.compare_digest(token.encode(), known.encode()):
-                return AccessToken(token=token, client_id=tenant, scopes=[])
-        return None
-
-
-def parse_tenants(raw: str) -> dict[str, str]:
-    """Parse ``bearer:tenant`` entries separated by commas."""
-    tenants: dict[str, str] = {}
-    for entry in filter(None, (item.strip() for item in raw.split(","))):
-        bearer, separator, tenant = entry.partition(":")
-        if not separator or not bearer or not tenant or ":" in tenant:
-            raise ValueError("MCP_PORTFOLIO_USERS entries must be bearer:tenant")
-        tenants[bearer] = tenant
-    if not tenants:
-        raise ValueError("MCP_PORTFOLIO_USERS must define at least one user")
-    return tenants
 
 
 def build_server(

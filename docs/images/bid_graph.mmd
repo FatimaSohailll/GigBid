@@ -18,12 +18,13 @@ graph TD;
 	compliance(compliance)
 	prepare_approval(prepare_approval)
 	submit(submit)
+	learn(learn)
 	approval(approval)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> scout;
 	analyst --> reconcile;
-	approval -.-> __end__;
 	approval -.-> compliance;
+	approval -.-> learn;
 	approval -.-> submit;
 	compliance -.-> __end__;
 	compliance -.-> prepare_approval;
@@ -44,11 +45,13 @@ graph TD;
 	scout -.-> analyst;
 	scout -.-> fit_matcher;
 	scout -.-> risk_assessor;
+	submit -.-> __end__;
+	submit -.-> learn;
 	verify_claims -.-> __end__;
 	verify_claims -.-> critic;
 	writer -.-> __end__;
 	writer -.-> verify_claims;
-	submit --> __end__;
+	learn --> __end__;
 	classDef default fill:#f2f0ff,line-height:1.2
 	classDef first fill-opacity:0
 	classDef last fill:#bfb6fc

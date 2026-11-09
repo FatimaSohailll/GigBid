@@ -29,10 +29,13 @@ async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
     if critiques and critiques[-1].reasons:
         reasons = "; ".join(critiques[-1].reasons)
         feedback = f"\n\nReviewer feedback:\n{delimit_untrusted('revision_feedback', reasons)}"
+    style = await runtime.memory.style_rules(state["user_id"])
+    what_worked = await runtime.memory.outcome_insights(state["user_id"], job["category"])
     data = (
         f"{delimit_untrusted('job_post', job_text(job))}\n\n"
         f"Hidden needs: {spec.hidden_needs}\nDeliverables: {spec.deliverables}\n"
-        f"Bid: {state['price_quote'].amount}\n\n"
+        f"Bid: {state['price_quote'].amount}\n"
+        f"Style rules: {style}\nWhat has worked before: {what_worked}\n\n"
         f"{delimit_untrusted('evidence', evidence)}{feedback}"
     )
     result = await runtime.llm.structured("writer", runtime.prompt("writer"), data, _ModelDraft)

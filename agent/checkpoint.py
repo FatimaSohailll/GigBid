@@ -10,6 +10,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.store.postgres.aio import AsyncPostgresStore
 from pydantic import BaseModel
 
 from agent import handoffs, state
@@ -40,6 +41,13 @@ async def postgres_checkpointer(url: str) -> AsyncIterator[AsyncPostgresSaver]:
     ) as saver:
         await saver.setup()
         yield saver
+
+
+@asynccontextmanager
+async def postgres_store(url: str) -> AsyncIterator[AsyncPostgresStore]:
+    async with AsyncPostgresStore.from_conn_string(normalise_url(url)) as store:
+        await store.setup()
+        yield store
 
 
 async def replay_from(
