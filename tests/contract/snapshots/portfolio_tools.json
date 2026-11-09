@@ -1,0 +1,359 @@
+{
+  "prompts": [
+    "answer_screening_question",
+    "prove_requirement"
+  ],
+  "resource_templates": [
+    "portfolio://case/{id}",
+    "portfolio://proposal/{id}"
+  ],
+  "tools": {
+    "get_case_study": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Get the full text of one case study by its id.",
+      "input": {
+        "properties": {
+          "id": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "get_case_studyArguments",
+        "type": "object"
+      },
+      "output": {
+        "properties": {
+          "client_industry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Industry"
+          },
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "project": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project"
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "content",
+          "source",
+          "project",
+          "skills",
+          "date",
+          "client_industry"
+        ],
+        "title": "CaseStudy",
+        "type": "object"
+      }
+    },
+    "list_skills": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "List every skill the portfolio can evidence, with how many items show it.",
+      "input": {
+        "properties": {},
+        "title": "list_skillsArguments",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "SkillSummary": {
+            "properties": {
+              "item_count": {
+                "title": "Item Count",
+                "type": "integer"
+              },
+              "item_types": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Item Types",
+                "type": "array"
+              },
+              "skill": {
+                "title": "Skill",
+                "type": "string"
+              }
+            },
+            "required": [
+              "skill",
+              "item_count",
+              "item_types"
+            ],
+            "title": "SkillSummary",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/SkillSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SkillList",
+        "type": "object"
+      }
+    },
+    "search_evidence": {
+      "annotations": {
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "readOnlyHint": true
+      },
+      "description": "Find portfolio evidence for a requirement. Returns type, source, date and outcome.",
+      "input": {
+        "$defs": {
+          "EvidenceFilters": {
+            "additionalProperties": false,
+            "properties": {
+              "client_industries": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Client Industries",
+                "type": "array"
+              },
+              "min_year": {
+                "anyOf": [
+                  {
+                    "maximum": 2100,
+                    "minimum": 1990,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Min Year"
+              },
+              "outcomes": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 5,
+                "title": "Outcomes",
+                "type": "array"
+              },
+              "project": {
+                "anyOf": [
+                  {
+                    "maxLength": 128,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Project"
+              },
+              "skills": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "title": "Skills",
+                "type": "array"
+              },
+              "types": {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 10,
+                "title": "Types",
+                "type": "array"
+              }
+            },
+            "title": "EvidenceFilters",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/EvidenceFilters"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "k": {
+            "default": 5,
+            "maximum": 20,
+            "minimum": 1,
+            "title": "K",
+            "type": "integer"
+          },
+          "requirement": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Requirement",
+            "type": "string"
+          }
+        },
+        "required": [
+          "requirement"
+        ],
+        "title": "search_evidenceArguments",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "EvidenceItem": {
+            "additionalProperties": false,
+            "properties": {
+              "date": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Date"
+              },
+              "evidence_id": {
+                "title": "Evidence Id",
+                "type": "string"
+              },
+              "excerpt": {
+                "title": "Excerpt",
+                "type": "string"
+              },
+              "outcome": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Outcome"
+              },
+              "score": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Score"
+              },
+              "source": {
+                "title": "Source",
+                "type": "string"
+              },
+              "type": {
+                "title": "Type",
+                "type": "string"
+              }
+            },
+            "required": [
+              "evidence_id",
+              "type",
+              "source",
+              "excerpt"
+            ],
+            "title": "EvidenceItem",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/EvidenceItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "EvidenceList",
+        "type": "object"
+      }
+    }
+  }
+}
