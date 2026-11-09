@@ -210,6 +210,11 @@ def test_bid_jobs_have_evidence_and_a_fair_price(data: Path) -> None:
             assert 0 < band["min"] < band["max"]
 
 
+def test_perfect_retrieval_can_score_close_to_full_recall(data: Path) -> None:
+    sizes = [len(row["relevant_evidence"]) for row in dev_gold(data) if row["relevant_evidence"]]
+    assert sum(min(5, size) / size for size in sizes) / len(sizes) > 0.8
+
+
 def test_injection_labels_match_the_text(data: Path) -> None:
     jobs = jobs_by_id(data)
     for row in dev_gold(data):
