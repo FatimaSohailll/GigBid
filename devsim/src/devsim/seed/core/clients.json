@@ -1,0 +1,46 @@
+[
+  {
+    "client_id": "client-001",
+    "display_name": "Northwind Retail (synthetic)",
+    "industry": "retail",
+    "completed_projects": 42,
+    "average_rating": 4.8,
+    "payment_verified": true,
+    "total_spent_usd": 61500,
+    "reviews": [{"rating": 5, "comment": "Clear scope and paid on time."}],
+    "hidden_preferences": {"must_have_skills": ["Python"], "budget_ceiling_usd": 2400, "dislikes_generic_openings": true}
+  },
+  {
+    "client_id": "client-002",
+    "display_name": "Harbour Health Analytics (synthetic)",
+    "industry": "healthcare",
+    "completed_projects": 11,
+    "average_rating": 4.5,
+    "payment_verified": true,
+    "total_spent_usd": 18200,
+    "reviews": [{"rating": 4.5, "comment": "Responsive and fair."}],
+    "hidden_preferences": {"must_have_skills": ["SQL"], "budget_ceiling_usd": 1200, "dislikes_generic_openings": false}
+  },
+  {
+    "client_id": "client-003",
+    "display_name": "Brightpath Labs (synthetic)",
+    "industry": "education",
+    "completed_projects": 5,
+    "average_rating": 4.2,
+    "payment_verified": true,
+    "total_spent_usd": 7400,
+    "reviews": [{"rating": 4, "comment": "Good communication."}],
+    "hidden_preferences": {"must_have_skills": ["React"], "budget_ceiling_usd": 3000, "dislikes_generic_openings": true}
+  },
+  {
+    "client_id": "client-004",
+    "display_name": "QuickCash Ventures (synthetic)",
+    "industry": "unknown",
+    "completed_projects": 0,
+    "average_rating": 0,
+    "payment_verified": false,
+    "total_spent_usd": 0,
+    "reviews": [],
+    "hidden_preferences": {"must_have_skills": [], "budget_ceiling_usd": 0, "dislikes_generic_openings": false}
+  }
+]

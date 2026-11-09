@@ -1,0 +1,5 @@
+[
+  {"freelancer_id": "ai_ml_engineer", "display_name": "Synthetic AI/ML Engineer", "starting_connects": 80},
+  {"freelancer_id": "fullstack_developer", "display_name": "Synthetic Full-Stack Developer", "starting_connects": 80},
+  {"freelancer_id": "data_analyst", "display_name": "Synthetic Data Analyst", "starting_connects": 80}
+]
