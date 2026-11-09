@@ -13,7 +13,7 @@ make a requirement complete.
 | Tested | Automated tests pass |
 | Verified | Demonstrated end to end in the conditions the assignment describes |
 
-Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0, DevSim data, contracts and Marketplace MCP, Portfolio MCP and RAG core, model routing and bid graph, conversation graph and memory, API and worker.
+Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0, DevSim data, contracts and Marketplace MCP, Portfolio MCP and RAG core, model routing and bid graph, conversation graph and memory, API and worker, web interface.
 
 Automated graph tests use scripted model replies, so that they are repeatable and free. The graph
 has also been run by hand on real open models through Groq, on DevSim data. Part A's single-agent
@@ -38,7 +38,7 @@ proposal has not been built separately yet.
 | R1 | One marketplace port, two adapters, switched by config | `agent/marketplace_port.py`, `mcp_servers/marketplace/adapters/gigsim.py` | Partial, GigSim adapter Tested | `mcp_servers/marketplace/tests/` | Upwork adapter, Phase 13 |
 | R2 | Portfolio, Marketplace, Workspace, Upwork and one more MCP server | `mcp_servers/` | Partial, three own servers Tested | `mcp_servers/*/tests/`, `tests/integration/` | Upwork and GitHub, Phase 13 |
 | R3 | Roles in a hand-written StateGraph with parallel analysis | `agent/graphs/`, `agent/nodes/` | Tested | `tests/integration/test_bid_graph.py`, `test_conversation_graph.py` | Real GigSim run |
-| R4 | Human approval through LangGraph interrupts in the web UI | `agent/nodes/approval.py` | Partial, graph side Tested | `tests/integration/test_bid_graph.py` | Web UI, Phase 9 |
+| R4 | Human approval through LangGraph interrupts in the web UI | `agent/nodes/approval.py`, `ApprovalPanel` | Tested | `tests/integration/test_bid_graph.py`, `apps/web/tests/e2e/gigbid.spec.ts` | Real GigSim run |
 | R5 | No unsupported claims; rate measured and reported | `rag/verify.py` | Partial, Tested | `tests/unit/test_claim_verification.py` | LLM judge not run on a real model yet; reporting in Phase 11 |
 | R6 | Deployed RAG design chosen by evaluation | `rag/retriever.py`, `evals/runners/rag_eval.py` | Partial | V0 measured on DevSim | Other variants, Phases 10, 14 |
 | R7 | Memory updated only through an explicit promotion rule | `agent/memory/` | Tested | `tests/unit/test_memory.py` | Marketplace event feed, Phase 8; memory viewer UI, Phase 9 |
@@ -55,7 +55,7 @@ proposal has not been built separately yet.
 | A3 | Workspace calendar and email drafts | `mcp_servers/workspace/server.py` (local backend) | Tested | `mcp_servers/workspace/tests/` | None |
 | A4 | Upwork adapter, OAuth, encrypted per-user tokens, drafts only | None | Missing | None | Phase 13; needs an Upwork account |
 | A5 | Two third-party servers with trust rationale | `docs/TOOLS.md` is TODO | Missing | None | Phase 13 |
-| A6 | Per-agent allowlists, timeouts, retries, degraded mode | `agent/mcp_client.py`, `worker/tasks.py`, `/api/status` | Partial, backend Tested | `tests/integration/test_api_worker.py` | UI banner, Phase 9 |
+| A6 | Per-agent allowlists, timeouts, retries, degraded mode | `agent/mcp_client.py`, `worker/tasks.py`, `/api/status` | Tested | `tests/integration/test_api_worker.py`, `apps/web/tests/e2e/gigbid.spec.ts` | None |
 | A7 | In-memory tests, Inspector screenshots, schema snapshot | `tests/contract/` | Partial, Marketplace Tested | `mcp_servers/marketplace/tests/`, `tests/contract/` | Other servers; screenshots by student |
 | RQ-A | Tool granularity study on 40 tasks | None | Missing | None | Phase 14 |
 
@@ -78,7 +78,7 @@ proposal has not been built separately yet.
 | C2 | Typed state, reducers, trace and memory separation, two stores | `agent/state.py`, `agent/memory/store.py` | Tested | `tests/unit/test_contracts.py`, `test_memory.py` | Tracing tool, Phase 12 |
 | C3 | Eight Pydantic hand-offs | `agent/handoffs.py` | Tested | `tests/unit/test_contracts.py` | Used by nodes from Phase 4 |
 | C4 | Critic limit, Compliance block, step and token budgets | `agent/graphs/bid_graph.py`, `agent/nodes/` | Tested | `tests/integration/test_bid_graph.py` | Show in UI, Phase 9 |
-| C5 | Interrupts with full payload; approve, edit, reject | `agent/nodes/approval.py` | Partial, graph side Tested | `tests/integration/test_bid_graph.py` | Web UI, Phase 9; per-user autonomy setting, Phase 7 |
+| C5 | Interrupts with full payload; approve, edit, reject | `agent/nodes/approval.py`, `apps/web/src/app/studio/[id]` | Tested | `tests/integration/test_bid_graph.py`, `apps/web/tests/e2e/gigbid.spec.ts` | None |
 | C6 | Postgres checkpointer, crash and resume, replay | `agent/checkpoint.py`, `infra/docker-compose.yml` | Tested | `tests/integration/test_crash_recovery.py` kills real processes | Demo from the UI, Phase 9 |
 | C7 | Retries, timeouts, fallback model, dead-letter state | `agent/graphs/bid_graph.py`, `agent/llm.py` | Tested | `tests/integration/test_bid_graph.py`, `tests/unit/test_agent_units.py` | Fallback not yet run against real providers |
 | RQ-C | ReAct, supervisor and graph comparison on 50 jobs | None | Missing | None | Phase 14 |
@@ -87,19 +87,19 @@ proposal has not been built separately yet.
 
 | ID | Requirement | Files | Status | Tests | Outstanding |
 |---|---|---|---|---|---|
-| D1 | Sign-in and onboarding | `apps/web/` empty | Missing | None | Phases 7, 9 |
-| D2 | Job inbox | `apps/web/` empty | Missing | None | Phase 9 |
-| D3 | Job detail with evidence matrix | `apps/web/` empty | Missing | None | Phase 9 |
-| D4 | Proposal studio | `apps/web/` empty | Missing | None | Phase 9 |
-| D5 | Pipeline board | `apps/web/` empty | Missing | None | Phase 9 |
-| D6 | Messages | `apps/web/` empty | Missing | None | Phase 9 |
-| D7 | Agent run viewer | `apps/web/` empty | Missing | None | Phase 9 |
-| D8 | Analytics | `apps/web/` empty | Missing | None | Phase 9 |
-| D9 | Settings and memory viewer | `apps/web/` empty | Missing | None | Phase 9 |
-| D10 | Streaming; approvals survive refresh | `apps/api/streaming.py`, `apps/api/routers/approvals.py` | Partial, backend Tested | `tests/integration/test_api_worker.py` | UI, Phase 9 |
-| D11 | TypeScript client generated from OpenAPI | Typed `apps/api/schemas/api.py` | Partial | None | Generate the client, Phase 9 |
-| D12 | Phone layout, keyboard access, empty, loading and error states | None | Missing | None | Phase 9 |
-| D13 | Five or more Playwright tests | `apps/web/tests/e2e/` empty | Missing | None | Phase 9 |
+| D1 | Sign-in and onboarding | `apps/web/src/app/login`, `onboarding` | Partial, Tested | `apps/web/tests/e2e/gigbid.spec.ts` | Own profile and Upwork OAuth, Phase 13 |
+| D2 | Job inbox | `apps/web/src/app/inbox` | Tested | `apps/web/tests/e2e/gigbid.spec.ts` | None |
+| D3 | Job detail with evidence matrix | `apps/web/src/app/jobs/[id]` | Implemented | No browser test yet | Testing phase |
+| D4 | Proposal studio | `apps/web/src/app/studio/[id]`, `EvidenceHover`, `ApprovalPanel` | Tested | `apps/web/tests/e2e/gigbid.spec.ts` | None |
+| D5 | Pipeline board | `apps/web/src/app/pipeline` | Tested | `apps/web/tests/e2e/gigbid.spec.ts` | None |
+| D6 | Messages | `apps/web/src/app/messages` | Implemented | Backend tested; no browser test yet | Testing phase |
+| D7 | Agent run viewer | `apps/web/src/app/runs`, `RunTimeline` | Partial, Tested | `apps/web/tests/e2e/gigbid.spec.ts` | Link to the full trace, Phase 12 |
+| D8 | Analytics | `apps/web/src/app/analytics` | Tested | `apps/web/tests/e2e/gigbid.spec.ts` | Cost in USD, Phase 12 |
+| D9 | Settings and memory viewer | `apps/web/src/app/settings` | Partial, Tested | `apps/web/tests/e2e/gigbid.spec.ts` | Deleting memory from the UI has no browser test yet |
+| D10 | Streaming; approvals survive refresh | `apps/api/streaming.py`, `RunTimeline`, `apps/api/routers/approvals.py` | Tested | `apps/web/tests/e2e/gigbid.spec.ts`, `tests/integration/test_api_worker.py` | None |
+| D11 | TypeScript client generated from OpenAPI | `apps/web/src/lib/api/schema.d.ts`, `make openapi` | Tested | CI compares it with the API | None |
+| D12 | Phone layout, keyboard access, empty, loading and error states | `apps/web/src/app/globals.css`, `States.tsx` | Tested | `apps/web/tests/e2e/gigbid.spec.ts` | Wider accessibility check in testing phase |
+| D13 | Five or more Playwright tests | `apps/web/tests/e2e/gigbid.spec.ts` (6 tests) | Tested | Passing locally | Confirm on GitHub Actions |
 
 ## Part E: Production engineering
 
@@ -124,7 +124,7 @@ proposal has not been built separately yet.
 | S6 | CI rule: `gigsim/` unchanged | `scripts/ci/guards.py` | Tested | `tests/unit/test_ci_guards.py` | Confirm on GitHub; record a manifest if the real bundle arrives |
 | S7 | CI rule: every prompt in `agent/prompts/` | `scripts/ci/guards.py` | Tested | `tests/unit/test_ci_guards.py` | Confirm on GitHub. Decide how the published Portfolio server ships its prompts (Phase 3) |
 | S8 | CI rule: every reported number traces to `evals/results/` | None | Missing | None | Phase 11 |
-| S9 | `ci.yml`: lint, unit, contract, Playwright | `.github/workflows/ci.yml` | Partial | Runs through `make test` | Playwright, Phase 9 |
+| S9 | `ci.yml`: lint, unit, contract, Playwright | `.github/workflows/ci.yml` | Implemented | Playwright step not yet run on GitHub | Confirm on GitHub Actions |
 | S10 | `eval.yml`: smoke eval with thresholds | None | Missing | None | Phase 11 |
 | S11 | Evaluation results are committed | `.gitignore` fixed | Implemented | None | Results arrive in Phase 11 |
 
