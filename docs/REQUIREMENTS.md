@@ -13,7 +13,7 @@ make a requirement complete.
 | Tested | Automated tests pass |
 | Verified | Demonstrated end to end in the conditions the assignment describes |
 
-Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0.
+Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0, DevSim data.
 
 ## Instructor resources
 
@@ -21,10 +21,10 @@ Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace A
 |---|---|---|---|---|---|
 | RES-1 | GigSim REST marketplace | `gigsim/` absent; `devsim/` | Stand-in, Tested | `devsim/tests/` | Real bundle unavailable. Hidden test run needs the real GigSim |
 | RES-2 | Simulated clients with hidden preferences | `devsim/` has preferences only | Missing | None | DevSim step: LLM reply, interview and hire decisions |
-| RES-3 | Three persona corpora | `data/personas/` absent | Missing | None | DevSim step, stored apart from `data/personas/` |
-| RES-4 | Policy pack | `data/policy_pack/marketplace_policy.md` | Stub | None | Kit copy is illustrative. DevSim step |
-| RES-5 | About 1,500 historical jobs and live stream | 7 seed jobs in `devsim/` | Partial | `devsim/tests/` | DevSim step |
-| RES-6 | Dev evaluation set with gold labels | `evals/datasets/` empty | Missing | None | DevSim step; results must be labelled DevSim |
+| RES-3 | Three persona corpora | `devsim/src/devsim/datagen/` (`corpus.py`, `catalog.yaml`) | Stand-in, Tested | `devsim/tests/test_datagen.py` | Real personas unavailable |
+| RES-4 | Policy pack | `devsim/src/devsim/datagen/policy_pack.md` | Stand-in, Tested | `devsim/tests/test_datagen.py` | Real pack unavailable; kit copy is illustrative |
+| RES-5 | About 1,500 historical jobs and live stream | `devsim/src/devsim/datagen/jobs.py`; `/v1/market/price-stats` | Stand-in, Tested | `devsim/tests/test_datagen.py` | Templated text is more regular than real posts |
+| RES-6 | Dev evaluation set with gold labels | `devsim/src/devsim/datagen/jobs.py`, output in `data/processed/devsim/dev_set/` | Stand-in, Tested | `devsim/tests/test_datagen.py` | All results must be labelled DevSim |
 | RES-7 | 2 November change request | None | Missing | None | Only a rehearsal can be self-written |
 
 ## System requirements
@@ -114,7 +114,7 @@ Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace A
 |---|---|---|---|---|---|
 | S1 | Required directory layout | All required folders except `gigsim/`, `data/personas/` | Partial | None | Required files arrive in their phases |
 | S2 | Pinned Python dependencies | `pyproject.toml`, `uv.lock` | Tested | Clean-checkout install | None |
-| S3 | `make dev`, `test`, `eval`, `seed`, `demo`, `lint` | `Makefile` | Partial | `test` and `lint` run | `dev`, `eval`, `seed`, `demo` fail on purpose until built |
+| S3 | `make dev`, `test`, `eval`, `seed`, `demo`, `lint` | `Makefile` | Partial | `test`, `lint`, `seed` run | `dev`, `eval`, `demo` fail on purpose until built |
 | S4 | `.env.example` lists every variable, no real values | `.env.example` | Partial | `tests/unit/test_ci_guards.py` | Extend as services are added |
 | S5 | CI rule: no secrets | `scripts/ci/guards.py` | Tested | `tests/unit/test_ci_guards.py` | Confirm on a GitHub Actions run |
 | S6 | CI rule: `gigsim/` unchanged | `scripts/ci/guards.py` | Tested | `tests/unit/test_ci_guards.py` | Confirm on GitHub; record a manifest if the real bundle arrives |

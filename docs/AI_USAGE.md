@@ -7,7 +7,7 @@ The student remains accountable for every line in this repository.
 | Tool | Model | Files or tasks | Reviewed and run by the student |
 |---|---|---|---|
 | Claude Code (desktop app) | Claude Opus 5.5 | Assignment assessment and roadmap | Student to confirm |
-| Claude Code (desktop app) | Claude Opus 5.5 | `devsim/`: stand-in marketplace simulator and tests | Student to confirm |
+| Claude Code (desktop app) | Claude Opus 5.5 | `devsim/`: stand-in marketplace simulator, synthetic data generator, personas, policy pack and tests | Student to confirm |
 | Claude Code (desktop app) | Claude Opus 5.5 | Step 0: `pyproject.toml`, `uv.lock`, `Makefile`, `.gitignore`, `.env.example`, `.github/workflows/ci.yml`, `scripts/ci/guards.py`, `tests/unit/test_ci_guards.py`, `docs/REQUIREMENTS.md` | Pending |
 
 ## One thing the AI got wrong that I caught
