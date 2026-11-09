@@ -44,5 +44,14 @@ async def event_stream(
                 raw = fields.get(b"data") or fields.get("data")
                 data = raw.decode() if isinstance(raw, bytes) else raw
                 yield f"id: {position}\ndata: {data}\n\n"
-                if json.loads(data).get("type") == "run_end":
+                if json.loads(data).get("type") == "run_end" and await _is_latest(
+                    redis, key, position
+                ):
                     return
+
+
+async def _is_latest(redis: Redis, key: str, position: str) -> bool:
+    """A thread can run several times, so only the newest run_end finishes the stream."""
+    newest = await redis.xrevrange(key, count=1)
+    entry_id = newest[0][0]
+    return (entry_id.decode() if isinstance(entry_id, bytes) else entry_id) == position

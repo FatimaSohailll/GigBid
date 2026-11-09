@@ -97,9 +97,20 @@ def _reply(_: str, schema: type[BaseModel]) -> BaseModel:
     return schema.model_validate({"body": "Thanks for asking. Monday works well for a start."})
 
 
+def _rewrite(_: str, schema: type[BaseModel]) -> BaseModel:
+    return schema.model_validate(
+        {"text": "I tuned a gradient boosted model with scikit-learn for a telecom operator."}
+    )
+
+
 class ScriptedLlm:
     def __init__(self, tokens_per_call: int = 10) -> None:
-        self.answers = {**default_answers(), "intent": _intent, "client_liaison": _reply}
+        self.answers = {
+            **default_answers(),
+            "intent": _intent,
+            "client_liaison": _reply,
+            "rewrite": _rewrite,
+        }
         self.calls: Counter[str] = Counter()
         self.seen: defaultdict[str, list[str]] = defaultdict(list)
         self.tokens_per_call = tokens_per_call
