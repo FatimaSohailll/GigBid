@@ -23,6 +23,7 @@ agent_tools:
   writer: [search_evidence, get_case_study]
   critic: [search_evidence, get_case_study]
   compliance: []
+  sync: [list_events, get_proposal]
   client_liaison: [list_conversations, list_messages, get_job, free_slots]
   submission: [create_proposal_draft, submit_proposal, send_message, get_connects_balance, create_interview_hold, create_email_draft]
 
@@ -107,6 +108,14 @@ memory:
   style_min_consistency: 0.6 # share of drafts where the edit could apply and was made
   outcome_min_samples: 5
   outcome_min_reply_rate: 0.4
+
+worker:
+  service_retry_seconds: 15 # how soon queued work tries again after an outage
+  service_max_retries: 200
+  max_jobs_per_scout: 10
+  min_search_interval_minutes:
+    gigsim: 5
+    upwork_live: 240 # conservative; see docs/RUNBOOK.md
 
 workspace:
   work_start_hour: 9

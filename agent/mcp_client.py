@@ -74,18 +74,22 @@ class ResilienceInterceptor:
         raise AssertionError("unreachable")
 
 
-def connections_from_env(environ: Mapping[str, str] | None = None) -> dict[str, Any]:
-    """Build one connection for each MCP server that has a URL configured."""
+def connections_from_env(
+    environ: Mapping[str, str] | None = None,
+    bearer: str | None = None,
+) -> dict[str, Any]:
+    """Build one connection per configured MCP server, optionally as one specific user."""
     env = os.environ if environ is None else environ
     connections: dict[str, Any] = {}
     for server in ("marketplace", "portfolio", "workspace"):
         prefix = f"MCP_{server.upper()}"
         url = env.get(f"{prefix}_URL")
         if url:
+            token = bearer or env.get(f"{prefix}_BEARER_TOKEN", "")
             connection: StreamableHttpConnection = {
                 "transport": "streamable_http",
                 "url": url,
-                "headers": {"Authorization": f"Bearer {env.get(f'{prefix}_BEARER_TOKEN', '')}"},
+                "headers": {"Authorization": f"Bearer {token}"},
             }
             connections[server] = connection
     return connections

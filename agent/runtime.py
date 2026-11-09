@@ -27,9 +27,13 @@ class AgentRuntime:
         return load_prompt(node, self.config.prompt_versions.get(node))
 
 
-def default_runtime(store: BaseStore, config: AppConfig | None = None) -> AgentRuntime:
+def default_runtime(
+    store: BaseStore,
+    config: AppConfig | None = None,
+    bearer: str | None = None,
+) -> AgentRuntime:
     """The production wiring: configured models and MCP servers from the environment."""
     app = config or get_config()
-    toolbox = Toolbox(connections_from_env(), app, handle_tool_errors=False)
+    toolbox = Toolbox(connections_from_env(bearer=bearer), app, handle_tool_errors=False)
     memory = LongTermMemory(store, app.memory)
     return AgentRuntime(app, ModelRouter(app), ToolGateway(toolbox), memory)

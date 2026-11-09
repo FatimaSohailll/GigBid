@@ -13,7 +13,7 @@ make a requirement complete.
 | Tested | Automated tests pass |
 | Verified | Demonstrated end to end in the conditions the assignment describes |
 
-Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0, DevSim data, contracts and Marketplace MCP, Portfolio MCP and RAG core, model routing and bid graph, conversation graph and memory.
+Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0, DevSim data, contracts and Marketplace MCP, Portfolio MCP and RAG core, model routing and bid graph, conversation graph and memory, API and worker.
 
 Automated graph tests use scripted model replies, so that they are repeatable and free. The graph
 has also been run by hand on real open models through Groq, on DevSim data. Part A's single-agent
@@ -55,7 +55,7 @@ proposal has not been built separately yet.
 | A3 | Workspace calendar and email drafts | `mcp_servers/workspace/server.py` (local backend) | Tested | `mcp_servers/workspace/tests/` | None |
 | A4 | Upwork adapter, OAuth, encrypted per-user tokens, drafts only | None | Missing | None | Phase 13; needs an Upwork account |
 | A5 | Two third-party servers with trust rationale | `docs/TOOLS.md` is TODO | Missing | None | Phase 13 |
-| A6 | Per-agent allowlists, timeouts, retries, degraded mode | `agent/mcp_client.py`, `agent/config.yaml` | Partial, client side Tested | `tests/integration/test_marketplace_http.py` | Queue and UI banner, Phases 8, 9 |
+| A6 | Per-agent allowlists, timeouts, retries, degraded mode | `agent/mcp_client.py`, `worker/tasks.py`, `/api/status` | Partial, backend Tested | `tests/integration/test_api_worker.py` | UI banner, Phase 9 |
 | A7 | In-memory tests, Inspector screenshots, schema snapshot | `tests/contract/` | Partial, Marketplace Tested | `mcp_servers/marketplace/tests/`, `tests/contract/` | Other servers; screenshots by student |
 | RQ-A | Tool granularity study on 40 tasks | None | Missing | None | Phase 14 |
 
@@ -96,8 +96,8 @@ proposal has not been built separately yet.
 | D7 | Agent run viewer | `apps/web/` empty | Missing | None | Phase 9 |
 | D8 | Analytics | `apps/web/` empty | Missing | None | Phase 9 |
 | D9 | Settings and memory viewer | `apps/web/` empty | Missing | None | Phase 9 |
-| D10 | Streaming; approvals survive refresh | None | Missing | None | Phases 7, 9 |
-| D11 | TypeScript client generated from OpenAPI | None | Missing | None | Phases 7, 9 |
+| D10 | Streaming; approvals survive refresh | `apps/api/streaming.py`, `apps/api/routers/approvals.py` | Partial, backend Tested | `tests/integration/test_api_worker.py` | UI, Phase 9 |
+| D11 | TypeScript client generated from OpenAPI | Typed `apps/api/schemas/api.py` | Partial | None | Generate the client, Phase 9 |
 | D12 | Phone layout, keyboard access, empty, loading and error states | None | Missing | None | Phase 9 |
 | D13 | Five or more Playwright tests | `apps/web/tests/e2e/` empty | Missing | None | Phase 9 |
 
@@ -105,9 +105,9 @@ proposal has not been built separately yet.
 
 | ID | Requirement | Files | Status | Tests | Outstanding |
 |---|---|---|---|---|---|
-| E1 | Redis worker, schedules, idempotent jobs | `worker/` is TODO | Missing | None | Phase 8 |
+| E1 | Redis worker, schedules, idempotent jobs | `worker/`, `docs/RUNBOOK.md` | Tested | `tests/integration/test_api_worker.py` | Cron schedule not run live; real worker kill in testing phase |
 | E2 | `make eval`; CI runs tests and a 30-job gated smoke eval | `Makefile` fails clearly; `eval.yml` absent | Missing | None | Phases 9, 11 |
-| E3 | One trace id across UI, API, graph, MCP and audit log | `agent/graphs/bid_graph.py`, `agent/mcp_client.py`, Marketplace server | Partial, graph to audit log Tested | `tests/integration/test_bid_graph.py` | UI, API and tracing tool, Phases 7, 12 |
+| E3 | One trace id across UI, API, graph, MCP and audit log | `apps/api/main.py`, `agent/graphs/common.py`, `agent/mcp_client.py`, Marketplace server | Partial, API to audit log implemented | `tests/integration/test_bid_graph.py` | UI and tracing tool, Phases 9, 12 |
 | E4 | Delimited untrusted data, attack rate, masking, encrypted tokens, tenancy | None | Missing | None | Phases 7, 12, 13 |
 | E5 | Declared and measured budgets; one optimisation | None | Missing | None | Phases 12, 14 |
 | E6 | Full Docker stack and stable public deployment | `infra/` empty | Missing | None | Phase 16 |

@@ -44,6 +44,23 @@ def _read_json_items(path: Path, id_field: str) -> dict[str, dict[str, Any]]:
     return {row[id_field]: row for row in rows}
 
 
+def load_upload(path: Path, upload_id: str, title: str) -> PortfolioDocument:
+    """Read one file the user added through the web interface."""
+    if path.suffix.lower() == ".pdf":
+        text = read_pdf_text(path)
+    else:
+        front_matter, text = split_front_matter(path.read_text(encoding="utf-8"))
+        title = str(front_matter.get("title", title))
+    return PortfolioDocument(
+        item_id=f"case:upload:{upload_id}",
+        type="case_study",
+        title=title,
+        text=text,
+        source=path.name,
+        project=upload_id,
+    )
+
+
 def load_portfolio(root: Path) -> list[PortfolioDocument]:
     """Read every item listed in a persona's index.json."""
     index = json.loads((root / "index.json").read_text(encoding="utf-8"))
