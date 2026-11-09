@@ -42,7 +42,8 @@ def _after_decision(state: BidState) -> str:
 
 
 def _after_pricing(state: BidState) -> str:
-    return END if failed(state) or state.get("status") is ThreadStatus.SKIPPED else "writer"
+    # Compare by value: a status restored from Postgres can come back as a plain string.
+    return END if failed(state) or state.get("status") == ThreadStatus.SKIPPED else "writer"
 
 
 def _after_critic(max_revisions: int) -> Callable[[BidState], str]:

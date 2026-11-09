@@ -154,6 +154,13 @@ class MemoryConfig(_Strict):
     outcome_min_reply_rate: float = Field(gt=0, le=1)
 
 
+class WorkerConfig(_Strict):
+    service_retry_seconds: float = Field(gt=0)
+    service_max_retries: int = Field(ge=1)
+    max_jobs_per_scout: int = Field(ge=1)
+    min_search_interval_minutes: dict[str, int]
+
+
 class WorkspaceConfig(_Strict):
     work_start_hour: int = Field(ge=0, le=23)
     work_end_hour: int = Field(ge=1, le=24)
@@ -181,6 +188,7 @@ class AppConfig(_Strict):
     compliance: ComplianceConfig
     memory: MemoryConfig
     workspace: WorkspaceConfig
+    worker: WorkerConfig
     prompt_versions: dict[str, int] = Field(default_factory=dict)
     budgets: Budgets
     thresholds: Thresholds

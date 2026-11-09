@@ -1,7 +1,10 @@
-.PHONY: install dev test eval seed ingest db graphs demo lint format guards api
+.PHONY: install dev test eval seed ingest db graphs demo lint format guards api worker
 
 db:
-	docker compose -f infra/docker-compose.yml up -d --wait postgres
+	docker compose -f infra/docker-compose.yml up -d --wait postgres redis
+
+worker:
+	uv run --locked arq worker.main.WorkerSettings
 
 graphs:
 	uv run --locked python -m scripts.render_graphs
