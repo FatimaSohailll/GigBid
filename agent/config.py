@@ -100,11 +100,34 @@ class Thresholds(_Strict):
     maximum_risk_score: float = Field(ge=0, le=1)
 
 
+class RagConfig(_Strict):
+    variant: str
+    collection: str
+    chunk_size_words: int = Field(gt=0)
+    chunk_overlap_words: int = Field(ge=0)
+    candidate_multiplier: int = Field(ge=1)
+    embedding_query_prefix: str = ""
+    embedding_document_prefix: str = ""
+
+    @model_validator(mode="after")
+    def _overlap_smaller_than_chunk(self) -> Self:
+        if self.chunk_overlap_words >= self.chunk_size_words:
+            raise ValueError("chunk_overlap_words must be smaller than chunk_size_words")
+        return self
+
+
+class VerificationConfig(_Strict):
+    supported_coverage: float = Field(gt=0, le=1)
+    partly_supported_coverage: float = Field(gt=0, le=1)
+
+
 class AppConfig(_Strict):
     marketplace: MarketplaceConfig
     mcp_client: McpClientConfig
     agent_tools: dict[str, list[str]]
     models: ModelsConfig
+    rag: RagConfig
+    verification: VerificationConfig
     prompt_versions: dict[str, int] = Field(default_factory=dict)
     budgets: Budgets
     thresholds: Thresholds
