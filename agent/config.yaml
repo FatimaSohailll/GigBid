@@ -1,20 +1,75 @@
+# Environment overrides: MODEL_PROFILE, MARKETPLACE_MODE.
 marketplace:
-  mode: gigsim
-  max_requests_per_minute: 20
+  mode: gigsim # gigsim or upwork_live
+  max_requests_per_minute: 20 # per user; deliberately below the simulator's limit
+  request_timeout_seconds: 10
+  max_retries: 3
+  backoff_base_seconds: 0.5
+  max_retry_wait_seconds: 10
+  max_rate_limit_wait_seconds: 30
+
+mcp_client:
+  tool_timeout_seconds: 30
+  max_retries: 2
+  backoff_base_seconds: 0.5
+
+# Tools each agent may use, filtered by exact name. "submission" is the post-approval step.
+agent_tools:
+  scout: [search_jobs]
+  analyst: []
+  risk_assessor: [get_client_history]
+  fit_matcher: [search_evidence, get_case_study, list_skills]
+  pricing: [get_price_stats, get_client_history, get_connects_balance]
+  writer: [search_evidence, get_case_study]
+  critic: [search_evidence, get_case_study]
+  compliance: []
+  client_liaison: [list_conversations, list_messages, get_job, free_slots, create_interview_hold, create_email_draft]
+  submission: [create_proposal_draft, submit_proposal, send_message, get_connects_balance]
 
 models:
-  profile: open
-  nodes:
-    scout: qwen3-4b
-    analyst: qwen3-4b
-    risk_assessor: qwen3-4b
-    fit_matcher: qwen3-4b
-    pricing: qwen3-4b
-    writer: configure-your-model
-    critic: configure-your-model
-    client_liaison: configure-your-model
+  active_profile: open
   embeddings: nomic-embed-text
   reranker: bge-reranker-v2-m3
+  profiles:
+    # Open-weight models only. Choices are a starting point until measured on the dev set.
+    open:
+      tiers:
+        small: {provider: groq, model: openai/gpt-oss-20b}
+        small_fallback: {provider: ollama, model: "qwen3:4b"}
+        strong: {provider: groq, model: openai/gpt-oss-120b}
+      nodes:
+        scout: {tier: small, fallback: small_fallback}
+        analyst: {tier: small, fallback: small_fallback}
+        risk_assessor: {tier: small, fallback: small_fallback}
+        fit_matcher: {tier: small, fallback: small_fallback}
+        pricing: {tier: small, fallback: small_fallback}
+        verifier: {tier: small, fallback: small_fallback}
+        compliance: {tier: small, fallback: small_fallback}
+        intent: {tier: small, fallback: small_fallback}
+        writer: {tier: strong}
+        critic: {tier: strong}
+        client_liaison: {tier: strong}
+    # Optional. Used only where it beats the open profile enough to justify its cost.
+    paid:
+      tiers:
+        small: {provider: anthropic, model: claude-haiku-5-5}
+        small_fallback: {provider: groq, model: openai/gpt-oss-20b}
+        strong: {provider: anthropic, model: claude-opus-5-5}
+      nodes:
+        scout: {tier: small, fallback: small_fallback}
+        analyst: {tier: small, fallback: small_fallback}
+        risk_assessor: {tier: small, fallback: small_fallback}
+        fit_matcher: {tier: small, fallback: small_fallback}
+        pricing: {tier: small, fallback: small_fallback}
+        verifier: {tier: small, fallback: small_fallback}
+        compliance: {tier: small, fallback: small_fallback}
+        intent: {tier: small, fallback: small_fallback}
+        writer: {tier: strong}
+        critic: {tier: strong}
+        client_liaison: {tier: strong}
+
+# Pinned prompt version per node. A node without a pin uses its highest version.
+prompt_versions: {}
 
 budgets:
   max_graph_steps: 30
@@ -23,4 +78,5 @@ budgets:
 
 thresholds:
   minimum_fit_score: 0.60
+  watch_fit_score: 0.45
   maximum_risk_score: 0.70
