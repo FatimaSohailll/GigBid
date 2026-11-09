@@ -50,6 +50,7 @@ class McpClientConfig(_Strict):
 class ModelSpec(_Strict):
     provider: str
     model: str
+    structured_method: str | None = None
 
 
 class NodeRoute(_Strict):
@@ -119,6 +120,36 @@ class RagConfig(_Strict):
 class VerificationConfig(_Strict):
     supported_coverage: float = Field(gt=0, le=1)
     partly_supported_coverage: float = Field(gt=0, le=1)
+    judge: Literal["llm", "lexical"] = "llm"
+    max_evidence_per_claim: int = Field(default=3, ge=1)
+
+
+class LlmConfig(_Strict):
+    max_rate_limit_waits: int = Field(ge=0)
+    max_rate_limit_wait_seconds: float = Field(ge=0)
+
+
+class GraphConfig(_Strict):
+    node_timeout_seconds: float = Field(gt=0)
+    node_max_attempts: int = Field(ge=1)
+    node_backoff_seconds: float = Field(ge=0)
+    fit_evidence_per_requirement: int = Field(ge=1)
+    duplicate_similarity: float = Field(gt=0, le=1)
+
+
+class WritingConfig(_Strict):
+    min_cover_letter_words: int = Field(gt=0)
+    max_cover_letter_words: int = Field(gt=0)
+
+
+class PricingConfig(_Strict):
+    connect_value_usd: float = Field(ge=0)
+    max_connects_share_of_bid: float = Field(gt=0, le=1)
+
+
+class ComplianceConfig(_Strict):
+    policy_path: Path
+    rule_ids: dict[Literal["contact", "payment", "guarantee", "credentials", "fabrication"], str]
 
 
 class AppConfig(_Strict):
@@ -128,6 +159,11 @@ class AppConfig(_Strict):
     models: ModelsConfig
     rag: RagConfig
     verification: VerificationConfig
+    llm: LlmConfig
+    graph: GraphConfig
+    writing: WritingConfig
+    pricing: PricingConfig
+    compliance: ComplianceConfig
     prompt_versions: dict[str, int] = Field(default_factory=dict)
     budgets: Budgets
     thresholds: Thresholds

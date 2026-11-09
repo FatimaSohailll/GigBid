@@ -86,10 +86,34 @@ def merge_evidence(
     return list(merged.values())
 
 
+_STICKY_STATUSES = {ThreadStatus.NEEDS_ATTENTION, ThreadStatus.DEAD_LETTER}
+
+
+def merge_status(current: ThreadStatus | None, update: ThreadStatus) -> ThreadStatus:
+    """Keep a failure visible even if a parallel branch reports normal progress."""
+    if current in _STICKY_STATUSES and update not in _STICKY_STATUSES:
+        return current
+    return update
+
+
+def keep_first(current: str | None, update: str | None) -> str | None:
+    return current or update
+
+
+class UserSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    floor_usd: float = Field(ge=0)
+    weekly_connects_budget: int = Field(ge=0)
+    connects_spent_this_week: int = Field(default=0, ge=0)
+
+
 class _ThreadState(TypedDict, total=False):
     user_id: str
     trace_id: str
-    status: ThreadStatus
+    settings: UserSettings
+    status: Annotated[ThreadStatus, merge_status]
+    attention_reason: Annotated[str | None, keep_first]
     errors: Annotated[list[NodeError], operator.add]
     approvals: Annotated[list[ApprovalRecord], operator.add]
     steps_used: Annotated[int, operator.add]
@@ -101,6 +125,8 @@ class BidState(_ThreadState, total=False):
 
     job_id: str
     job: dict[str, Any]
+    recent_jobs: list[dict[str, Any]]
+    duplicate_of: str | None
     job_spec: JobSpec
     risk_report: RiskReport
     fit_report: FitReport
@@ -108,9 +134,13 @@ class BidState(_ThreadState, total=False):
     decision: BidDecision
     price_quote: PriceQuote
     drafts: Annotated[list[ProposalDraft], operator.add]
+    verification_reports: Annotated[list[dict[str, Any]], operator.add]
+    needs_rewrite: bool
     critiques: Annotated[list[Critique], operator.add]
     compliance_verdicts: Annotated[list[ComplianceVerdict], operator.add]
     dry_run_preview: dict[str, Any]
+    style_edits: Annotated[list[dict[str, Any]], operator.add]
+    proposal_id: str
     outcomes: Annotated[list[OutcomeRecord], operator.add]
 
 

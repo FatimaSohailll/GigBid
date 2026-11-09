@@ -1,4 +1,10 @@
-.PHONY: install dev test eval seed ingest demo lint format guards api
+.PHONY: install dev test eval seed ingest db graphs demo lint format guards api
+
+db:
+	docker compose -f infra/docker-compose.yml up -d --wait postgres
+
+graphs:
+	uv run --locked python -m scripts.render_graphs
 
 install:
 	uv sync --locked

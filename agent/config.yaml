@@ -15,7 +15,7 @@ mcp_client:
 
 # Tools each agent may use, filtered by exact name. "submission" is the post-approval step.
 agent_tools:
-  scout: [search_jobs]
+  scout: [search_jobs, get_job]
   analyst: []
   risk_assessor: [get_client_history]
   fit_matcher: [search_evidence, get_case_study, list_skills]
@@ -54,7 +54,7 @@ models:
       tiers:
         small: {provider: anthropic, model: claude-haiku-5-5}
         small_fallback: {provider: groq, model: openai/gpt-oss-20b}
-        strong: {provider: anthropic, model: claude-opus-5-5}
+        strong: {provider: anthropic, model: claude-opus-5-5, structured_method: json_schema}
       nodes:
         scout: {tier: small, fallback: small_fallback}
         analyst: {tier: small, fallback: small_fallback}
@@ -80,6 +80,36 @@ rag:
 verification:
   supported_coverage: 0.75
   partly_supported_coverage: 0.4
+  judge: llm # llm or lexical
+  max_evidence_per_claim: 3
+
+llm:
+  max_rate_limit_waits: 4 # Groq's free tier allows only 8,000 tokens a minute on small models
+  max_rate_limit_wait_seconds: 30
+
+graph:
+  node_timeout_seconds: 240
+  node_max_attempts: 3
+  node_backoff_seconds: 0.5
+  fit_evidence_per_requirement: 3
+  duplicate_similarity: 0.8
+
+writing:
+  min_cover_letter_words: 40
+  max_cover_letter_words: 300
+
+pricing:
+  connect_value_usd: 0.15
+  max_connects_share_of_bid: 0.02
+
+compliance:
+  policy_path: devsim/src/devsim/datagen/policy_pack.md # stand-in until the real pack exists
+  rule_ids:
+    contact: POL-01
+    payment: POL-02
+    guarantee: POL-04
+    credentials: POL-10
+    fabrication: POL-03
 
 # Pinned prompt version per node. A node without a pin uses its highest version.
 prompt_versions: {}
@@ -87,7 +117,7 @@ prompt_versions: {}
 budgets:
   max_graph_steps: 30
   max_revisions: 2
-  max_tokens_per_job: 12000
+  max_tokens_per_job: 40000 # a real run with three drafts exceeded 12,000 before verification
 
 thresholds:
   minimum_fit_score: 0.60

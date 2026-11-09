@@ -6,11 +6,9 @@ the language model when one is configured and a lexical comparison otherwise.
 """
 
 import re
-from collections.abc import Collection, Iterable
+from collections.abc import Callable, Collection, Iterable
 from typing import Protocol
 
-from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, ConfigDict, Field
 
 from agent.config import VerificationConfig
@@ -49,9 +47,12 @@ _EXPERIENCE = re.compile(
 )
 _FORWARD_LOOKING = re.compile(
     r"^(i would|i'd|i will|i'll|i can start|i am available|i'm available|i look forward|"
-    r"happy to|looking forward|let's|please|thanks|thank you|hello|hi\b|dear|best regards)",
+    r"happy to|looking forward|let's|please|thanks|thank you|hello|hi\b|dear|best regards|"
+    r"you\b|your\b)",
     re.IGNORECASE,
 )
+_MIN_CLAIM_WORDS = 3
+_HYPHENS = re.compile(r"[-‐-―]")
 
 
 class ClaimJudgement(BaseModel):
@@ -107,7 +108,7 @@ def split_sentences(text: str) -> list[str]:
 def is_factual_claim(sentence: str, vocabulary: Collection[str] = ()) -> bool:
     """True for a sentence asserting experience or results, rather than plans or courtesy."""
     plain = _CITATION.sub("", sentence).strip()
-    if plain.endswith("?"):
+    if plain.endswith("?") or len(plain.split()) < _MIN_CLAIM_WORDS:
         return False
     lowered = plain.lower()
     names_skill = any(
@@ -118,13 +119,16 @@ def is_factual_claim(sentence: str, vocabulary: Collection[str] = ()) -> bool:
     return names_skill or bool(_EXPERIENCE.search(plain)) or bool(_numbers(plain))
 
 
-def _named_terms(sentence: str, vocabulary: Collection[str]) -> set[str]:
+def _named_terms(
+    sentence: str,
+    vocabulary: Collection[str],
+    trusted_terms: Collection[str] = (),
+) -> set[str]:
     """Specific names in a claim: mid-sentence capitalised words and known skills."""
-    words = sentence.split()
+    trusted = {word.lower() for term in trusted_terms for word in term.split()}
+    cleaned = (_HYPHENS.split(word)[0].strip(".,;:!?()\"'*") for word in sentence.split()[1:])
     named = {
-        word.strip(".,;:!?()\"'")
-        for word in words[1:]
-        if word[:1].isupper() and word.strip(".,;:!?()\"'").lower() not in _STOPWORDS
+        word for word in cleaned if word[:1].isupper() and word.lower() not in _STOPWORDS | trusted
     }
     lowered = sentence.lower()
     named |= {
@@ -139,16 +143,22 @@ def hard_check(
     claim: str,
     evidence: list[EvidenceItem],
     vocabulary: Collection[str] = (),
+    trusted_terms: Collection[str] = (),
+    all_evidence: list[EvidenceItem] | None = None,
 ) -> str | None:
-    """Return why a claim is unsupported, or None if it passes."""
+    """Return why a claim is unsupported, or None if it passes.
+
+    Figures must appear in the evidence the claim cites. Names may appear anywhere in the
+    retrieved evidence. Trusted terms are skills already shown by evidence, even if unnamed.
+    """
     corpus = " ".join(item.excerpt for item in evidence)
-    lowered = corpus.lower()
     missing_numbers = sorted(_numbers(claim) - _numbers(corpus))
     if missing_numbers:
         return f"No evidence states: {', '.join(missing_numbers)}."
+    lowered = " ".join(item.excerpt for item in all_evidence or evidence).lower()
     missing_names = sorted(
         name
-        for name in _named_terms(claim, vocabulary)
+        for name in _named_terms(claim, vocabulary, trusted_terms)
         if not re.search(rf"(?<!\w){re.escape(name.lower())}(?!\w)", lowered)
     )
     if missing_names:
@@ -196,22 +206,14 @@ def _delimited_data(claim: str, evidence_blocks: str) -> str:
 class LlmJudge:
     """Entailment by the configured language model. Evidence is passed as delimited data."""
 
-    def __init__(self, model: BaseChatModel, instructions: str) -> None:
-        self._model = model.with_structured_output(ClaimJudgement)
-        self._instructions = instructions
+    def __init__(self, ask: Callable[[str], ClaimJudgement]) -> None:
+        self._ask = ask
 
     def judge(self, claim: str, evidence: list[EvidenceItem]) -> ClaimJudgement:
         blocks = "\n".join(
             f'<evidence id="{item.evidence_id}">\n{item.excerpt}\n</evidence>' for item in evidence
         )
-        result = self._model.invoke(
-            [
-                SystemMessage(content=self._instructions),
-                HumanMessage(content=_delimited_data(claim, blocks)),
-            ]
-        )
-        if not isinstance(result, ClaimJudgement):
-            raise TypeError("The model did not return a claim judgement")
+        result = self._ask(_delimited_data(claim, blocks))
         known = {item.evidence_id for item in evidence}
         cited = [item for item in result.evidence_ids if item in known]
         if result.support is not ClaimSupport.UNSUPPORTED and not cited:
@@ -222,12 +224,26 @@ class LlmJudge:
         return result.model_copy(update={"evidence_ids": cited})
 
 
+def _closest_evidence(
+    claim: str,
+    evidence: list[EvidenceItem],
+    limit: int | None,
+) -> list[EvidenceItem]:
+    """Keep the items that overlap most with a claim, so each judge call stays small."""
+    if limit is None or len(evidence) <= limit:
+        return evidence
+    terms = _content_terms(claim)
+    return sorted(evidence, key=lambda item: -len(terms & _content_terms(item.excerpt)))[:limit]
+
+
 def check_claims(
     text: str,
     evidence: list[EvidenceItem],
     judge: ClaimJudge,
     vocabulary: Collection[str] = (),
     prefix: str = "c",
+    max_evidence: int | None = None,
+    trusted_terms: Collection[str] = (),
 ) -> list[tuple[str, ProposalClaim | None]]:
     """Return each sentence with its verified claim, or None for a non-claim sentence."""
     by_id = {item.evidence_id: item for item in evidence}
@@ -240,11 +256,11 @@ def check_claims(
         # A claim that cites evidence is checked against that evidence only.
         cited = [by_id[i] for i in _CITATION.findall(sentence) if i in by_id]
         pool = cited or evidence
-        failure = hard_check(plain, pool, vocabulary)
+        failure = hard_check(plain, pool, vocabulary, trusted_terms, evidence)
         judgement = (
             ClaimJudgement(support=ClaimSupport.UNSUPPORTED, explanation=failure)
             if failure
-            else judge.judge(plain, pool)
+            else judge.judge(plain, _closest_evidence(plain, pool, max_evidence))
         )
         checked.append(
             (
@@ -280,10 +296,12 @@ def verify_draft(
     evidence: list[EvidenceItem],
     judge: ClaimJudge,
     vocabulary: Collection[str] = (),
+    max_evidence: int | None = None,
+    trusted_terms: Collection[str] = (),
 ) -> VerificationResult:
-    """Label every claim, remove unsupported ones, then re-verify the result."""
+    """Label every claim and remove the unsupported ones."""
     checked = {
-        prefix: check_claims(text, evidence, judge, vocabulary, prefix)
+        prefix: check_claims(text, evidence, judge, vocabulary, prefix, max_evidence, trusted_terms)
         for prefix, text in _sections(draft)
     }
 
@@ -298,17 +316,13 @@ def verify_draft(
 
     before = [claim for rows in checked.values() for _, claim in rows if claim is not None]
     removed = [claim for claim in before if _is_unsupported(claim)]
-    recheck = [
-        claim
-        for prefix, text in _sections(cleaned)
-        for _, claim in check_claims(text, evidence, judge, vocabulary, prefix)
-        if claim is not None
-    ]
-    unsupported_after = sum(_is_unsupported(claim) for claim in recheck)
+    # Each kept claim keeps the verdict it earned while its citations were still attached.
+    kept = [claim for claim in before if not _is_unsupported(claim)]
+    unsupported_after = sum(_is_unsupported(claim) for claim in kept)
     final = cleaned.model_copy(
         update={
-            "claims": recheck,
-            "evidence_ids": sorted({item for claim in recheck for item in claim.evidence_ids}),
+            "claims": kept,
+            "evidence_ids": sorted({item for claim in kept for item in claim.evidence_ids}),
         }
     )
     report = VerificationReport(
@@ -316,7 +330,7 @@ def verify_draft(
         unsupported_before=len(removed),
         unsupported_after=unsupported_after,
         unsupported_rate_before=_rate(len(removed), len(before)),
-        unsupported_rate_after=_rate(unsupported_after, len(recheck)),
+        unsupported_rate_after=_rate(unsupported_after, len(kept)),
     )
     emptied = not final.cover_letter or any(not a.answer for a in final.screening_answers)
     return VerificationResult(

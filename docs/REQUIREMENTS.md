@@ -13,7 +13,11 @@ make a requirement complete.
 | Tested | Automated tests pass |
 | Verified | Demonstrated end to end in the conditions the assignment describes |
 
-Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0, DevSim data, contracts and Marketplace MCP, Portfolio MCP and RAG core.
+Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace API, Step 0, DevSim data, contracts and Marketplace MCP, Portfolio MCP and RAG core, model routing and bid graph.
+
+Automated graph tests use scripted model replies, so that they are repeatable and free. The graph
+has also been run by hand on real open models through Groq, on DevSim data. Part A's single-agent
+proposal has not been built separately yet.
 
 ## Instructor resources
 
@@ -33,8 +37,8 @@ Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace A
 |---|---|---|---|---|---|
 | R1 | One marketplace port, two adapters, switched by config | `agent/marketplace_port.py`, `mcp_servers/marketplace/adapters/gigsim.py` | Partial, GigSim adapter Tested | `mcp_servers/marketplace/tests/` | Upwork adapter, Phase 13 |
 | R2 | Portfolio, Marketplace, Workspace, Upwork and one more MCP server | `mcp_servers/marketplace/`, `mcp_servers/portfolio/` | Partial, Marketplace and Portfolio Tested | `mcp_servers/*/tests/`, `tests/integration/` | Phases 6, 13 |
-| R3 | Roles in a hand-written StateGraph with parallel analysis | `agent/graphs/`, `agent/nodes/` | Stub | None | Phase 5 |
-| R4 | Human approval through LangGraph interrupts in the web UI | None | Missing | None | Phases 5, 9 |
+| R3 | Roles in a hand-written StateGraph with parallel analysis | `agent/graphs/bid_graph.py`, `agent/nodes/` | Partial, bid graph Tested | `tests/integration/test_bid_graph.py` | Client Liaison, Phase 6; real-model run needs a key |
+| R4 | Human approval through LangGraph interrupts in the web UI | `agent/nodes/approval.py` | Partial, graph side Tested | `tests/integration/test_bid_graph.py` | Web UI, Phase 9 |
 | R5 | No unsupported claims; rate measured and reported | `rag/verify.py` | Partial, Tested | `tests/unit/test_claim_verification.py` | LLM judge not run on a real model yet; reporting in Phase 11 |
 | R6 | Deployed RAG design chosen by evaluation | `rag/retriever.py`, `evals/runners/rag_eval.py` | Partial | V0 measured on DevSim | Other variants, Phases 10, 14 |
 | R7 | Memory updated only through an explicit promotion rule | `agent/memory/promotion_rules.py` | Stub | None | Phase 6 |
@@ -70,13 +74,13 @@ Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace A
 
 | ID | Requirement | Files | Status | Tests | Outstanding |
 |---|---|---|---|---|---|
-| C1 | Bid and conversation graphs | `agent/graphs/` | Stub | None | Phases 5, 6 |
+| C1 | Bid and conversation graphs | `agent/graphs/bid_graph.py` | Partial, bid graph Tested | `tests/integration/test_bid_graph.py` | Conversation graph, Phase 6 |
 | C2 | Typed state, reducers, trace and memory separation, two stores | `agent/state.py` | Partial, state and reducers Tested | `tests/unit/test_contracts.py` | Memory stores, Phase 6 |
 | C3 | Eight Pydantic hand-offs | `agent/handoffs.py` | Tested | `tests/unit/test_contracts.py` | Used by nodes from Phase 4 |
-| C4 | Critic limit, Compliance block, step and token budgets | `agent/config.yaml` has values | Stub | None | Phase 5 |
-| C5 | Interrupts with full payload; approve, edit, reject | None | Missing | None | Phase 5 |
-| C6 | Postgres checkpointer, crash and resume, replay | None | Missing | None | Phase 5 |
-| C7 | Retries, timeouts, fallback model, dead-letter state | None | Missing | None | Phase 5 |
+| C4 | Critic limit, Compliance block, step and token budgets | `agent/graphs/bid_graph.py`, `agent/nodes/` | Tested | `tests/integration/test_bid_graph.py` | Show in UI, Phase 9 |
+| C5 | Interrupts with full payload; approve, edit, reject | `agent/nodes/approval.py` | Partial, graph side Tested | `tests/integration/test_bid_graph.py` | Web UI, Phase 9; per-user autonomy setting, Phase 7 |
+| C6 | Postgres checkpointer, crash and resume, replay | `agent/checkpoint.py`, `infra/docker-compose.yml` | Tested | `tests/integration/test_crash_recovery.py` kills real processes | Demo from the UI, Phase 9 |
+| C7 | Retries, timeouts, fallback model, dead-letter state | `agent/graphs/bid_graph.py`, `agent/llm.py` | Tested | `tests/integration/test_bid_graph.py`, `tests/unit/test_agent_units.py` | Fallback not yet run against real providers |
 | RQ-C | ReAct, supervisor and graph comparison on 50 jobs | None | Missing | None | Phase 14 |
 
 ## Part D: Web interface
@@ -103,7 +107,7 @@ Phases refer to the agreed roadmap. Steps completed so far: DevSim marketplace A
 |---|---|---|---|---|---|
 | E1 | Redis worker, schedules, idempotent jobs | `worker/` is TODO | Missing | None | Phase 8 |
 | E2 | `make eval`; CI runs tests and a 30-job gated smoke eval | `Makefile` fails clearly; `eval.yml` absent | Missing | None | Phases 9, 11 |
-| E3 | One trace id across UI, API, graph, MCP and audit log | `agent/mcp_client.py`, Marketplace server and adapter | Partial, MCP to audit log Tested | `tests/integration/test_marketplace_http.py` | UI, API, graph and tracing tool, Phases 5, 7, 12 |
+| E3 | One trace id across UI, API, graph, MCP and audit log | `agent/graphs/bid_graph.py`, `agent/mcp_client.py`, Marketplace server | Partial, graph to audit log Tested | `tests/integration/test_bid_graph.py` | UI, API and tracing tool, Phases 7, 12 |
 | E4 | Delimited untrusted data, attack rate, masking, encrypted tokens, tenancy | None | Missing | None | Phases 7, 12, 13 |
 | E5 | Declared and measured budgets; one optimisation | None | Missing | None | Phases 12, 14 |
 | E6 | Full Docker stack and stable public deployment | `infra/` empty | Missing | None | Phase 16 |
