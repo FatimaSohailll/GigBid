@@ -24,6 +24,21 @@ def _year(date: str | None) -> int | None:
     return int(date[:4]) if date and date[:4].isdigit() else None
 
 
+def chunk_payload(tenant: str, document: PortfolioDocument) -> dict[str, Any]:
+    return {
+        "tenant": tenant,
+        "item_id": document.item_id,
+        "type": document.type,
+        "source": document.source,
+        "project": document.project,
+        "skills": [skill.lower() for skill in document.skills],
+        "date": document.date,
+        "year": _year(document.date),
+        "client_industry": document.client_industry,
+        "outcome": document.outcome,
+    }
+
+
 class VectorIndex:
     def __init__(self, client: QdrantClient, collection: str, dimension: int) -> None:
         self._client = client
@@ -64,18 +79,7 @@ class VectorIndex:
         self.delete_item(tenant, document.item_id)
         if not chunks:
             return
-        payload = {
-            "tenant": tenant,
-            "item_id": document.item_id,
-            "type": document.type,
-            "source": document.source,
-            "project": document.project,
-            "skills": [skill.lower() for skill in document.skills],
-            "date": document.date,
-            "year": _year(document.date),
-            "client_industry": document.client_industry,
-            "outcome": document.outcome,
-        }
+        payload = chunk_payload(tenant, document)
         self._client.upsert(
             self._collection,
             points=[

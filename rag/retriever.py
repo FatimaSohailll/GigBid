@@ -9,17 +9,35 @@ from qdrant_client import QdrantClient
 from agent.config import AppConfig, get_config
 from rag.index.corpus import CorpusStore
 from rag.index.embedder import Embedder, FastEmbedEmbedder
+from rag.index.reranker import FastEmbedReranker
 from rag.index.vector import VectorIndex
 from rag.types import RagComponents, Retriever
-from rag.variants import v0_naive
+from rag.variants import (
+    v0_naive,
+    v1_decomposition,
+    v2_hybrid,
+    v3_rerank,
+    v4_outcome,
+    v8_corrective,
+)
+from rag.variants.composed import ComposedRetriever, parse_stages
 
 VARIANTS: dict[str, Callable[[RagComponents], Retriever]] = {
     "v0_naive": v0_naive.build,
+    "v1_decomposition": v1_decomposition.build,
+    "v2_hybrid": v2_hybrid.build,
+    "v3_rerank": v3_rerank.build,
+    "v4_outcome": v4_outcome.build,
+    "v8_corrective": v8_corrective.build,
 }
+_COMBO_PREFIX = "combo:"
 
 
 def build_retriever(components: RagComponents, variant: str | None = None) -> Retriever:
+    """Build a named variant, or a combination such as combo:decompose+hybrid."""
     name = variant or components.config.variant
+    if name.startswith(_COMBO_PREFIX):
+        return ComposedRetriever(components, parse_stages(name.removeprefix(_COMBO_PREFIX)))
     if name not in VARIANTS:
         raise ValueError(f"Unknown retrieval variant '{name}'. Available: {sorted(VARIANTS)}")
     return VARIANTS[name](components)
@@ -47,4 +65,5 @@ def open_components(
         index=VectorIndex(client, app.rag.collection, model.dimension),
         embedder=model,
         config=app.rag,
+        reranker=FastEmbedReranker(app.models.reranker),
     )

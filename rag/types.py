@@ -11,6 +11,7 @@ from agent.handoffs import EvidenceItem
 if TYPE_CHECKING:
     from rag.index.corpus import CorpusStore
     from rag.index.embedder import Embedder
+    from rag.index.reranker import Reranker
     from rag.index.vector import VectorIndex
 
 
@@ -31,6 +32,7 @@ class RagComponents:
     index: "VectorIndex"
     embedder: "Embedder"
     config: RagConfig
+    reranker: "Reranker | None" = None
 
     def close(self) -> None:
         self.index.close()
