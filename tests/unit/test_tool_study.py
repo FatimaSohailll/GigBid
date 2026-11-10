@@ -17,6 +17,7 @@ from evals.tool_study import (
     value_matches,
 )
 from mcp_servers.marketplace.adapters.gigsim import GigSimAdapter
+from mcp_servers.tool_descriptions import TOOL_DESCRIPTIONS
 
 
 def task(tool: str = "get_job", fine: str | None = None, **args: Any) -> dict[str, Any]:
@@ -228,6 +229,11 @@ def test_upwork_connects_as_one_user_only_when_configured() -> None:
     connection = upwork_connection("t", env)
     assert connection is not None
     assert connection["upwork"]["headers"]["Authorization"] == "Bearer t"
+
+
+def test_shipped_descriptions_are_exactly_what_was_measured() -> None:
+    measured = {t["function"]["name"]: t["function"] for t in ToolSet("rewritten").definitions}
+    assert TOOL_DESCRIPTIONS == {name: tool["description"] for name, tool in measured.items()}
 
 
 def test_gigsim_submits_directly() -> None:

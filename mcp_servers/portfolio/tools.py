@@ -12,6 +12,7 @@ from mcp.types import ToolAnnotations
 from pydantic import BaseModel, Field
 
 from agent.handoffs import EvidenceItem
+from mcp_servers.tool_descriptions import TOOL_DESCRIPTIONS
 from rag.index.corpus import SkillSummary
 from rag.ingest.loaders import PortfolioDocument
 from rag.types import EvidenceFilters, RagComponents, Retriever
@@ -88,7 +89,7 @@ def _case_study(document: PortfolioDocument) -> CaseStudy:
 
 
 def register_tools(mcp: FastMCP, backend: PortfolioBackend, tenant_of: TenantResolver) -> None:
-    @mcp.tool(annotations=READ_ONLY)
+    @mcp.tool(annotations=READ_ONLY, description=TOOL_DESCRIPTIONS["search_evidence"])
     async def search_evidence(
         requirement: Annotated[str, Field(min_length=1, max_length=4000)],
         ctx: Context[Any, Any, Any],
@@ -102,12 +103,12 @@ def register_tools(mcp: FastMCP, backend: PortfolioBackend, tenant_of: TenantRes
         )
         return EvidenceList(items=items)
 
-    @mcp.tool(annotations=READ_ONLY)
+    @mcp.tool(annotations=READ_ONLY, description=TOOL_DESCRIPTIONS["get_case_study"])
     async def get_case_study(id: ItemId, ctx: Context[Any, Any, Any]) -> CaseStudy:
         """Get the full text of one case study by its id."""
         return _case_study(await backend.item(tenant_of(ctx), "case", id))
 
-    @mcp.tool(annotations=READ_ONLY)
+    @mcp.tool(annotations=READ_ONLY, description=TOOL_DESCRIPTIONS["list_skills"])
     async def list_skills(ctx: Context[Any, Any, Any]) -> SkillList:
         """List every skill the portfolio can evidence, with how many items show it."""
         tenant = tenant_of(ctx)

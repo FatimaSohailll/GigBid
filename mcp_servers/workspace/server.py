@@ -22,6 +22,7 @@ from starlette.responses import JSONResponse
 
 from agent.config import WorkspaceConfig, get_config
 from mcp_servers.tenant_auth import TenantBearerVerifier, bearer_tenant, parse_tenants
+from mcp_servers.tool_descriptions import TOOL_DESCRIPTIONS
 
 TenantResolver = Callable[[Context[Any, Any, Any]], str]
 READ_ONLY = ToolAnnotations(
@@ -137,7 +138,7 @@ def build_server(
         **fastmcp_options,
     )
 
-    @mcp.tool(annotations=READ_ONLY)
+    @mcp.tool(annotations=READ_ONLY, description=TOOL_DESCRIPTIONS["free_slots"])
     async def free_slots(
         ctx: Context[Any, Any, Any],
         count: Annotated[int, Field(ge=1, le=10)] = settings.slots_offered,
@@ -155,7 +156,7 @@ def build_server(
         )
         return SlotList(items=items)
 
-    @mcp.tool(annotations=LOCAL_WRITE)
+    @mcp.tool(annotations=LOCAL_WRITE, description=TOOL_DESCRIPTIONS["create_interview_hold"])
     async def create_interview_hold(
         request: CreateHoldInput,
         ctx: Context[Any, Any, Any],
@@ -188,7 +189,7 @@ def build_server(
         )
         return Hold(start=request.start, end=end, title=request.title)
 
-    @mcp.tool(annotations=LOCAL_WRITE)
+    @mcp.tool(annotations=LOCAL_WRITE, description=TOOL_DESCRIPTIONS["create_email_draft"])
     async def create_email_draft(
         request: CreateEmailDraftInput,
         ctx: Context[Any, Any, Any],
