@@ -9,6 +9,8 @@ make a requirement complete.
 | Stub | Only a kit placeholder or TODO exists |
 | Partial | Some of the requirement works |
 | Stand-in | A self-built replacement for an instructor resource; must be labelled wherever used |
+| Deferred | Explicitly postponed by the student; not complete and still required |
+| In progress | Work has started and has no final result yet |
 | Implemented | Code is complete but its tests are missing or incomplete |
 | Tested | Automated tests pass |
 | Verified | Demonstrated end to end in the conditions the assignment describes |
@@ -35,8 +37,8 @@ proposal has not been built separately yet.
 
 | ID | Requirement | Files | Status | Tests | Outstanding |
 |---|---|---|---|---|---|
-| R1 | One marketplace port, two adapters, switched by config | `agent/marketplace_port.py`, `mcp_servers/marketplace/adapters/gigsim.py` | Partial, GigSim adapter Tested | `mcp_servers/marketplace/tests/` | Upwork adapter, Phase 13 |
-| R2 | Portfolio, Marketplace, Workspace, Upwork and one more MCP server | `mcp_servers/` | Partial, three own servers Tested | `mcp_servers/*/tests/`, `tests/integration/` | Upwork and GitHub, Phase 13 |
+| R1 | One marketplace port, two adapters, switched by config | `agent/marketplace_port.py`, `mcp_servers/marketplace/adapters/gigsim.py` | Partial, GigSim adapter Tested | `mcp_servers/marketplace/tests/` | Upwork adapter deferred (A4) |
+| R2 | Portfolio, Marketplace, Workspace, Upwork and one more MCP server | `mcp_servers/` | Partial, three own servers Tested | `mcp_servers/*/tests/`, `tests/integration/` | Upwork and GitHub deferred (A5) |
 | R3 | Roles in a hand-written StateGraph with parallel analysis | `agent/graphs/`, `agent/nodes/` | Tested | `tests/integration/test_bid_graph.py`, `test_conversation_graph.py` | Real GigSim run |
 | R4 | Human approval through LangGraph interrupts in the web UI | `agent/nodes/approval.py`, `ApprovalPanel` | Tested | `tests/integration/test_bid_graph.py`, `apps/web/tests/e2e/gigbid.spec.ts` | Real GigSim run |
 | R5 | No unsupported claims; rate measured and reported | `rag/verify.py` | Partial, Tested | `tests/unit/test_claim_verification.py` | LLM judge not run on a real model yet; reporting in Phase 11 |
@@ -53,22 +55,22 @@ proposal has not been built separately yet.
 | A1 | Portfolio tools, resource templates, prompt templates | `mcp_servers/portfolio/` | Tested | `mcp_servers/portfolio/tests/`, `tests/integration/test_portfolio_http.py` | Publishing, Phase 16 |
 | A2 | Marketplace read and write tools, schemas, annotations, idempotency, `dry_run`, auth, rate limit, audit log | `mcp_servers/marketplace/` | Tested | `mcp_servers/marketplace/tests/`, `tests/integration/` | Tested on DevSim, not the real GigSim |
 | A3 | Workspace calendar and email drafts | `mcp_servers/workspace/server.py` (local backend) | Tested | `mcp_servers/workspace/tests/` | None |
-| A4 | Upwork adapter, OAuth, encrypted per-user tokens, drafts only | None | Missing | None | Phase 13; needs an Upwork account |
-| A5 | Two third-party servers with trust rationale | `docs/TOOLS.md` is TODO | Missing | None | Phase 13 |
+| A4 | Upwork adapter, OAuth, encrypted per-user tokens, drafts only | `agent/marketplace_port.py` (submission mode only) | Deferred, not complete | None | Adapter and OAuth; needs an Upwork OAuth client |
+| A5 | Two third-party servers with trust rationale | `agent/mcp_client.py`, `docs/TOOLS.md` | Deferred, not complete | GitHub read and repository ingestion checked live; Upwork not connected | Stays incomplete until Upwork and GitHub are both verified; finish `docs/TOOLS.md` |
 | A6 | Per-agent allowlists, timeouts, retries, degraded mode | `agent/mcp_client.py`, `worker/tasks.py`, `/api/status` | Tested | `tests/integration/test_api_worker.py`, `apps/web/tests/e2e/gigbid.spec.ts` | None |
 | A7 | In-memory tests, Inspector screenshots, schema snapshot | `tests/contract/` | Partial, Marketplace Tested | `mcp_servers/marketplace/tests/`, `tests/contract/` | Other servers; screenshots by student |
-| RQ-A | Tool granularity study on 40 tasks | None | Missing | None | Phase 14 |
+| RQ-A | Tool granularity study on 40 tasks | `evals/runners/tool_granularity.py`, `evals/datasets/tool_study/` | In progress, running on Qwen3 8B | `tests/unit/test_tool_study.py` | Finish the run, write up, freeze the winning tool set |
 
 ## Part B: Advanced RAG
 
 | ID | Requirement | Files | Status | Tests | Outstanding |
 |---|---|---|---|---|---|
-| B1 | Ingestion with full metadata and incremental re-indexing | `rag/ingest/`, `rag/index/` | Partial, Tested | `tests/unit/test_rag_core.py` | GitHub repo ingestion via MCP, Phase 13; UI upload, Phase 9 |
-| B2 | V0 and at least four more variants covering required groups | `rag/variants/` (V0, V1, V2, V3, V4, V8) | Tested | `tests/unit/test_rag_variants.py` | V4 phrasing; full comparison, Part B |
-| B3 | Claim verification, rate before and after | `rag/verify.py`, `agent/nodes/verifier.py` | Partial, Tested | `tests/unit/test_claim_verification.py`, `tests/integration/test_bid_graph_llm_judge.py` | Measure the rate on real runs, Part B |
-| B4 | Retrieval, decision, quality, outcome, cost metrics; calibrated judge | `evals/runners/`, `evals/judge.py`, `agent/prompts/judge.v1.md` | Partial, runners Tested with scripted models | `tests/unit/test_eval_pipeline.py`, `tests/integration/test_eval_runners.py` | Real runs and cost, Part B; student labels 30 items; classmate panel |
-| B5 | Results table regenerated by a script | `evals/results_table.py` | Tested | `tests/unit/test_eval_pipeline.py` | Real numbers, Part B |
-| RQ-B | Hypothesis, ablation, breakdown by persona and job type | `evals/runners/ablation.py` | Partial, not measured | None | Run and write up, Part B |
+| B1 | Ingestion with full metadata and incremental re-indexing | `rag/ingest/` (including `github.py`), `rag/index/`, `apps/api/routers/settings.py` | Partial, Tested | `tests/unit/test_rag_core.py`, `tests/unit/test_part_b_measurement.py`, `tests/integration/test_github_mcp.py` | Re-ingest so chunks carry persona; UI for evidence list and delete, Part D |
+| B2 | V0 and at least four more variants covering required groups | `rag/variants/` (V0, V1, V2, V3, V4, V8), `agent/nodes/writer.py` | Tested | `tests/unit/test_rag_variants.py`, `tests/unit/test_part_b_measurement.py` | Full comparison |
+| B3 | Claim verification, rate before and after | `rag/verify.py` (`recheck_final_text`), `agent/nodes/verifier.py`, `evals/job_runner.py` | Partial, Tested | `tests/unit/test_claim_verification.py`, `tests/unit/test_part_b_measurement.py` | Measure on real runs, against the final text |
+| B4 | Retrieval, decision, quality, outcome, cost metrics; calibrated judge | `evals/runners/`, `evals/judge.py`, `agent/prompts/judge.v1.md` | Partial, retrieval runner checked on 9 jobs | `tests/unit/test_eval_pipeline.py`, `tests/unit/test_part_b_measurement.py`, `tests/integration/test_eval_runners.py` | Real runs and cost; student labels 30 items; classmate panel script and ratings |
+| B5 | Results table regenerated by a script | `evals/results_table.py` | Tested | `tests/unit/test_eval_pipeline.py` | Real numbers |
+| RQ-B | Hypothesis, ablation, breakdown by persona and job type | `evals/runners/ablation.py` | Partial, hypothesis stated, not measured | `tests/unit/test_part_b_measurement.py` | Run and write up |
 
 ## Part C: Multi-agent orchestration
 

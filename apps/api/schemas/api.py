@@ -214,6 +214,22 @@ class MemoryOut(BaseModel):
     outcome: list[MemoryItem]
 
 
+class GithubIngestIn(_Input):
+    repository: str = Field(pattern=r"^[\w.-]+/[\w.-]+$", max_length=200)
+
+
+class EvidenceOut(BaseModel):
+    id: str
+    type: str
+    title: str
+    source: str
+    project: str | None
+    skills: list[str]
+    date: str | None
+    client_industry: str | None
+    outcome: str | None
+
+
 class UploadOut(BaseModel):
     id: str
     filename: str

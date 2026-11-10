@@ -18,6 +18,24 @@ class _ModelDraft(BaseModel):
     screening_answers: list[ScreeningAnswer] = Field(default_factory=list)
 
 
+async def _phrasing_examples(state: BidState, runtime: AgentRuntime) -> str:
+    """V4: how winning proposals were worded. Kept apart from evidence, so it can't be cited."""
+    if not runtime.config.outcome_aware:
+        return ""
+    spec = state["job_spec"]
+    found = await runtime.tools.call(
+        "writer",
+        "search_evidence",
+        {
+            "requirement": " ".join([spec.title, *spec.required_skills]),
+            "k": runtime.config.writing.phrasing_examples,
+            "filters": {"types": ["proposal"], "outcomes": ["won", "replied"]},
+        },
+    )
+    excerpts = "\n---\n".join(item["excerpt"] for item in found["items"])
+    return f"\n\n{delimit_untrusted('phrasing_examples', excerpts)}" if excerpts else ""
+
+
 async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
     job = state["job"]
     spec = state["job_spec"]
@@ -37,6 +55,7 @@ async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
         f"Bid: {state['price_quote'].amount}\n"
         f"Style rules: {style}\nWhat has worked before: {what_worked}\n\n"
         f"{delimit_untrusted('evidence', evidence)}{feedback}"
+        f"{await _phrasing_examples(state, runtime)}"
     )
     result = await runtime.llm.structured("writer", runtime.prompt("writer"), data, _ModelDraft)
     drafts = state.get("drafts", [])

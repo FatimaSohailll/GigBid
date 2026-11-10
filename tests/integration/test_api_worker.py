@@ -33,6 +33,7 @@ from tests.support.rag_fakes import memory_components
 from tests.support.scripted_llm import ScriptedLlm
 from worker.tasks import (
     WorkerServices,
+    delete_evidence,
     ingest_upload,
     run_thread,
     scout_search,
@@ -79,6 +80,7 @@ class System:
                 func(scout_search, max_tries=200),
                 sync_user,
                 ingest_upload,
+                delete_evidence,
             ],
             redis_pool=self.queue,
             ctx={"services": self.worker_services, "redis": self.queue},
@@ -151,6 +153,7 @@ async def system(stack: GraphStack, tmp_path: Path) -> AsyncIterator[System]:
         vault=None,
         upload_dir=tmp_path / "uploads",
         marketplace_health_url=f"{stack.marketplace.url}/health",
+        corpus=components.corpus,
     )
     worker_services = WorkerServices(
         repository, queue, lambda _: runtime, saver, lambda: components
@@ -360,6 +363,39 @@ async def test_settings_memory_and_upload(system: System) -> None:
     assert uploaded.status_code == 202
     await system.drain()
     assert (await system.api.get("/api/portfolio/uploads")).json()[0]["status"] == "indexed"
+
+    described = await system.api.post(
+        "/api/portfolio/uploads",
+        data={
+            "title": "Won bid",
+            "item_type": "proposal",
+            "skills": "Stripe, Postgres",
+            "date": "2026-03",
+            "client_industry": "fintech",
+            "outcome": "won",
+        },
+        files={"file": ("bid.md", b"I rebuilt billing for a fintech client.")},
+    )
+    assert described.status_code == 202
+    await system.drain()
+    items = {item["id"]: item for item in (await system.api.get("/api/portfolio/evidence")).json()}
+    stored = items[f"proposal:upload:{described.json()['id']}"]
+    assert stored["outcome"] == "won"
+    assert stored["skills"] == ["Stripe", "Postgres"]
+    assert stored["client_industry"] == "fintech"
+
+    invalid = await system.api.post(
+        "/api/portfolio/uploads",
+        data={"title": "X", "outcome": "maybe"},
+        files={"file": ("a.md", b"text")},
+    )
+    assert invalid.status_code == 422
+
+    assert (await system.api.delete(f"/api/portfolio/evidence/{stored['id']}")).status_code == 202
+    await system.drain()
+    remaining = (await system.api.get("/api/portfolio/evidence")).json()
+    assert stored["id"] not in {item["id"] for item in remaining}
+    assert (await system.api.delete(f"/api/portfolio/evidence/{stored['id']}")).status_code == 404
 
 
 async def test_oauth_tokens_are_encrypted_at_rest(system: System) -> None:

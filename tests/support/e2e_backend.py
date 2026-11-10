@@ -29,7 +29,14 @@ from apps.api.services import DEGRADED_KEY, ApiServices
 from tests.support.graph_stack import fast_config, start_stack
 from tests.support.rag_fakes import memory_components
 from tests.support.scripted_llm import ScriptedLlm
-from worker.tasks import WorkerServices, ingest_upload, run_thread, scout_search, sync_user
+from worker.tasks import (
+    WorkerServices,
+    delete_evidence,
+    ingest_upload,
+    run_thread,
+    scout_search,
+    sync_user,
+)
 
 PORT = int(os.environ.get("E2E_API_PORT", "8010"))
 
@@ -66,6 +73,7 @@ async def main() -> None:
         upload_dir=root / "uploads",
         marketplace_health_url=f"{stack.marketplace.url}/health",
         llm=llm,
+        corpus=components.corpus,
     )
     app = create_app(services)
 
@@ -96,6 +104,7 @@ async def main() -> None:
             func(scout_search, max_tries=200),
             sync_user,
             ingest_upload,
+            delete_evidence,
         ],
         redis_pool=queue,
         ctx={

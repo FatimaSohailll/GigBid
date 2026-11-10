@@ -12,11 +12,14 @@ from langgraph.store.postgres.aio import AsyncPostgresStore
 
 from agent.checkpoint import checkpoint_serde
 from agent.config import get_config
+from agent.mcp_client import Toolbox, ToolGateway, github_connection
 from agent.runtime import AgentRuntime, default_runtime
 from apps.api.db import Repository, open_pool
 from mcp_servers.tenant_auth import mint_user_token
 from worker.tasks import (
     WorkerServices,
+    delete_evidence,
+    ingest_github,
     ingest_upload,
     run_thread,
     scout_search,
@@ -31,6 +34,8 @@ FUNCTIONS = [
     func(scout_search, max_tries=get_config().worker.service_max_retries),
     sync_user,
     ingest_upload,
+    ingest_github,
+    delete_evidence,
 ]
 
 
@@ -56,8 +61,13 @@ async def startup(ctx: dict[str, Any]) -> None:
         return runtimes[user["id"]]
 
     ctx["pool"] = pool
+
+    def github() -> ToolGateway | None:
+        connection = github_connection()
+        return ToolGateway(Toolbox(connection, config, False)) if connection else None
+
     ctx["services"] = WorkerServices(
-        repository, ctx["redis"], runtime_for, saver, cache(open_components)
+        repository, ctx["redis"], runtime_for, saver, cache(open_components), github
     )
 
 
