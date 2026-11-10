@@ -6,8 +6,11 @@ from typing import Annotated, Any
 
 import httpx
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from pydantic import ValidationError
 
 from apps.api.schemas.api import (
+    EvidenceOut,
+    GithubIngestIn,
     MemoryItem,
     MemoryOut,
     SavedSearchIn,
@@ -17,7 +20,8 @@ from apps.api.schemas.api import (
     UploadOut,
     UserOut,
 )
-from apps.api.services import DEGRADED_KEY, CurrentUser, Services
+from apps.api.services import DEGRADED_KEY, ApiServices, CurrentUser, Services
+from rag.ingest.loaders import PortfolioDocument, UploadMetadata
 
 router = APIRouter(prefix="/api", tags=["settings"])
 _ALLOWED_UPLOADS = {".pdf", ".md", ".txt"}
@@ -90,8 +94,27 @@ async def upload(
     title: Annotated[str, Form(min_length=1, max_length=200)],
     user: CurrentUser,
     services: Services,
+    item_type: Annotated[str, Form()] = "case_study",
+    project: Annotated[str | None, Form(max_length=128)] = None,
+    skills: Annotated[str, Form(max_length=500)] = "",
+    date: Annotated[str | None, Form(max_length=32)] = None,
+    client_industry: Annotated[str | None, Form(max_length=64)] = None,
+    outcome: Annotated[str | None, Form()] = None,
 ) -> UploadOut:
-    """Save a portfolio file and index it on the worker."""
+    """Save a portfolio file with its metadata and index it on the worker."""
+    try:
+        metadata = UploadMetadata.model_validate(
+            {
+                "item_type": item_type,
+                "project": project,
+                "skills": [skill.strip() for skill in skills.split(",") if skill.strip()],
+                "date": date,
+                "client_industry": client_industry,
+                "outcome": outcome,
+            }
+        )
+    except ValidationError as error:
+        raise HTTPException(422, "Check the portfolio item details.") from error
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in _ALLOWED_UPLOADS:
         raise HTTPException(415, "Upload a PDF, Markdown or text file.")
@@ -105,13 +128,49 @@ async def upload(
     path.write_bytes(content)
     filename = Path(file.filename or "upload").name
     await services.repository.add_upload(user["id"], upload_id, filename)
-    await services.queue.enqueue_job("ingest_upload", upload_id, user["id"], str(path), title)
+    await services.queue.enqueue_job(
+        "ingest_upload", upload_id, user["id"], str(path), title, metadata.model_dump()
+    )
     return UploadOut(id=upload_id, filename=filename, status="queued")
 
 
 @router.get("/portfolio/uploads", response_model=list[UploadOut])
 async def uploads(user: CurrentUser, services: Services) -> list[dict[str, Any]]:
     return await services.repository.uploads(user["id"])
+
+
+@router.post("/portfolio/github", response_model=UploadOut, status_code=202)
+async def ingest_github(body: GithubIngestIn, user: CurrentUser, services: Services) -> UploadOut:
+    """Index a repository's README and code on the worker, through the GitHub MCP server."""
+    upload_id = uuid.uuid4().hex
+    owner, repo = body.repository.split("/", 1)
+    await services.repository.add_upload(user["id"], upload_id, body.repository)
+    await services.queue.enqueue_job("ingest_github", upload_id, user["id"], owner, repo)
+    return UploadOut(id=upload_id, filename=body.repository, status="queued")
+
+
+def _evidence_rows(services: ApiServices, user: dict[str, Any]) -> list[PortfolioDocument]:
+    if services.corpus is None:
+        raise HTTPException(503, "The portfolio store is not available.")
+    # Until the first run copies the persona's portfolio, show what will be copied.
+    return services.corpus.documents(user["id"]) or services.corpus.documents(user["persona"])
+
+
+@router.get("/portfolio/evidence", response_model=list[EvidenceOut])
+async def evidence(user: CurrentUser, services: Services) -> list[EvidenceOut]:
+    return [
+        EvidenceOut(id=item.item_id, **item.model_dump(exclude={"item_id", "text"}))
+        for item in _evidence_rows(services, user)
+    ]
+
+
+@router.delete("/portfolio/evidence/{item_id:path}", status_code=202)
+async def delete_evidence(item_id: str, user: CurrentUser, services: Services) -> dict[str, str]:
+    """Remove one item from this user's portfolio. Other users are not affected."""
+    if item_id not in {item.item_id for item in _evidence_rows(services, user)}:
+        raise HTTPException(404, "That item is not in your portfolio.")
+    await services.queue.enqueue_job("delete_evidence", user["id"], item_id)
+    return {"status": "queued"}
 
 
 @router.get("/status", response_model=ServiceStatus)

@@ -1,0 +1,169 @@
+# Many narrow tools. "canonical" and "fixed" translate a call back for scoring; "nest" moves a
+# parameter into a nested argument of the canonical tool.
+search_jobs_by_keyword:
+  description: Search open jobs by free-text keywords.
+  canonical: search_jobs
+  params: {query: string, limit: integer}
+  required: [query]
+search_jobs_by_skills:
+  description: Search open jobs by required skills.
+  canonical: search_jobs
+  params: {skills: "array", limit: integer}
+  required: [skills]
+list_newest_jobs:
+  description: List the newest open jobs.
+  canonical: search_jobs
+  params: {limit: integer}
+get_job:
+  description: Get the full details of one job.
+  canonical: get_job
+  params: {job_id: string}
+  required: [job_id]
+get_job_budget:
+  description: Get only the budget of one job.
+  canonical: get_job
+  params: {job_id: string}
+  required: [job_id]
+get_job_screening_questions:
+  description: Get only the screening questions of one job.
+  canonical: get_job
+  params: {job_id: string}
+  required: [job_id]
+get_client_rating:
+  description: Get a client's average rating.
+  canonical: get_client_history
+  params: {client_id: string}
+  required: [client_id]
+get_client_spend:
+  description: Get a client's total spend.
+  canonical: get_client_history
+  params: {client_id: string}
+  required: [client_id]
+get_client_reviews:
+  description: Get the reviews a client has received.
+  canonical: get_client_history
+  params: {client_id: string}
+  required: [client_id]
+get_connects_balance:
+  description: Get the Connects the freelancer has left.
+  canonical: get_connects_balance
+get_connects_spent:
+  description: Get the Connects the freelancer has spent.
+  canonical: get_connects_balance
+get_price_stats_by_category:
+  description: Get past prices for a job category.
+  canonical: get_price_stats
+  params: {category: string}
+  required: [category]
+get_price_stats_by_skills:
+  description: Get past prices for a job category and specific skills.
+  canonical: get_price_stats
+  params: {category: string, skills: "array"}
+  required: [category, skills]
+get_proposal:
+  description: Get the full details of one proposal.
+  canonical: get_proposal
+  params: {proposal_id: string}
+  required: [proposal_id]
+get_proposal_status:
+  description: Get only the status of one proposal.
+  canonical: get_proposal
+  params: {proposal_id: string}
+  required: [proposal_id]
+list_conversations:
+  description: List client conversations.
+  canonical: list_conversations
+list_messages:
+  description: List the messages in one conversation.
+  canonical: list_messages
+  params: {conversation_id: string}
+  required: [conversation_id]
+list_events:
+  description: List marketplace events after a position.
+  canonical: list_events
+  params: {after: integer, limit: integer}
+preview_proposal_draft:
+  description: Preview a proposal draft without saving it.
+  canonical: create_proposal_draft
+  fixed: {dry_run: true}
+  params: {job_id: string, cover_letter: string, bid_amount: number, screening_answers: "array", idempotency_key: string}
+  required: [job_id, cover_letter, bid_amount, idempotency_key]
+create_proposal_draft:
+  description: Save an unsent proposal draft.
+  canonical: create_proposal_draft
+  params: {job_id: string, cover_letter: string, bid_amount: number, screening_answers: "array", idempotency_key: string}
+  required: [job_id, cover_letter, bid_amount, idempotency_key]
+preview_submit_proposal:
+  description: Preview submitting a draft and what it costs.
+  canonical: submit_proposal
+  fixed: {dry_run: true}
+  params: {proposal_id: string, idempotency_key: string}
+  required: [proposal_id, idempotency_key]
+submit_proposal:
+  description: Submit a draft proposal and spend Connects.
+  canonical: submit_proposal
+  params: {proposal_id: string, idempotency_key: string}
+  required: [proposal_id, idempotency_key]
+preview_message:
+  description: Preview a message to a client without sending it.
+  canonical: send_message
+  fixed: {dry_run: true}
+  params: {conversation_id: string, body: string, idempotency_key: string}
+  required: [conversation_id, body, idempotency_key]
+send_message:
+  description: Send a message to a client.
+  canonical: send_message
+  params: {conversation_id: string, body: string, idempotency_key: string}
+  required: [conversation_id, body, idempotency_key]
+search_case_studies:
+  description: Search portfolio case studies.
+  canonical: search_evidence
+  fixed: {filters: {types: [case_study]}}
+  params: {requirement: string, k: integer}
+  required: [requirement]
+search_code_samples:
+  description: Search portfolio code.
+  canonical: search_evidence
+  fixed: {filters: {types: [code]}}
+  params: {requirement: string, k: integer}
+  required: [requirement]
+search_client_reviews:
+  description: Search reviews from past clients.
+  canonical: search_evidence
+  fixed: {filters: {types: [review]}}
+  params: {requirement: string, k: integer}
+  required: [requirement]
+search_past_proposals:
+  description: Search past proposals, optionally by outcome.
+  canonical: search_evidence
+  fixed: {filters: {types: [proposal]}}
+  nest: {outcomes: filters}
+  params: {requirement: string, outcomes: "array", k: integer}
+  required: [requirement]
+search_all_evidence:
+  description: Search all portfolio evidence.
+  canonical: search_evidence
+  params: {requirement: string, k: integer}
+  required: [requirement]
+get_case_study:
+  description: Get one case study.
+  canonical: get_case_study
+  params: {id: string}
+  required: [id]
+list_skills:
+  description: List portfolio skills.
+  canonical: list_skills
+free_slots:
+  description: List free calendar slots.
+  canonical: free_slots
+  params: {count: integer, duration_minutes: integer, days_ahead: integer}
+create_interview_hold:
+  description: Create a tentative interview hold.
+  canonical: create_interview_hold
+  params: {start: string, duration_minutes: integer, title: string, idempotency_key: string}
+  required: [start, duration_minutes, title, idempotency_key]
+create_email_draft:
+  description: Save an email draft.
+  canonical: create_email_draft
+  params: {subject: string, body: string, recipient: string, idempotency_key: string}
+  required: [subject, body, idempotency_key]

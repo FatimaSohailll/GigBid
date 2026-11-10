@@ -98,6 +98,45 @@ def connections_from_env(
     return connections
 
 
+def github_connection(environ: Mapping[str, str] | None = None) -> dict[str, Any] | None:
+    """The official GitHub MCP server, read-only. None until both settings exist.
+
+    It is kept out of the agents' connections: only ingestion uses it, and a GitHub outage must
+    not stop the agents from listing their own tools.
+    """
+    env = os.environ if environ is None else environ
+    url = env.get("MCP_GITHUB_URL")
+    token = env.get("GITHUB_PERSONAL_ACCESS_TOKEN")
+    if not url or not token:
+        return None
+    connection: StreamableHttpConnection = {
+        "transport": "streamable_http",
+        "url": url,
+        "headers": {"Authorization": f"Bearer {token}", "X-MCP-Readonly": "true"},
+    }
+    return {"github": connection}
+
+
+def upwork_connection(
+    access_token: str,
+    environ: Mapping[str, str] | None = None,
+) -> dict[str, Any] | None:
+    """The official Upwork MCP server, as one user. None until the URL and a token exist.
+
+    Agents never connect to it directly. Only the live adapter behind the marketplace port does.
+    """
+    env = os.environ if environ is None else environ
+    url = env.get("MCP_UPWORK_URL")
+    if not url or not access_token:
+        return None
+    connection: StreamableHttpConnection = {
+        "transport": "streamable_http",
+        "url": url,
+        "headers": {"Authorization": f"Bearer {access_token}"},
+    }
+    return {"upwork": connection}
+
+
 class Toolbox:
     """Gives each agent only the tools named in its allowlist."""
 
@@ -145,10 +184,20 @@ class ToolGateway:
     def __init__(self, toolbox: Toolbox) -> None:
         self._toolbox = toolbox
 
-    async def call(self, agent: str, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
+    async def _allowed(self, agent: str, tool: str) -> BaseTool:
         match = next((t for t in await self._toolbox.tools_for(agent) if t.name == tool), None)
         if match is None:
             raise PermissionError(f"Agent '{agent}' may not use tool '{tool}'")
+        return match
+
+    async def call_text(self, agent: str, tool: str, arguments: dict[str, Any]) -> list[str]:
+        """For third-party tools that return plain text blocks rather than one JSON object."""
+        result = await (await self._allowed(agent, tool)).ainvoke(arguments)
+        blocks = result if isinstance(result, list) else [result]
+        return [block["text"] if isinstance(block, dict) else str(block) for block in blocks]
+
+    async def call(self, agent: str, tool: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        match = await self._allowed(agent, tool)
         try:
             result = await match.ainvoke(arguments)
         except ToolException as error:

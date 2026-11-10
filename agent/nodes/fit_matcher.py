@@ -58,7 +58,7 @@ async def match_requirements(
             "search_evidence",
             {
                 "requirement": requirement,
-                "k": runtime.config.graph.fit_evidence_per_requirement,
+                "k": runtime.config.rag.fit_evidence_per_requirement,
             },
         )
         items = [EvidenceItem.model_validate(item) for item in found["items"]]

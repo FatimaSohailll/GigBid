@@ -1,10 +1,11 @@
+import json
 from pathlib import Path
 
 import pytest
 
 from devsim.datagen.generate import generate
 from evals.metrics import ndcg_at_k, recall_at_k, reciprocal_rank
-from evals.runners.rag_eval import evaluate
+from evals.runners.rag_eval import evaluate_whole_job
 from rag.index.embedder import FastEmbedEmbedder
 from rag.ingest.chunkers import chunk_words
 from rag.ingest.loaders import load_portfolio, split_front_matter
@@ -251,13 +252,18 @@ def test_evaluation_reports_overall_persona_and_job_type(
     source = (data / "dev_set" / "ai_ml_engineer.jsonl").read_bytes()
     (data / "only_one" / "ai_ml_engineer.jsonl").write_bytes(source)
 
-    result = evaluate(
+    jobs_file = data / "marketplace" / "jobs.json"
+    result = evaluate_whole_job(
         build_retriever(components),
-        data / "only_one",
-        data / "marketplace" / "jobs.json",
+        [
+            json.loads(line)
+            for path in sorted((data / "only_one").glob("*.jsonl"))
+            for line in path.read_text(encoding="utf-8").splitlines()
+        ],
+        {job["job_id"]: job for job in json.loads(jobs_file.read_text(encoding="utf-8"))},
     )
 
     assert set(result["by_persona"]) == {"ai_ml_engineer"}
-    assert result["overall"]["jobs"] > 0
+    assert result["overall"]["count"] > 0
     assert 0 <= result["overall"]["recall_at_5"] <= 1
     assert result["by_job_type"]

@@ -9,7 +9,6 @@ from typing import Any
 
 import httpx
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.graph.state import CompiledStateGraph
 from langgraph.store.memory import InMemoryStore
 from mcp.server.auth.settings import AuthSettings
 from pydantic import AnyHttpUrl
@@ -81,15 +80,16 @@ class EvalStack:
     env: dict[str, str]
     config: AppConfig
 
-    def graph(self, persona: str, llm: LlmGateway) -> CompiledStateGraph[Any, Any, Any, Any]:
+    def runtime(self, persona: str, llm: LlmGateway) -> AgentRuntime:
         connections = connections_from_env(self.env, bearer=_token(persona))
         toolbox = Toolbox(connections, self.config, handle_tool_errors=False)
         memory = LongTermMemory(InMemoryStore(), self.config.memory)
-        runtime = AgentRuntime(self.config, llm, ToolGateway(toolbox), memory)
-        return build_bid_graph(runtime, InMemorySaver(serde=checkpoint_serde()))
+        return AgentRuntime(self.config, llm, ToolGateway(toolbox), memory)
 
     def runner(self, persona: str, llm: LlmGateway, defences: bool = True) -> GraphJobRunner:
-        return GraphJobRunner(self.graph(persona, llm), self.config, defences)
+        runtime = self.runtime(persona, llm)
+        graph = build_bid_graph(runtime, InMemorySaver(serde=checkpoint_serde()))
+        return GraphJobRunner(graph, runtime, defences)
 
     def simulate_client(self, proposal_id: str, seed: int) -> dict[str, Any]:
         """DevSim only. The official GigSim runs its own client model when it is added."""

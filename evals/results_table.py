@@ -12,9 +12,10 @@ from evals.runners.rag_eval import RESULTS_DIR, safe_name
 START, END = "<!-- results:start -->", "<!-- results:end -->"
 MISSING = "not measured"
 HEADER = (
-    "| Variant | Evidence Recall@5 | nDCG@10 | Unsupported claims per proposal | Judge score "
+    "| Variant | Evidence Recall@5, whole job | Evidence Recall@5, per requirement "
+    "| nDCG@10, per requirement | Unsupported claims per proposal | Judge score "
     "| Simulated reply rate | p95 latency (s) | Cost per proposal (USD) |\n"
-    "|---|---|---|---|---|---|---|---|"
+    "|---|---|---|---|---|---|---|---|---|"
 )
 
 
@@ -30,17 +31,20 @@ def _cell(values: dict[str, Any], key: str) -> str:
 
 def table_row(label: str, variant: str, source: str, results: Path) -> str:
     name = safe_name(variant)
-    retrieval = _load(results, f"rag_{name}_{source}.json").get("overall", {})
+    retrieval = _load(results, f"rag_{name}_{source}.json")
+    whole_job = retrieval.get("whole_job", {}).get("overall", {})
+    per_requirement = retrieval.get("per_requirement", {}).get("overall", {})
     outcomes = _load(results, f"outcomes_{name}_{source}.json").get("overall", {})
     cells = [
         label,
-        _cell(retrieval, "recall_at_5"),
-        _cell(retrieval, "ndcg_at_10"),
+        _cell(whole_job, "recall_at_5"),
+        _cell(per_requirement, "recall_at_5"),
+        _cell(per_requirement, "ndcg_at_10"),
         _cell(outcomes, "unsupported_claims_after"),
         _cell(outcomes, "judge_score"),
         _cell(outcomes, "reply_rate"),
         _cell(outcomes, "p95_latency_seconds"),
-        MISSING,
+        _cell(outcomes, "cost_per_proposal_usd"),
     ]
     return "| " + " | ".join(cells) + " |"
 

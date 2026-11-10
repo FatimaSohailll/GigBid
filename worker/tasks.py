@@ -28,8 +28,9 @@ from agent.tracing import run_config
 from apps.api.db import Repository
 from apps.api.services import DEGRADED_KEY, bid_thread, conversation_thread
 from apps.api.streaming import publish_event
-from rag.ingest.loaders import load_upload
-from rag.ingest.pipeline import ingest_documents, provision_tenant
+from rag.ingest.github import TextGateway, read_repository
+from rag.ingest.loaders import UploadMetadata, load_upload
+from rag.ingest.pipeline import ingest_documents, provision_tenant, remove_item
 from rag.types import RagComponents
 
 _WEEK_DAYS = 7
@@ -43,6 +44,7 @@ class WorkerServices:
     runtime_for: Callable[[dict[str, Any]], AgentRuntime]
     saver: BaseCheckpointSaver[Any]
     rag: Callable[[], RagComponents]
+    github: Callable[[], TextGateway | None] = lambda: None
 
     def __post_init__(self) -> None:
         self._graphs: dict[tuple[str, str], CompiledStateGraph[Any, Any, Any, Any]] = {}
@@ -328,11 +330,42 @@ async def ingest_upload(
     user_id: str,
     path: str,
     title: str,
+    metadata: dict[str, Any] | None = None,
 ) -> None:
     """Index one uploaded file. Existing items are left alone (incremental re-indexing)."""
     services = _services(ctx)
     user = await services.repository.user(user_id)
     await services.ensure_portfolio(user)  # first, or the copy would be skipped as already done
-    document = load_upload(Path(path), upload_id, title)
+    details = UploadMetadata.model_validate(metadata or {})
+    document = load_upload(Path(path), upload_id, title, details)
     ingest_documents([document], user_id, services.rag())
     await services.repository.set_upload_status(upload_id, "indexed")
+
+
+async def ingest_github(
+    ctx: dict[str, Any],
+    upload_id: str,
+    user_id: str,
+    owner: str,
+    repo: str,
+) -> None:
+    """Index a repository's README and code through the read-only GitHub MCP server."""
+    services = _services(ctx)
+    user = await services.repository.user(user_id)
+    await services.ensure_portfolio(user)
+    gateway = services.github()
+    if gateway is None:
+        await services.repository.set_upload_status(upload_id, "github_not_configured")
+        return
+    components = services.rag()
+    documents = await read_repository(gateway, owner, repo, components.config)
+    await asyncio.to_thread(ingest_documents, documents, user_id, components)
+    await services.repository.set_upload_status(upload_id, "indexed")
+
+
+async def delete_evidence(ctx: dict[str, Any], user_id: str, item_id: str) -> None:
+    """Remove one item from this user's portfolio only. Safe to run twice."""
+    services = _services(ctx)
+    user = await services.repository.user(user_id)
+    await services.ensure_portfolio(user)
+    await asyncio.to_thread(remove_item, user_id, item_id, services.rag())

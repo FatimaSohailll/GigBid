@@ -27,6 +27,7 @@ from apps.api.auth.security import TokenVault
 from apps.api.db import Repository, open_pool
 from apps.api.routers import analytics, approvals, auth, jobs, messages, proposals, runs, settings
 from apps.api.services import ApiServices, marketplace_health_url
+from rag.index.corpus import CorpusStore
 
 _TRACE_ID = re.compile(r"^[A-Za-z0-9_-]{8,64}$")
 
@@ -59,6 +60,9 @@ async def build_services() -> tuple[ApiServices, Callable[[], Awaitable[None]]]:
         marketplace_health_url=marketplace_health_url(),
         cookie_secure=os.environ.get("APP_ENV") == "production",
         llm=ModelRouter(config),
+        corpus=CorpusStore(
+            Path(os.environ.get("RAG_DATA_DIR", "data/processed/rag")) / "corpus.sqlite3"
+        ),
     )
 
     async def close() -> None:

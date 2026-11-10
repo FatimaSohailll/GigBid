@@ -28,6 +28,7 @@ def _year(date: str | None) -> int | None:
 def chunk_payload(tenant: str, document: PortfolioDocument) -> dict[str, Any]:
     return {
         "tenant": tenant,
+        "persona": tenant,
         "item_id": document.item_id,
         "type": document.type,
         "source": document.source,
@@ -88,20 +89,20 @@ class VectorIndex:
             if points:
                 self._client.upsert(
                     self._collection,
-                    points=[self._copied(point, target) for point in points],
+                    points=[self._copied(point, source, target) for point in points],
                 )
             if offset is None:
                 return
 
     @staticmethod
-    def _copied(point: models.Record, target: str) -> models.PointStruct:
+    def _copied(point: models.Record, source: str, target: str) -> models.PointStruct:
         payload = dict(point.payload or {})
         identity = f"{target}|{payload['item_id']}|{payload['chunk']}"
         assert point.vector is not None
         return models.PointStruct(
             id=str(uuid.uuid5(_POINT_NAMESPACE, identity)),
             vector=cast(Any, point.vector),
-            payload={**payload, "tenant": target},
+            payload={**payload, "tenant": target, "persona": payload.get("persona", source)},
         )
 
     def replace_item(

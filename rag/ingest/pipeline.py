@@ -22,9 +22,15 @@ class IngestReport:
     chunks_embedded: int = 0
 
 
+_PAYLOAD_VERSION = 2  # bump when chunk metadata changes, so the next ingest rewrites it
+
+
 def _content_hash(document: PortfolioDocument, components: RagComponents) -> str:
     rag = components.config
-    settings = f"{rag.chunk_size_words}:{rag.chunk_overlap_words}:{components.embedder.name}"
+    settings = (
+        f"{_PAYLOAD_VERSION}:{rag.chunk_size_words}:{rag.chunk_overlap_words}:"
+        f"{components.embedder.name}"
+    )
     return hashlib.sha256(f"{settings}|{document.model_dump_json()}".encode()).hexdigest()
 
 

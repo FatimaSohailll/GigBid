@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
@@ -44,20 +44,57 @@ def _read_json_items(path: Path, id_field: str) -> dict[str, dict[str, Any]]:
     return {row[id_field]: row for row in rows}
 
 
-def load_upload(path: Path, upload_id: str, title: str) -> PortfolioDocument:
+UPLOAD_PREFIXES = {
+    "case_study": "case",
+    "cv": "cv",
+    "proposal": "proposal",
+    "review": "review",
+    "readme": "readme",
+    "code": "code",
+}
+
+
+class UploadMetadata(BaseModel):
+    """What the user tells us about a file. Front matter in the file takes precedence."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    item_type: Literal["case_study", "cv", "proposal", "review", "readme", "code"] = "case_study"
+    project: str | None = Field(default=None, max_length=128)
+    skills: list[str] = Field(default_factory=list, max_length=30)
+    date: str | None = Field(default=None, max_length=32)
+    client_industry: str | None = Field(default=None, max_length=64)
+    outcome: Literal["won", "replied", "ignored"] | None = None
+
+
+def load_upload(
+    path: Path,
+    upload_id: str,
+    title: str,
+    metadata: UploadMetadata | None = None,
+) -> PortfolioDocument:
     """Read one file the user added through the web interface."""
+    front_matter: dict[str, Any] = {}
     if path.suffix.lower() == ".pdf":
         text = read_pdf_text(path)
     else:
         front_matter, text = split_front_matter(path.read_text(encoding="utf-8"))
-        title = str(front_matter.get("title", title))
+    given = (metadata or UploadMetadata()).model_dump()
+    known = {key: front_matter[key] for key in given if key in front_matter}
+    if "date" in known:
+        known["date"] = str(known["date"])
+    details = UploadMetadata.model_validate({**given, **known})
     return PortfolioDocument(
-        item_id=f"case:upload:{upload_id}",
-        type="case_study",
-        title=title,
+        item_id=f"{UPLOAD_PREFIXES[details.item_type]}:upload:{upload_id}",
+        type=details.item_type,
+        title=str(front_matter.get("title", title)),
         text=text,
         source=path.name,
-        project=upload_id,
+        project=details.project or upload_id,
+        skills=details.skills,
+        date=details.date,
+        client_industry=details.client_industry,
+        outcome=details.outcome,
     )
 
 

@@ -15,6 +15,7 @@ from agent.llm import LlmGateway
 from agent.memory.store import LongTermMemory
 from apps.api.auth.security import TokenVault, hash_token
 from apps.api.db import Repository
+from rag.index.corpus import CorpusStore
 
 SESSION_COOKIE = "gigbid_session"
 DEGRADED_KEY = "gigbid:degraded:marketplace"
@@ -33,6 +34,7 @@ class ApiServices:
     marketplace_health_url: str | None
     cookie_secure: bool = False
     llm: LlmGateway | None = None
+    corpus: CorpusStore | None = None
 
     @property
     def redis(self) -> Redis:

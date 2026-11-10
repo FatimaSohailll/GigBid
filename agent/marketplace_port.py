@@ -7,6 +7,7 @@ marketplace is behind it.
 
 from contextvars import ContextVar
 from datetime import datetime
+from enum import StrEnum
 from typing import Protocol
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -88,6 +89,7 @@ class Proposal(_Record):
     connects_spent: int = 0
     created_at: datetime
     submitted_at: datetime | None = None
+    requires_platform_confirmation: bool = False
 
 
 class Conversation(_Record):
@@ -164,7 +166,16 @@ class MarketplaceUnavailable(MarketplaceError):
     retryable = True
 
 
+class SubmissionMode(StrEnum):
+    """What "submit" means on this marketplace, so the graph need not know which one it uses."""
+
+    DIRECT = "direct"  # GigSim: the marketplace receives the proposal
+    PLATFORM_CONFIRMATION = "platform_confirmation"  # Upwork: the user confirms the draft there
+
+
 class MarketplacePort(Protocol):
+    submission_mode: SubmissionMode
+
     async def search_jobs(
         self,
         query: str | None,

@@ -108,6 +108,11 @@
               "title": "Payload",
               "type": "object"
             },
+            "requires_platform_confirmation": {
+              "default": false,
+              "title": "Requires Platform Confirmation",
+              "type": "boolean"
+            },
             "tool": {
               "title": "Tool",
               "type": "string"
@@ -155,6 +160,11 @@
             "proposal_id": {
               "title": "Proposal Id",
               "type": "string"
+            },
+            "requires_platform_confirmation": {
+              "default": false,
+              "title": "Requires Platform Confirmation",
+              "type": "boolean"
             },
             "screening_answers": {
               "items": {
@@ -620,6 +630,11 @@
         "proposal_id": {
           "title": "Proposal Id",
           "type": "string"
+        },
+        "requires_platform_confirmation": {
+          "default": false,
+          "title": "Requires Platform Confirmation",
+          "type": "boolean"
         },
         "screening_answers": {
           "items": {
@@ -1180,6 +1195,11 @@
               "title": "Payload",
               "type": "object"
             },
+            "requires_platform_confirmation": {
+              "default": false,
+              "title": "Requires Platform Confirmation",
+              "type": "boolean"
+            },
             "tool": {
               "title": "Tool",
               "type": "string"
@@ -1356,6 +1376,11 @@
               "title": "Payload",
               "type": "object"
             },
+            "requires_platform_confirmation": {
+              "default": false,
+              "title": "Requires Platform Confirmation",
+              "type": "boolean"
+            },
             "tool": {
               "title": "Tool",
               "type": "string"
@@ -1403,6 +1428,11 @@
             "proposal_id": {
               "title": "Proposal Id",
               "type": "string"
+            },
+            "requires_platform_confirmation": {
+              "default": false,
+              "title": "Requires Platform Confirmation",
+              "type": "boolean"
             },
             "screening_answers": {
               "items": {

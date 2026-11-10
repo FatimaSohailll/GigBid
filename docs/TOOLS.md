@@ -29,4 +29,18 @@ The Workspace server uses a documented local backend, as A3 permits. It never se
 The Portfolio server also exposes the resource templates `portfolio://case/{id}` and
 `portfolio://proposal/{id}`, and the prompts `answer_screening_question` and `prove_requirement`.
 
-Upwork and the second third-party server are added in their phase.
+## Third-party servers
+
+| Tool | Server | Read or write | Annotations | Auth |
+|---|---|---|---|---|
+| `get_me` | GitHub (official) | Read | read-only server mode | Fine-grained token |
+| `search_repositories` | GitHub (official) | Read | read-only server mode | Fine-grained token |
+| `get_file_contents` | GitHub (official) | Read | read-only server mode | Fine-grained token |
+
+GitHub trust rationale: maintained by GitHub, used only by ingestion, restricted by a read-only
+token, the server's read-only mode and a name allowlist. Fetched repository text is untrusted data.
+
+Upwork trust rationale: Upwork's own server at `mcp.upwork.com`, reached only through the marketplace
+port with each user's encrypted OAuth token; every write stays a draft the user confirms on Upwork.
+
+Upwork's tool list needs a signed-in account, so its rows are added when that sign-in exists.

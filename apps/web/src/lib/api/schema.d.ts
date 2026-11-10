@@ -314,6 +314,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portfolio/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Evidence */
+        get: operations["evidence_api_portfolio_evidence_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portfolio/evidence/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Evidence
+         * @description Remove one item from this user's portfolio. Other users are not affected.
+         */
+        delete: operations["delete_evidence_api_portfolio_evidence__item_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portfolio/github": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ingest Github
+         * @description Index a repository's README and code on the worker, through the GitHub MCP server.
+         */
+        post: operations["ingest_github_api_portfolio_github_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portfolio/uploads": {
         parameters: {
             query?: never;
@@ -326,7 +383,7 @@ export interface paths {
         put?: never;
         /**
          * Upload
-         * @description Save a portfolio file and index it on the worker.
+         * @description Save a portfolio file with its metadata and index it on the worker.
          */
         post: operations["upload_api_portfolio_uploads_post"];
         delete?: never;
@@ -599,8 +656,26 @@ export interface components {
         };
         /** Body_upload_api_portfolio_uploads_post */
         Body_upload_api_portfolio_uploads_post: {
+            /** Client Industry */
+            client_industry?: string | null;
+            /** Date */
+            date?: string | null;
             /** File */
             file: string;
+            /**
+             * Item Type
+             * @default case_study
+             */
+            item_type: string;
+            /** Outcome */
+            outcome?: string | null;
+            /** Project */
+            project?: string | null;
+            /**
+             * Skills
+             * @default
+             */
+            skills: string;
             /** Title */
             title: string;
         };
@@ -731,6 +806,27 @@ export interface components {
             /** Type */
             type: string;
         };
+        /** EvidenceOut */
+        EvidenceOut: {
+            /** Client Industry */
+            client_industry: string | null;
+            /** Date */
+            date: string | null;
+            /** Id */
+            id: string;
+            /** Outcome */
+            outcome: string | null;
+            /** Project */
+            project: string | null;
+            /** Skills */
+            skills: string[];
+            /** Source */
+            source: string;
+            /** Title */
+            title: string;
+            /** Type */
+            type: string;
+        };
         /** FitReport */
         FitReport: {
             /** Evidence Ids */
@@ -745,6 +841,11 @@ export interface components {
             reasons?: string[];
             /** Score */
             score: number;
+        };
+        /** GithubIngestIn */
+        GithubIngestIn: {
+            /** Repository */
+            repository: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1794,6 +1895,113 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PipelineCard"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    evidence_api_portfolio_evidence_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                gigbid_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvidenceOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_evidence_api_portfolio_evidence__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                item_id: string;
+            };
+            cookie?: {
+                gigbid_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ingest_github_api_portfolio_github_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                gigbid_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GithubIngestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadOut"];
                 };
             };
             /** @description Validation Error */
