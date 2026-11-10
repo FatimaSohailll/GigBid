@@ -1,0 +1,20 @@
+# R&D question A. One model and one set of settings for every tool configuration.
+hypothesis: >-
+  Keeping the current mid-sized tool set and rewriting its descriptions gives higher task-level
+  tool-selection accuracy than either a fine-grained or a coarse set, and uses fewer tokens per
+  task than the fine-grained set.
+model:
+  provider: ollama
+  name: "qwen3:8b"
+  temperature: 0
+  # Passed unchanged to the provider's chat model. Must stay identical across tool sets.
+  options:
+    reasoning: false # Qwen3 thinking off, so tokens measure tool use and not hidden reasoning
+    seed: 7
+    num_ctx: 8192 # fits the largest set (about 5,000 tokens); a smaller window silently truncates
+    num_predict: 768
+limitations:
+  - One small open model on one machine, so results may not hold for stronger models.
+  - Tool results are fixed canned replies; the tools are not executed.
+  - The 40 tasks were written by the author of the tool sets, which may favour them.
+  - Forty tasks give wide confidence intervals; small differences are not meaningful.

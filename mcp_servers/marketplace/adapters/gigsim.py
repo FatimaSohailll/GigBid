@@ -34,6 +34,7 @@ from agent.marketplace_port import (
     PriceStats,
     Proposal,
     ProposalDraftRequest,
+    SubmissionMode,
     current_trace_id,
 )
 
@@ -97,6 +98,8 @@ def _segment(value: str) -> str:
 
 
 class GigSimAdapter:
+    submission_mode = SubmissionMode.DIRECT
+
     def __init__(
         self,
         base_url: str,

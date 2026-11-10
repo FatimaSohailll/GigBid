@@ -119,6 +119,11 @@ class RagConfig(_Strict):
     outcome_boosts: dict[str, float]
     corrective_min_coverage: float = Field(ge=0, le=1)
     corrective_max_retries: int = Field(ge=0)
+    fit_evidence_per_requirement: int = Field(ge=1)
+    github_max_files: int = Field(ge=1)
+    github_max_file_bytes: int = Field(ge=1)
+    github_max_depth: int = Field(ge=1)
+    github_code_extensions: list[str]
 
     @model_validator(mode="after")
     def _overlap_smaller_than_chunk(self) -> Self:
@@ -143,13 +148,13 @@ class GraphConfig(_Strict):
     node_timeout_seconds: float = Field(gt=0)
     node_max_attempts: int = Field(ge=1)
     node_backoff_seconds: float = Field(ge=0)
-    fit_evidence_per_requirement: int = Field(ge=1)
     duplicate_similarity: float = Field(gt=0, le=1)
 
 
 class WritingConfig(_Strict):
     min_cover_letter_words: int = Field(gt=0)
     max_cover_letter_words: int = Field(gt=0)
+    phrasing_examples: int = Field(ge=1)
 
 
 class PricingConfig(_Strict):
@@ -215,6 +220,12 @@ class AppConfig(_Strict):
         route = profile.nodes[node]
         fallback = profile.tiers[route.fallback] if route.fallback else None
         return profile.tiers[route.tier], fallback
+
+    @property
+    def outcome_aware(self) -> bool:
+        """True when the deployed variant ranks by outcome, which also shows winning phrasing."""
+        variant = self.rag.variant
+        return variant == "v4_outcome" or (variant.startswith("combo:") and "outcome" in variant)
 
     def tools_for(self, agent: str) -> list[str]:
         return self.agent_tools[agent]

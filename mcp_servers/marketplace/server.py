@@ -31,6 +31,7 @@ from agent.marketplace_port import (
     PriceStats,
     Proposal,
     ProposalDraftRequest,
+    SubmissionMode,
     current_trace_id,
 )
 from mcp_servers.marketplace.adapters.gigsim import GigSimAdapter, PerUserRateLimiter
@@ -376,6 +377,9 @@ def build_server(
                     connects_balance_after=balance.balance - job.connects_cost,
                     can_execute=not blockers,
                     blockers=blockers,
+                    requires_platform_confirmation=(
+                        port.submission_mode is SubmissionMode.PLATFORM_CONFIRMATION
+                    ),
                 )
                 return ProposalWriteResult(dry_run=True, preview=preview)
             return await once(

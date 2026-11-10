@@ -59,6 +59,7 @@ class DryRunPreview(BaseModel):
     connects_balance_after: int
     can_execute: bool
     blockers: list[str] = Field(default_factory=list)
+    requires_platform_confirmation: bool = False
 
 
 class ProposalWriteResult(BaseModel):

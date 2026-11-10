@@ -1,0 +1,13 @@
+# Four coarse tools. "action" names the operation and "params" holds its arguments.
+marketplace_read:
+  description: Read marketplace data.
+  actions: [search_jobs, get_job, get_client_history, get_connects_balance, get_price_stats, get_proposal, list_conversations, list_messages, list_events]
+marketplace_write:
+  description: Change marketplace data. Needs the freelancer's approval.
+  actions: [create_proposal_draft, submit_proposal, send_message]
+portfolio:
+  description: Read the freelancer's portfolio.
+  actions: [search_evidence, get_case_study, list_skills]
+workspace:
+  description: Use the calendar and email drafts.
+  actions: [free_slots, create_interview_hold, create_email_draft]

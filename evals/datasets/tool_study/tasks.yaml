@@ -1,0 +1,179 @@
+# Forty tasks with known correct calls. "tool" and "args" use the current tool names; "fine" names
+# the expected tool in the fine-grained set where it differs. Each args value must match; a
+# {contains: text} value matches free text. Extra arguments are allowed.
+- id: r01
+  category: read
+  instruction: Show me open jobs that need Kafka.
+  steps: [{tool: search_jobs, fine: search_jobs_by_skills, args: {skills: [Kafka]}, observation: '{"items":[{"job_id":"job-0101"}]}'}]
+- id: r02
+  category: read
+  instruction: Find open jobs matching the phrase "churn prediction".
+  steps: [{tool: search_jobs, fine: search_jobs_by_keyword, args: {query: {contains: churn}}, observation: '{"items":[{"job_id":"job-0102"}]}'}]
+- id: r03
+  category: read
+  instruction: Open job job-0421 and show me all of its details.
+  steps: [{tool: get_job, args: {job_id: job-0421}, observation: '{"job_id":"job-0421","title":"ETL pipeline"}'}]
+- id: r04
+  category: read
+  instruction: How many Connects do I have left?
+  steps: [{tool: get_connects_balance, args: {}, observation: '{"balance":120,"spent":30}'}]
+- id: r05
+  category: read
+  instruction: Get the full record of client client-77.
+  steps: [{tool: get_client_history, fine: get_client_reviews, args: {client_id: client-77}, observation: '{"client_id":"client-77","average_rating":4.8}'}]
+- id: r06
+  category: read
+  instruction: What did past jobs in the data-engineering category pay?
+  steps: [{tool: get_price_stats, fine: get_price_stats_by_category, args: {category: data-engineering}, observation: '{"p25":800,"p50":1500,"p75":3000}'}]
+- id: r07
+  category: read
+  instruction: Show me proposal prop-1042 in full.
+  steps: [{tool: get_proposal, args: {proposal_id: prop-1042}, observation: '{"proposal_id":"prop-1042","status":"submitted"}'}]
+- id: r08
+  category: read
+  instruction: List all my client conversations.
+  steps: [{tool: list_conversations, args: {}, observation: '{"items":[{"conversation_id":"conv-5"}]}'}]
+- id: r09
+  category: read
+  instruction: Read the messages in conversation conv-5.
+  steps: [{tool: list_messages, args: {conversation_id: conv-5}, observation: '{"items":[{"body":"Can we talk?"}]}'}]
+- id: r10
+  category: read
+  instruction: What skills can my portfolio prove?
+  steps: [{tool: list_skills, args: {}, observation: '{"items":[{"skill":"Python","item_count":9}]}'}]
+- id: r11
+  category: read
+  instruction: Get the full text of case study case:churn-radar.
+  steps: [{tool: get_case_study, args: {id: "case:churn-radar"}, observation: '{"id":"case:churn-radar","content":"..."}'}]
+- id: r12
+  category: read
+  instruction: When am I free for a call in the next few days?
+  steps: [{tool: free_slots, args: {}, observation: '{"items":[{"start":"2026-11-12T10:00:00Z"}]}'}]
+- id: n01
+  category: near_miss
+  instruction: What is the budget on job job-0333?
+  steps: [{tool: get_job, fine: get_job_budget, args: {job_id: job-0333}, observation: '{"budget":{"min":500,"max":900}}'}]
+- id: n02
+  category: near_miss
+  instruction: What screening questions does job job-0334 ask?
+  steps: [{tool: get_job, fine: get_job_screening_questions, args: {job_id: job-0334}, observation: '{"screening_questions":["Your experience?"]}'}]
+- id: n03
+  category: near_miss
+  instruction: What is client-12's average rating?
+  steps: [{tool: get_client_history, fine: get_client_rating, args: {client_id: client-12}, observation: '{"average_rating":3.9}'}]
+- id: n04
+  category: near_miss
+  instruction: How much has client-13 spent on the platform?
+  steps: [{tool: get_client_history, fine: get_client_spend, args: {client_id: client-13}, observation: '{"total_spent_usd":42000}'}]
+- id: n05
+  category: near_miss
+  instruction: How many Connects have I used so far?
+  steps: [{tool: get_connects_balance, fine: get_connects_spent, args: {}, observation: '{"balance":120,"spent":30}'}]
+- id: n06
+  category: near_miss
+  instruction: Has proposal prop-2001 been viewed yet? I only need its status.
+  steps: [{tool: get_proposal, fine: get_proposal_status, args: {proposal_id: prop-2001}, observation: '{"status":"viewed"}'}]
+- id: n07
+  category: near_miss
+  instruction: Find past client reviews that praise my communication.
+  steps: [{tool: search_evidence, fine: search_client_reviews, args: {requirement: {contains: communication}, filters: {types: [review]}}, observation: '{"items":[{"evidence_id":"review:9"}]}'}]
+- id: n08
+  category: near_miss
+  instruction: Find proposals I wrote that won, about dashboards.
+  steps: [{tool: search_evidence, fine: search_past_proposals, args: {requirement: {contains: dashboard}, filters: {types: [proposal], outcomes: [won]}}, observation: '{"items":[{"evidence_id":"proposal:3"}]}'}]
+- id: w01
+  category: write
+  instruction: 'I approve this. Save a draft proposal for job job-0500 with the cover letter "Your ETL backlog is a queueing problem." and a bid of 1200.'
+  steps: [{tool: create_proposal_draft, args: {job_id: job-0500, cover_letter: {contains: queueing}, bid_amount: 1200}, observation: '{"proposal":{"proposal_id":"prop-3000","status":"drafted"}}'}]
+- id: w02
+  category: write
+  instruction: 'Preview a draft for job job-0501 with the cover letter "I cut report time by 40%." and a bid of 800, without saving anything.'
+  steps: [{tool: create_proposal_draft, fine: preview_proposal_draft, args: {job_id: job-0501, cover_letter: {contains: report}, bid_amount: 800, dry_run: true}, observation: '{"dry_run":true,"preview":{"connects_cost":0}}'}]
+- id: w03
+  category: write
+  instruction: I have approved it. Submit proposal prop-3100.
+  steps: [{tool: submit_proposal, args: {proposal_id: prop-3100}, observation: '{"proposal":{"status":"submitted"}}'}]
+- id: w04
+  category: write
+  instruction: What would submitting proposal prop-3101 cost? Do not actually submit it.
+  steps: [{tool: submit_proposal, fine: preview_submit_proposal, args: {proposal_id: prop-3101, dry_run: true}, observation: '{"dry_run":true,"preview":{"connects_cost":8}}'}]
+- id: w05
+  category: write
+  instruction: 'I approve this reply. In conversation conv-8, send: "Thursday at 10 works for me."'
+  steps: [{tool: send_message, args: {conversation_id: conv-8, body: {contains: Thursday}}, observation: '{"message":{"message_id":"m-1"}}'}]
+- id: w06
+  category: write
+  instruction: 'Show me exactly what would be sent if I replied "Happy to start Monday." in conversation conv-9, but do not send it.'
+  steps: [{tool: send_message, fine: preview_message, args: {conversation_id: conv-9, body: {contains: Monday}, dry_run: true}, observation: '{"dry_run":true,"preview":{"can_execute":true}}'}]
+- id: w07
+  category: write
+  instruction: 'I approve. Put a 30-minute interview hold titled "Acme intro" on my calendar at 2026-11-13T10:00:00Z.'
+  steps: [{tool: create_interview_hold, args: {start: {contains: 2026-11-13T10:00}, duration_minutes: 30, title: {contains: Acme}}, observation: '{"status":"tentative"}'}]
+- id: w08
+  category: write
+  instruction: 'Save an email draft to sam@acme.test with the subject "Portfolio link" and the body "Here is my portfolio."'
+  steps: [{tool: create_email_draft, args: {subject: {contains: Portfolio}, body: {contains: portfolio}, recipient: sam@acme.test}, observation: '{"status":"draft"}'}]
+- id: m01
+  category: multi_step
+  instruction: Look up job job-0600, then get the record of the client who posted it.
+  steps:
+    - {tool: get_job, args: {job_id: job-0600}, observation: '{"job_id":"job-0600","client_id":"client-60"}'}
+    - {tool: get_client_history, fine: get_client_reviews, args: {client_id: client-60}, observation: '{"average_rating":4.2}'}
+- id: m02
+  category: multi_step
+  instruction: Find open jobs that need dbt, then show the full details of the first result.
+  steps:
+    - {tool: search_jobs, fine: search_jobs_by_skills, args: {skills: [dbt]}, observation: '{"items":[{"job_id":"job-0610"},{"job_id":"job-0611"}]}'}
+    - {tool: get_job, args: {job_id: job-0610}, observation: '{"job_id":"job-0610"}'}
+- id: m03
+  category: multi_step
+  instruction: Find my conversations, then read the messages in the first one.
+  steps:
+    - {tool: list_conversations, args: {}, observation: '{"items":[{"conversation_id":"conv-20"},{"conversation_id":"conv-21"}]}'}
+    - {tool: list_messages, args: {conversation_id: conv-20}, observation: '{"items":[{"body":"Hello"}]}'}
+- id: m04
+  category: multi_step
+  instruction: Look up job job-0620, then get past prices for its category.
+  steps:
+    - {tool: get_job, args: {job_id: job-0620}, observation: '{"job_id":"job-0620","category":"web-development"}'}
+    - {tool: get_price_stats, fine: get_price_stats_by_category, args: {category: web-development}, observation: '{"p50":1200}'}
+- id: m05
+  category: multi_step
+  instruction: Search my portfolio for evidence of Airflow, then open the full case study for the top result.
+  steps:
+    - {tool: search_evidence, fine: search_all_evidence, args: {requirement: {contains: Airflow}}, observation: '{"items":[{"evidence_id":"case:etl-orchestrator","type":"case_study"}]}'}
+    - {tool: get_case_study, args: {id: "case:etl-orchestrator"}, observation: '{"id":"case:etl-orchestrator"}'}
+- id: m06
+  category: multi_step
+  instruction: Check my free slots, then, as I approve it, hold the first one for 30 minutes titled "Client call".
+  steps:
+    - {tool: free_slots, args: {}, observation: '{"items":[{"start":"2026-11-14T09:00:00Z","end":"2026-11-14T09:30:00Z"}]}'}
+    - {tool: create_interview_hold, args: {start: {contains: 2026-11-14T09:00}, duration_minutes: 30, title: {contains: Client}}, observation: '{"status":"tentative"}'}
+- id: m07
+  category: multi_step
+  instruction: 'I approve all of this. Save a draft for job job-0630 with the cover letter "Your pipeline needs retries." and a bid of 950, then submit that draft.'
+  steps:
+    - {tool: create_proposal_draft, args: {job_id: job-0630, cover_letter: {contains: retries}, bid_amount: 950}, observation: '{"proposal":{"proposal_id":"prop-3300","status":"drafted"}}'}
+    - {tool: submit_proposal, args: {proposal_id: prop-3300}, observation: '{"proposal":{"status":"submitted"}}'}
+- id: m08
+  category: multi_step
+  instruction: 'Read the messages in conversation conv-30, then, as I approve it, reply there with "Yes, I can share samples."'
+  steps:
+    - {tool: list_messages, args: {conversation_id: conv-30}, observation: '{"items":[{"body":"Can you share samples?"}]}'}
+    - {tool: send_message, args: {conversation_id: conv-30, body: {contains: samples}}, observation: '{"message":{"message_id":"m-2"}}'}
+- id: x01
+  category: no_tool
+  instruction: In one sentence, what does a cover letter do?
+  steps: []
+- id: x02
+  category: no_tool
+  instruction: What is 15% of a 2000 dollar bid?
+  steps: []
+- id: x03
+  category: no_tool
+  instruction: Rephrase "I am very good at Python" so it sounds less boastful.
+  steps: []
+- id: x04
+  category: no_tool
+  instruction: 'Should I send "I can start today" to the client in conv-40? I have not decided yet, so just give me your opinion.'
+  steps: []

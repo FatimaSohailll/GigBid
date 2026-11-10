@@ -29,6 +29,7 @@ agent_tools:
   compliance: []
   sync: [list_events, get_proposal]
   client_liaison: [list_conversations, list_messages, get_job, free_slots]
+  github_ingest: [get_me, search_repositories, get_file_contents]
   submission: [create_proposal_draft, submit_proposal, send_message, get_connects_balance, create_interview_hold, create_email_draft]
 
 models:
@@ -94,6 +95,11 @@ rag:
   outcome_boosts: {won: 1.3, replied: 1.1, ignored: 0.4}
   corrective_min_coverage: 0.34
   corrective_max_retries: 1
+  fit_evidence_per_requirement: 3 # what the Fit Matcher requests; the evaluation scores the same
+  github_max_files: 30
+  github_max_file_bytes: 40000
+  github_max_depth: 3
+  github_code_extensions: [.py, .ts, .tsx, .js, .jsx, .go, .rs, .java, .sql]
 
 verification:
   supported_coverage: 0.75
@@ -109,12 +115,12 @@ graph:
   node_timeout_seconds: 240
   node_max_attempts: 3
   node_backoff_seconds: 0.5
-  fit_evidence_per_requirement: 3
   duplicate_similarity: 0.8
 
 writing:
   min_cover_letter_words: 40
   max_cover_letter_words: 300
+  phrasing_examples: 2 # winning proposals shown for tone, only when the variant is outcome-aware
 
 pricing:
   connect_value_usd: 0.15
