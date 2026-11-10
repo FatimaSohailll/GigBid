@@ -47,6 +47,7 @@ from mcp_servers.marketplace.schemas import (
     SubmitProposalInput,
 )
 from mcp_servers.marketplace.store import IdempotencyKeyReused, ServerStore, fingerprint
+from mcp_servers.tenant_auth import read_user_token
 
 READ = ToolAnnotations(
     readOnlyHint=True,
@@ -96,10 +97,17 @@ class UserAccess:
 
 
 class StaticBearerVerifier(TokenVerifier):
-    def __init__(self, users: Mapping[str, UserAccess]) -> None:
+    """Marketplace calls act as the account, which several demo users may share."""
+
+    def __init__(self, users: Mapping[str, UserAccess], signing_key: str | None = None) -> None:
         self._users = users
+        self._signing_key = signing_key
+        self._accounts = {access.user_id for access in users.values()}
 
     async def verify_token(self, token: str) -> AccessToken | None:
+        signed = read_user_token(self._signing_key, token)
+        if signed is not None and signed[1] in self._accounts:
+            return AccessToken(token=token, client_id=signed[1], scopes=[])
         for known, access in self._users.items():
             if hmac.compare_digest(token.encode(), known.encode()):
                 return AccessToken(token=token, client_id=access.user_id, scopes=[])
@@ -465,7 +473,7 @@ def create_http_server(environ: Mapping[str, str] | None = None) -> FastMCP:
             get_config().marketplace,
         ),
         ServerStore(Path(env.get("MCP_MARKETPLACE_DB", "data/processed/marketplace_mcp.sqlite3"))),
-        token_verifier=StaticBearerVerifier(users),
+        token_verifier=StaticBearerVerifier(users, env.get("MCP_TENANT_SIGNING_KEY")),
         auth=AuthSettings(
             issuer_url=AnyHttpUrl(public_url),
             resource_server_url=AnyHttpUrl(public_url),

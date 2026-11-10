@@ -64,7 +64,7 @@ def create_server(environ: Mapping[str, str] | None = None) -> tuple[FastMCP, st
     url = AnyHttpUrl(env.get("MCP_PORTFOLIO_PUBLIC_URL", f"http://{host}:{port}"))
     server = build_server(
         open_components(environ=env),
-        token_verifier=TenantBearerVerifier(tenants),
+        token_verifier=TenantBearerVerifier(tenants, env.get("MCP_TENANT_SIGNING_KEY")),
         auth=AuthSettings(issuer_url=url, resource_server_url=url, validate_token_resource=False),
         host=host,
         port=port,

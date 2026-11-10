@@ -1,7 +1,7 @@
 .PHONY: install dev test eval seed ingest db graphs openapi e2e demo lint format guards api worker
 
 db:
-	docker compose -f infra/docker-compose.yml up -d --wait postgres redis
+	docker compose -f infra/docker-compose.yml up -d --wait postgres redis qdrant
 
 worker:
 	uv run --locked arq worker.main.WorkerSettings
