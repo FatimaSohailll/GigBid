@@ -339,3 +339,42 @@ def verify_draft(
         report=report,
         needs_rewrite=bool(removed) and emptied,
     )
+
+
+class FinalClaimCheck(BaseModel):
+    """Claims in the text that is actually sent, checked independently of earlier verdicts."""
+
+    total_claims: int
+    unsupported: int
+    unsupported_rate: float
+    unsupported_claims: list[str]
+
+
+def recheck_final_text(
+    draft: ProposalDraft,
+    evidence: list[EvidenceItem],
+    judge: ClaimJudge,
+    vocabulary: Collection[str] = (),
+    max_evidence: int | None = None,
+    trusted_terms: Collection[str] = (),
+) -> FinalClaimCheck:
+    """Check the final letter and answers from scratch.
+
+    Nothing from verify_draft is reused. Its "after" count covers only the claims it kept, so it
+    cannot be anything but zero, and revisions and redaction can change the text afterwards.
+    """
+    claims = [
+        claim
+        for prefix, text in _sections(draft)
+        for _, claim in check_claims(
+            text, evidence, judge, vocabulary, prefix, max_evidence, trusted_terms
+        )
+        if claim is not None
+    ]
+    unsupported = [claim.text for claim in claims if _is_unsupported(claim)]
+    return FinalClaimCheck(
+        total_claims=len(claims),
+        unsupported=len(unsupported),
+        unsupported_rate=_rate(len(unsupported), len(claims)),
+        unsupported_claims=unsupported,
+    )

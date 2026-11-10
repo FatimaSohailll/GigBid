@@ -69,6 +69,11 @@ def _mean(values: list[float]) -> float | None:
     return round(mean(values), 4) if values else None
 
 
+def _ratio(rows: list[dict[str, Any]], part: str, whole: str) -> float | None:
+    total = sum(row[whole] or 0 for row in rows)
+    return round(sum(row[part] or 0 for row in rows) / total, 4) if total else None
+
+
 def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
     done = [row for row in rows if not row["error"]]
     sent = [row for row in done if row["submitted"]]
@@ -88,6 +93,8 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "reply_rate_over_all_jobs": _mean([float(row["replied"]) for row in done]),
         "unsupported_claims_before": _mean([row["unsupported_before"] for row in drafted]),
         "unsupported_claims_after": _mean([row["unsupported_after"] for row in drafted]),
+        "unsupported_rate_before": _ratio(drafted, "unsupported_before", "claims_before"),
+        "unsupported_rate_after": _ratio(drafted, "unsupported_after", "claims_after"),
         "judge_score": _mean(
             [row["judge_overall"] for row in sent if row["judge_overall"] is not None]
         ),
@@ -101,8 +108,10 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
 
 async def run(arguments: argparse.Namespace) -> dict[str, Any]:
     load_dotenv()
-    config = eval_config(get_config())
-    variant = arguments.variant or config.rag.variant
+    base = eval_config(get_config())
+    variant = arguments.variant or base.rag.variant
+    # The Writer's phrasing examples follow the variant, so each run tests one complete design.
+    config = base.model_copy(update={"rag": base.rag.model_copy(update={"variant": variant})})
     components = open_components(config)
     name = f"{safe_name(variant)}_{arguments.source}"
     tag = f"_{arguments.tag}" if arguments.tag else ""

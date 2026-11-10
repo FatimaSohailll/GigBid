@@ -11,11 +11,13 @@ from typing import Any, Protocol
 
 from langgraph.types import Command
 
-from agent.config import AppConfig
 from agent.guardrails import defences_off
 from agent.handoffs import RiskFlag
+from agent.nodes.verifier import check_final_text
+from agent.runtime import AgentRuntime
 from agent.state import NodeUsage, ThreadStatus
 from agent.tracing import run_config
+from agent.usage import collect_model_calls
 from evals.harness_state import initial_state, trace_id
 
 _FAILED = {ThreadStatus.NEEDS_ATTENTION.value, ThreadStatus.DEAD_LETTER.value}
@@ -30,8 +32,13 @@ class JobResult:
     price: float | None = None
     proposal_id: str | None = None
     cover_letter: str | None = None
+    claims_before: int | None = None
     unsupported_before: int | None = None
+    claims_after: int | None = None
     unsupported_after: int | None = None
+    unsupported_final_claims: list[str] = field(default_factory=list)
+    final_check_tokens: int = 0
+    final_check_cost_usd: float | None = None
     tokens: int = 0
     cost_usd: float | None = None
     latency_seconds: float = 0.0
@@ -67,9 +74,10 @@ def total_cost(usage: list[NodeUsage]) -> float | None:
 class GraphJobRunner:
     name = "graph"
 
-    def __init__(self, graph: Any, config: AppConfig, defences: bool = True) -> None:
+    def __init__(self, graph: Any, runtime: AgentRuntime, defences: bool = True) -> None:
         self._graph = graph
-        self._config = config
+        self._runtime = runtime
+        self._config = runtime.config
         self._defences = defences
 
     def _thread(self, gold: dict[str, Any]) -> dict[str, Any]:
@@ -96,8 +104,8 @@ class GraphJobRunner:
             price=quote.amount if quote else None,
             proposal_id=state.get("proposal_id"),
             cover_letter=drafts[-1].cover_letter if drafts else None,
-            unsupported_before=reports[-1]["unsupported_before"] if reports else None,
-            unsupported_after=reports[-1]["unsupported_after"] if reports else None,
+            claims_before=reports[0]["total_claims"] if reports else None,
+            unsupported_before=reports[0]["unsupported_before"] if reports else None,
             tokens=counted or state.get("tokens_used", 0),
             cost_usd=total_cost(usage),
             latency_seconds=round(time.perf_counter() - started, 2),
@@ -124,4 +132,19 @@ class GraphJobRunner:
             state = await self._graph.ainvoke(initial_state(gold), thread)
             if "__interrupt__" in state:
                 state = await self._graph.ainvoke(Command(resume={"action": "approve"}), thread)
-        return self._result(state, started)
+        result = self._result(state, started)
+        if state.get("drafts"):
+            await self._check_final_text(state, result)
+        return result
+
+    async def _check_final_text(self, state: dict[str, Any], result: JobResult) -> None:
+        """Measure claims in the text that went out. Its cost is reported, not added to the job."""
+        with collect_model_calls() as calls:
+            check = await check_final_text(state, self._runtime)
+        result.claims_after = check.total_claims
+        result.unsupported_after = check.unsupported
+        result.unsupported_final_claims = check.unsupported_claims
+        result.final_check_tokens = sum(c.input_tokens + c.output_tokens for c in calls)
+        costs = [call.cost_usd for call in calls]
+        if costs and all(cost is not None for cost in costs):
+            result.final_check_cost_usd = round(sum(c or 0.0 for c in costs), 6)

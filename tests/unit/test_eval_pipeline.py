@@ -103,7 +103,9 @@ def outcome_row(**values: Any) -> dict[str, Any]:
         "submitted": True,
         "replied": True,
         "hired": False,
+        "claims_before": 4,
         "unsupported_before": 2,
+        "claims_after": 2,
         "unsupported_after": 0,
         "judge_overall": 4,
         "tokens": 100,
@@ -126,6 +128,7 @@ def test_reply_rate_counts_submitted_proposals_and_all_jobs_separately() -> None
     assert summary["reply_rate_over_all_jobs"] == 0.5
     assert summary["stopped_before_submission"] == {"skipped": 1}
     assert summary["unsupported_claims_before"] == 2
+    assert summary["unsupported_rate_before"] == 0.5
 
 
 def test_smoke_gate_fails_on_low_f1_and_more_unsupported_claims() -> None:
@@ -163,11 +166,17 @@ def test_calibration_refuses_blank_labels(tmp_path: Path) -> None:
 
 def test_table_labels_devsim_and_marks_missing_values(tmp_path: Path) -> None:
     (tmp_path / "rag_v0_naive_devsim.json").write_text(
-        json.dumps({"overall": {"recall_at_5": 0.093, "ndcg_at_10": 0.12}}), encoding="utf-8"
+        json.dumps(
+            {
+                "whole_job": {"overall": {"recall_at_5": 0.093}},
+                "per_requirement": {"overall": {"recall_at_5": 0.4, "ndcg_at_10": 0.12}},
+            }
+        ),
+        encoding="utf-8",
     )
     block = build_block("v2_hybrid", "devsim", tmp_path)
     assert "not GigSim" in block
-    assert "| V0 | 0.093 | 0.12 |" in block
+    assert "| V0 | 0.093 | 0.4 | 0.12 |" in block
     assert f"| Your best | {MISSING} |" in block
 
 

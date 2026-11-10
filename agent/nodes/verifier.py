@@ -1,38 +1,55 @@
 """Claim verification: remove unsupported claims before the Critic sees the draft."""
 
 import asyncio
+from collections.abc import Mapping
 from typing import Any
 
 from agent.runtime import AgentRuntime
 from agent.state import BidState
-from rag.verify import ClaimJudge, ClaimJudgement, LexicalJudge, LlmJudge, verify_draft
+from rag.verify import (
+    ClaimJudge,
+    ClaimJudgement,
+    FinalClaimCheck,
+    LexicalJudge,
+    LlmJudge,
+    recheck_final_text,
+    verify_draft,
+)
 
 
-async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
-    fit = state["fit_report"]
+def _claim_judge(runtime: AgentRuntime, tokens: list[int]) -> ClaimJudge:
+    """The configured judge. Model calls return to the routed gateway from a worker thread."""
     settings = runtime.config.verification
-    # A skill the portfolio lacks can never be claimed. A shown skill may be unnamed in the text.
-    vocabulary = sorted(fit.missing_skills)
-    shown = [match.requirement for match in fit.matches if match.evidence_ids]
+    if settings.judge != "llm":
+        return LexicalJudge(settings)
     loop = asyncio.get_running_loop()
     instructions = runtime.prompt("verifier")
-    tokens = [0]
 
     def ask(data: str) -> ClaimJudgement:
-        # Verification runs in a worker thread; model calls go back through the routed gateway.
         call = runtime.llm.structured("verifier", instructions, data, ClaimJudgement)
         result = asyncio.run_coroutine_threadsafe(call, loop).result()
         tokens[0] += result.tokens
         return result.value
 
-    judge: ClaimJudge = LlmJudge(ask) if settings.judge == "llm" else LexicalJudge(settings)
+    return LlmJudge(ask)
+
+
+def _terms(state: Mapping[str, Any]) -> tuple[list[str], list[str]]:
+    """A skill the portfolio lacks can never be claimed. A shown skill may be left unnamed."""
+    fit = state["fit_report"]
+    return sorted(fit.missing_skills), [m.requirement for m in fit.matches if m.evidence_ids]
+
+
+async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
+    vocabulary, shown = _terms(state)
+    tokens = [0]
     result = await asyncio.to_thread(
         verify_draft,
         state["drafts"][-1],
         state.get("evidence", []),
-        judge,
+        _claim_judge(runtime, tokens),
         vocabulary,
-        settings.max_evidence_per_claim,
+        runtime.config.verification.max_evidence_per_claim,
         shown,
     )
     return {
@@ -47,3 +64,17 @@ async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
         "needs_rewrite": result.needs_rewrite,
         "tokens_used": tokens[0],
     }
+
+
+async def check_final_text(state: Mapping[str, Any], runtime: AgentRuntime) -> FinalClaimCheck:
+    """Evaluation only: judge the final text with the same judge, from scratch."""
+    vocabulary, shown = _terms(state)
+    return await asyncio.to_thread(
+        recheck_final_text,
+        state["drafts"][-1],
+        state.get("evidence", []),
+        _claim_judge(runtime, [0]),
+        vocabulary,
+        runtime.config.verification.max_evidence_per_claim,
+        shown,
+    )
