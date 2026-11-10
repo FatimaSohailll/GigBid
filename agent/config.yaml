@@ -81,7 +81,7 @@ models:
         judge: {tier: strong} # evaluation only
 
 rag:
-  variant: v0_naive # chosen by evaluation (R6); V0 until other variants are measured
+  variant: combo:decompose+hybrid+outcome # best per-requirement result, see evals/results/rag_comparison_devsim.json
   collection: portfolio_chunks
   chunk_size_words: 180
   chunk_overlap_words: 30

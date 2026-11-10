@@ -230,6 +230,34 @@
       "no_evidence_refusal_rate": 0,
       "per_requirement": {
         "count": 1416,
+        "hit_at_fit_k": 0.6977,
+        "mrr": 0.5959,
+        "ndcg_at_10": 0.6303,
+        "recall_at_5": 0.5755
+      },
+      "per_requirement_p95_latency_ms": 64.9,
+      "refusal_rate": {
+        "good_fit": 0,
+        "injection_fit": 0,
+        "injection_poor": 0,
+        "low_budget": 0,
+        "other_field": 0,
+        "partial_fit": 0,
+        "scam": 0,
+        "vague": 0
+      },
+      "variant": "combo:decompose+hybrid+outcome",
+      "whole_job": {
+        "count": 495,
+        "mrr": 0.5784,
+        "ndcg_at_10": 0.4183,
+        "recall_at_5": 0.3074
+      }
+    },
+    {
+      "no_evidence_refusal_rate": 0,
+      "per_requirement": {
+        "count": 1416,
         "hit_at_fit_k": 0.6709,
         "mrr": 0.5641,
         "ndcg_at_10": 0.5575,
@@ -255,6 +283,6 @@
       }
     }
   ],
-  "selected_variant": "combo:decompose+hybrid+rerank+outcome",
+  "selected_variant": "combo:decompose+hybrid+outcome",
   "selection_basis": "per-requirement Recall@5, then nDCG@10, then MRR"
 }

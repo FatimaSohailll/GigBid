@@ -9,6 +9,7 @@ import asyncio
 import json
 import sys
 import tempfile
+from collections import defaultdict
 from pathlib import Path
 from statistics import mean
 from typing import Any
@@ -32,7 +33,7 @@ from evals.harness import (
 from evals.job_runner import JobRunner
 from evals.judge import score_proposal
 from evals.metrics import percentile
-from evals.runners.decision_eval import mean_cost, usage_by_node
+from evals.runners.decision_eval import mean_cost, models_used, usage_by_node
 from evals.runners.rag_eval import RESULTS_DIR, safe_name, write_result
 from rag.retriever import open_components
 
@@ -100,9 +101,26 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
         ),
         "tokens_per_proposal": _mean([row["tokens"] for row in sent]),
         "cost_per_proposal_usd": mean_cost(sent),
+        "models_used": models_used(done),
         "usage_by_node": usage_by_node(sent) if sent else {},
         "p50_latency_seconds": round(percentile(latencies, 50), 2) if latencies else None,
         "p95_latency_seconds": round(percentile(latencies, 95), 2) if latencies else None,
+    }
+
+
+def report(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Overall, per persona (as B4 requires) and per job type."""
+    groups: dict[str, defaultdict[str, list[dict[str, Any]]]] = {
+        "persona": defaultdict(list),
+        "job_type": defaultdict(list),
+    }
+    for row in rows:
+        for field, group in groups.items():
+            group[row[field]].append(row)
+    return {
+        "overall": summarise(rows),
+        "by_persona": {key: summarise(value) for key, value in sorted(groups["persona"].items())},
+        "by_job_type": {key: summarise(value) for key, value in sorted(groups["job_type"].items())},
     }
 
 
@@ -128,6 +146,8 @@ async def run(arguments: argparse.Namespace) -> dict[str, Any]:
         )
         runners: dict[str, JobRunner] = {}
         rows: list[dict[str, Any]] = []
+        failures_in_a_row = 0
+        stopped_early = False
         for gold in jobs:
             key = f"{gold['persona']}:{gold['job_id']}"
             if key not in finished:
@@ -137,7 +157,12 @@ async def run(arguments: argparse.Namespace) -> dict[str, Any]:
                 row = await run_job(runners[persona], gold, stack, arguments.seed, judge)
                 append_row(rows_path, row)
                 print(key, row["status"], row["replied"], row["tokens"], flush=True)
+                failures_in_a_row = failures_in_a_row + 1 if row["error"] else 0
             rows.append(finished.get(key) or row)
+            if failures_in_a_row >= arguments.max_failures:
+                print("Stopping: repeated failures, probably a provider limit.", flush=True)
+                stopped_early = True
+                break
         stack.stop()
     flush_traces(config)
     components.close()
@@ -146,7 +171,8 @@ async def run(arguments: argparse.Namespace) -> dict[str, Any]:
         "data_source": arguments.source,
         "official_gigsim": arguments.source == "gigsim",
         "seed": arguments.seed,
-        "overall": summarise(rows),
+        "stopped_early": stopped_early,
+        **report(rows),
     }
     write_result(f"outcomes_{name}{tag}.json", result)
     return result
@@ -162,6 +188,9 @@ def parser() -> argparse.ArgumentParser:
     options.add_argument("--tag", default="")
     options.add_argument("--judge", action="store_true", help="Also score with the rubric judge")
     options.add_argument("--fresh", action="store_true", help="Ignore rows from an earlier run")
+    options.add_argument(
+        "--max-failures", type=int, default=3, help="Stop after this many in a row"
+    )
     return options
 
 

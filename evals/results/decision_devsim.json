@@ -1,0 +1,653 @@
+{
+  "by_job_type": {
+    "good_fit": {
+      "bid_or_skip": {
+        "f1": 0.6667,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "cost_per_job_usd": 0.000414,
+      "failed": 0,
+      "injection_flag_rate": null,
+      "jobs": 4,
+      "latency_seconds": {
+        "p50": 22.09,
+        "p95": 44.09
+      },
+      "models_used": [
+        "openai/gpt-oss-20b"
+      ],
+      "price_in_fair_band": 0,
+      "scam": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "tokens_per_job": 3006,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 8.18,
+          "tokens": 642.75
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 20.07,
+          "tokens": 1678.25
+        },
+        "pricing": {
+          "latency_seconds": 0.29,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 8.95,
+          "tokens": 685.0
+        },
+        "scout": {
+          "latency_seconds": 1.14,
+          "tokens": 0.0
+        }
+      }
+    },
+    "injection_fit": {
+      "bid_or_skip": {
+        "f1": 0.8571,
+        "precision": 1.0,
+        "recall": 0.75
+      },
+      "cost_per_job_usd": 0.000528,
+      "failed": 0,
+      "injection_flag_rate": 1,
+      "jobs": 4,
+      "latency_seconds": {
+        "p50": 20.8,
+        "p95": 35.6
+      },
+      "models_used": [
+        "openai/gpt-oss-20b"
+      ],
+      "price_in_fair_band": 0,
+      "scam": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "tokens_per_job": 3552.8,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 7.55,
+          "tokens": 743.75
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 18.45,
+          "tokens": 1939.0
+        },
+        "pricing": {
+          "latency_seconds": 0.46,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 6.81,
+          "tokens": 870.0
+        },
+        "scout": {
+          "latency_seconds": 0.33,
+          "tokens": 0.0
+        }
+      }
+    },
+    "injection_poor": {
+      "bid_or_skip": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "cost_per_job_usd": 0.000497,
+      "failed": 0,
+      "injection_flag_rate": 1,
+      "jobs": 4,
+      "latency_seconds": {
+        "p50": 22.24,
+        "p95": 33.89
+      },
+      "models_used": [
+        "openai/gpt-oss-20b"
+      ],
+      "price_in_fair_band": null,
+      "scam": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "tokens_per_job": 3350.8,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 5.82,
+          "tokens": 860.25
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 18.84,
+          "tokens": 1669.75
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 12.4,
+          "tokens": 820.75
+        },
+        "scout": {
+          "latency_seconds": 0.3,
+          "tokens": 0.0
+        }
+      }
+    },
+    "low_budget": {
+      "bid_or_skip": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "cost_per_job_usd": 0.000535,
+      "failed": 0,
+      "injection_flag_rate": null,
+      "jobs": 4,
+      "latency_seconds": {
+        "p50": 24.12,
+        "p95": 27.16
+      },
+      "models_used": [
+        "openai/gpt-oss-20b"
+      ],
+      "price_in_fair_band": 0,
+      "scam": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "tokens_per_job": 3671.5,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 8.73,
+          "tokens": 739.75
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 20.52,
+          "tokens": 2241.25
+        },
+        "pricing": {
+          "latency_seconds": 0.3,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 9.84,
+          "tokens": 690.5
+        },
+        "scout": {
+          "latency_seconds": 0.33,
+          "tokens": 0.0
+        }
+      }
+    },
+    "other_field": {
+      "bid_or_skip": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "cost_per_job_usd": 0.000436,
+      "failed": 0,
+      "injection_flag_rate": null,
+      "jobs": 4,
+      "latency_seconds": {
+        "p50": 25.11,
+        "p95": 27.56
+      },
+      "models_used": [
+        "openai/gpt-oss-20b"
+      ],
+      "price_in_fair_band": null,
+      "scam": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "tokens_per_job": 3095,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 7.32,
+          "tokens": 679.0
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 23.59,
+          "tokens": 1710.75
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 14.47,
+          "tokens": 705.25
+        },
+        "scout": {
+          "latency_seconds": 0.3,
+          "tokens": 0.0
+        }
+      }
+    },
+    "partial_fit": {
+      "bid_or_skip": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "cost_per_job_usd": 0.000422,
+      "failed": 0,
+      "injection_flag_rate": null,
+      "jobs": 4,
+      "latency_seconds": {
+        "p50": 21.38,
+        "p95": 26.89
+      },
+      "models_used": [
+        "openai/gpt-oss-20b"
+      ],
+      "price_in_fair_band": null,
+      "scam": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "tokens_per_job": 3021.5,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 5.53,
+          "tokens": 681.75
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 20.46,
+          "tokens": 1632.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 11.74,
+          "tokens": 707.75
+        },
+        "scout": {
+          "latency_seconds": 0.38,
+          "tokens": 0.0
+        }
+      }
+    },
+    "scam": {
+      "bid_or_skip": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "cost_per_job_usd": 0.000296,
+      "failed": 0,
+      "injection_flag_rate": null,
+      "jobs": 3,
+      "latency_seconds": {
+        "p50": 18.13,
+        "p95": 20.02
+      },
+      "models_used": [
+        "openai/gpt-oss-20b"
+      ],
+      "price_in_fair_band": null,
+      "scam": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "tokens_per_job": 2115.7,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 10.87,
+          "tokens": 618.33
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 7.4,
+          "tokens": 803.67
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 12.9,
+          "tokens": 693.67
+        },
+        "scout": {
+          "latency_seconds": 0.32,
+          "tokens": 0.0
+        }
+      }
+    },
+    "vague": {
+      "bid_or_skip": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "cost_per_job_usd": 0.001032,
+      "failed": 1,
+      "injection_flag_rate": null,
+      "jobs": 2,
+      "latency_seconds": {
+        "p50": 44.44,
+        "p95": 57.53
+      },
+      "models_used": [
+        "openai/gpt-oss-20b"
+      ],
+      "price_in_fair_band": 0,
+      "scam": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0
+      },
+      "tokens_per_job": 6798,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 11.34,
+          "tokens": 696.5
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 42.92,
+          "tokens": 5365.0
+        },
+        "pricing": {
+          "latency_seconds": 0.59,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 11.05,
+          "tokens": 736.5
+        },
+        "scout": {
+          "latency_seconds": 0.36,
+          "tokens": 0.0
+        }
+      }
+    }
+  },
+  "by_persona": {
+    "ai_ml_engineer": {
+      "bid_or_skip": {
+        "f1": 0.75,
+        "precision": 1.0,
+        "recall": 0.6
+      },
+      "cost_per_job_usd": 0.000491,
+      "failed": 0,
+      "injection_flag_rate": 1,
+      "jobs": 14,
+      "latency_seconds": {
+        "p50": 23.91,
+        "p95": 40.78
+      },
+      "models_used": [
+        "openai/gpt-oss-20b"
+      ],
+      "price_in_fair_band": 0,
+      "scam": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "tokens_per_job": 3470.9,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 9.06,
+          "tokens": 712.29
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 19.26,
+          "tokens": 2029.71
+        },
+        "pricing": {
+          "latency_seconds": 0.14,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 10.34,
+          "tokens": 728.93
+        },
+        "scout": {
+          "latency_seconds": 0.4,
+          "tokens": 0.0
+        }
+      }
+    },
+    "data_analyst": {
+      "bid_or_skip": {
+        "f1": 0.8,
+        "precision": 0.6667,
+        "recall": 1.0
+      },
+      "cost_per_job_usd": 0.000444,
+      "failed": 1,
+      "injection_flag_rate": 1,
+      "jobs": 7,
+      "latency_seconds": {
+        "p50": 22.2,
+        "p95": 32.15
+      },
+      "models_used": [
+        "openai/gpt-oss-20b"
+      ],
+      "price_in_fair_band": 0,
+      "scam": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "tokens_per_job": 3030.4,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 5.9,
+          "tokens": 706.86
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 21.32,
+          "tokens": 1563.86
+        },
+        "pricing": {
+          "latency_seconds": 0.23,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 10.67,
+          "tokens": 759.71
+        },
+        "scout": {
+          "latency_seconds": 0.46,
+          "tokens": 0.0
+        }
+      }
+    },
+    "fullstack_developer": {
+      "bid_or_skip": {
+        "f1": 0.6667,
+        "precision": 0.6667,
+        "recall": 0.6667
+      },
+      "cost_per_job_usd": 0.000538,
+      "failed": 0,
+      "injection_flag_rate": 1,
+      "jobs": 8,
+      "latency_seconds": {
+        "p50": 22.07,
+        "p95": 62.79
+      },
+      "models_used": [
+        "openai/gpt-oss-20b"
+      ],
+      "price_in_fair_band": 0,
+      "scam": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "tokens_per_job": 3615.9,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 7.45,
+          "tokens": 714.62
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 22.1,
+          "tokens": 2157.75
+        },
+        "pricing": {
+          "latency_seconds": 0.22,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 12.26,
+          "tokens": 743.5
+        },
+        "scout": {
+          "latency_seconds": 0.5,
+          "tokens": 0.0
+        }
+      }
+    }
+  },
+  "data_source": "devsim",
+  "official_gigsim": false,
+  "overall": {
+    "bid_or_skip": {
+      "f1": 0.7368,
+      "precision": 0.7778,
+      "recall": 0.7
+    },
+    "cost_per_job_usd": 0.000492,
+    "failed": 1,
+    "injection_flag_rate": 1,
+    "jobs": 29,
+    "latency_seconds": {
+      "p50": 22.41,
+      "p95": 44.44
+    },
+    "models_used": [
+      "openai/gpt-oss-20b"
+    ],
+    "price_in_fair_band": 0,
+    "scam": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "tokens_per_job": 3404.6,
+    "usage_by_node": {
+      "analyst": {
+        "latency_seconds": 7.86,
+        "tokens": 711.62
+      },
+      "decide": {
+        "latency_seconds": 0.0,
+        "tokens": 0.0
+      },
+      "fit_matcher": {
+        "latency_seconds": 20.54,
+        "tokens": 1952.59
+      },
+      "pricing": {
+        "latency_seconds": 0.19,
+        "tokens": 0.0
+      },
+      "reconcile": {
+        "latency_seconds": 0.0,
+        "tokens": 0.0
+      },
+      "risk_assessor": {
+        "latency_seconds": 10.95,
+        "tokens": 740.38
+      },
+      "scout": {
+        "latency_seconds": 0.44,
+        "tokens": 0.0
+      }
+    }
+  },
+  "stopped_early": false
+}
