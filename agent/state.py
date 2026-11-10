@@ -67,6 +67,20 @@ class NodeError(BaseModel):
     retryable: bool = False
 
 
+class NodeUsage(BaseModel):
+    """What one node execution spent. Written by the shared node wrapper, never by a node."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    node: str
+    models: list[str] = Field(default_factory=list)
+    calls: int = Field(default=0, ge=0)
+    input_tokens: int = Field(default=0, ge=0)
+    output_tokens: int = Field(default=0, ge=0)
+    cost_usd: float | None = Field(default=None, ge=0)
+    latency_seconds: float = Field(default=0.0, ge=0)
+
+
 class OutcomeRecord(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -118,6 +132,7 @@ class _ThreadState(TypedDict, total=False):
     approvals: Annotated[list[ApprovalRecord], operator.add]
     steps_used: Annotated[int, operator.add]
     tokens_used: Annotated[int, operator.add]
+    node_usage: Annotated[list[NodeUsage], operator.add]
 
 
 class BidState(_ThreadState, total=False):

@@ -13,6 +13,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 
 from agent.config import AppConfig, ModelSpec
+from agent.usage import record_model_call
 
 logger = logging.getLogger(__name__)
 ModelFactory = Callable[[ModelSpec], BaseChatModel]
@@ -90,10 +91,11 @@ class ModelRouter:
         output = await self._invoke(
             runnable, [SystemMessage(content=instructions), HumanMessage(content=data)]
         )
+        usage = getattr(output["raw"], "usage_metadata", None) or {}
+        record_model_call(spec, usage)  # before validation: a rejected reply still cost tokens
         parsed = output["parsed"]
         if not isinstance(parsed, schema):
             raise ValueError(f"Model output did not match {schema.__name__}")
-        usage = getattr(output["raw"], "usage_metadata", None) or {}
         return LlmResult(parsed, int(usage.get("total_tokens", 0)), spec.model)
 
     async def structured[T: BaseModel](

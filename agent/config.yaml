@@ -1,4 +1,8 @@
 # Environment overrides: MODEL_PROFILE, MARKETPLACE_MODE.
+tracing:
+  enabled: true # also needs LANGSMITH_API_KEY; without it nothing is sent
+  project: gigbid
+
 marketplace:
   mode: gigsim # gigsim or upwork_live
   max_requests_per_minute: 20 # per user; deliberately below the simulator's limit
@@ -36,9 +40,10 @@ models:
     # Open-weight models only. Choices are a starting point until measured on the dev set.
     open:
       tiers:
-        small: {provider: groq, model: openai/gpt-oss-20b}
+        # Groq list prices, read from console.groq.com on 2026-11-10. Free-tier runs pay nothing.
+        small: {provider: groq, model: openai/gpt-oss-20b, input_usd_per_million: 0.075, output_usd_per_million: 0.30}
         small_fallback: {provider: ollama, model: "qwen3:4b"}
-        strong: {provider: groq, model: openai/gpt-oss-120b}
+        strong: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60}
       nodes:
         scout: {tier: small, fallback: small_fallback}
         analyst: {tier: small, fallback: small_fallback}

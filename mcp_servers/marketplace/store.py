@@ -2,15 +2,12 @@
 
 import hashlib
 import json
-import re
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-_EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
-_CARD = re.compile(r"\b(?:\d[ -]?){13,19}\b")
-_PHONE = re.compile(r"(?<![\w(])(?!\d{4}-\d{2}-\d{2})\+?\(?\d[\d ()-]{7,}\d(?!\w)")
+from agent.guardrails import mask_pii
 
 _SCHEMA = """
 create table if not exists audit_log (
@@ -40,19 +37,6 @@ create table if not exists idempotency (
 
 class IdempotencyKeyReused(Exception):
     pass
-
-
-def mask_pii(value: Any) -> Any:
-    """Mask emails, card numbers and phone numbers in any JSON-like value."""
-    if isinstance(value, str):
-        masked = _EMAIL.sub("[email]", value)
-        masked = _CARD.sub("[payment]", masked)
-        return _PHONE.sub("[phone]", masked)
-    if isinstance(value, list):
-        return [mask_pii(item) for item in value]
-    if isinstance(value, dict):
-        return {key: mask_pii(item) for key, item in value.items()}
-    return value
 
 
 def fingerprint(payload: dict[str, Any]) -> str:

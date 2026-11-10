@@ -52,6 +52,8 @@ class ModelSpec(_Strict):
     provider: str
     model: str
     structured_method: str | None = None
+    input_usd_per_million: float | None = Field(default=None, ge=0)
+    output_usd_per_million: float | None = Field(default=None, ge=0)
 
 
 class NodeRoute(_Strict):
@@ -182,7 +184,13 @@ class ComplianceConfig(_Strict):
     rule_ids: dict[Literal["contact", "payment", "guarantee", "credentials", "fabrication"], str]
 
 
+class TracingConfig(_Strict):
+    enabled: bool
+    project: str
+
+
 class AppConfig(_Strict):
+    tracing: TracingConfig
     marketplace: MarketplaceConfig
     mcp_client: McpClientConfig
     agent_tools: dict[str, list[str]]
