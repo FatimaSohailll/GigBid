@@ -18,7 +18,6 @@ from agent.config import AppConfig, McpClientConfig, get_config
 from agent.marketplace_port import current_trace_id
 
 Handler = Callable[[MCPToolCallRequest], Awaitable[Any]]
-_RETRYABLE_TOOL_CODES = {"marketplace_unavailable", "rate_limited"}
 _TRANSPORT_FAILURES = (
     httpx.TransportError,
     httpx.HTTPStatusError,
@@ -35,6 +34,10 @@ class ToolServerUnavailable(Exception):
         super().__init__(f"MCP server '{server}' is unavailable (tool '{tool}').")
         self.server = server
         self.tool = tool
+
+
+class ToolRateLimited(ToolServerUnavailable):
+    """The service is healthy but busy. Work waits and retries, with no outage banner."""
 
 
 def _is_transport_failure(error: BaseException) -> bool:
@@ -152,7 +155,9 @@ class ToolGateway:
             # The MCP SDK wraps the server's "code: message" text in its own prefix.
             text = re.sub(r"^Error executing tool \S+: ", "", str(error))
             code, _, message = text.partition(": ")
-            if code in _RETRYABLE_TOOL_CODES:
+            if code == "rate_limited":
+                raise ToolRateLimited("marketplace", tool) from error
+            if code == "marketplace_unavailable":
                 raise ToolServerUnavailable("marketplace", tool) from error
             raise ToolCallError(code, message or str(error)) from error
         block = result[0] if isinstance(result, list) else result
