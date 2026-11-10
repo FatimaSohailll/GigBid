@@ -1,0 +1,258 @@
+{
+  "hypothesis": "Keeping the current mid-sized tool set and rewriting its descriptions gives higher task-level tool-selection accuracy than either a fine-grained or a coarse set, and uses fewer tokens per task than the fine-grained set.",
+  "limitations": [
+    "One small open model on one machine, so results may not hold for stronger models.",
+    "Tool results are fixed canned replies; the tools are not executed.",
+    "The 40 tasks were written by the author of the tool sets, which may favour them.",
+    "Forty tasks give wide confidence intervals; small differences are not meaningful."
+  ],
+  "machine": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 189 Stepping 1, GenuineIntel"
+  },
+  "model": {
+    "name": "qwen3:8b",
+    "options": {
+      "num_ctx": 8192,
+      "num_predict": 768,
+      "reasoning": false,
+      "seed": 7
+    },
+    "provider": "ollama",
+    "temperature": 0
+  },
+  "model_identity": {
+    "details": {
+      "context_length": 40960,
+      "embedding_length": 4096,
+      "families": [
+        "qwen3"
+      ],
+      "family": "qwen3",
+      "format": "gguf",
+      "parameter_size": "8.2B",
+      "parent_model": "",
+      "quantization_level": "Q4_K_M",
+      "runner": "ggml"
+    },
+    "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+    "model": "qwen3:8b",
+    "ollama_version": "0.40.16",
+    "provider": "ollama"
+  },
+  "results": {
+    "coarse": {
+      "by_category": {
+        "multi_step": {
+          "argument_accuracy": 0.6,
+          "input_tokens_per_task": 1614.6,
+          "output_tokens_per_second": 5.68,
+          "output_tokens_per_task": 123.6,
+          "selection_accuracy": 0.875,
+          "step_selection_accuracy": 0.9375,
+          "task_success": 0.375,
+          "tasks": 8,
+          "tokens_per_task": 1738.2
+        },
+        "near_miss": {
+          "argument_accuracy": 0.8571,
+          "input_tokens_per_task": 1082.2,
+          "output_tokens_per_second": 5.31,
+          "output_tokens_per_task": 69,
+          "selection_accuracy": 0.875,
+          "step_selection_accuracy": 0.875,
+          "task_success": 0.75,
+          "tasks": 8,
+          "tokens_per_task": 1151.2
+        },
+        "no_tool": {
+          "argument_accuracy": null,
+          "input_tokens_per_task": 520.8,
+          "output_tokens_per_second": 6.68,
+          "output_tokens_per_task": 54,
+          "selection_accuracy": 1.0,
+          "step_selection_accuracy": null,
+          "task_success": 1.0,
+          "tasks": 4,
+          "tokens_per_task": 574.8
+        },
+        "read": {
+          "argument_accuracy": 0.7273,
+          "input_tokens_per_task": 1034.1,
+          "output_tokens_per_second": 4.4,
+          "output_tokens_per_task": 61.2,
+          "selection_accuracy": 0.8333,
+          "step_selection_accuracy": 0.9167,
+          "task_success": 0.5833,
+          "tasks": 12,
+          "tokens_per_task": 1095.3
+        },
+        "write": {
+          "argument_accuracy": 0.2,
+          "input_tokens_per_task": 1064.9,
+          "output_tokens_per_second": 5.76,
+          "output_tokens_per_task": 100.5,
+          "selection_accuracy": 0.625,
+          "step_selection_accuracy": 0.625,
+          "task_success": 0.125,
+          "tasks": 8,
+          "tokens_per_task": 1165.4
+        }
+      },
+      "overall": {
+        "argument_accuracy": 0.6316,
+        "input_tokens_per_task": 1114.7,
+        "output_tokens_per_second": 5.34,
+        "output_tokens_per_task": 82.4,
+        "selection_accuracy": 0.825,
+        "step_selection_accuracy": 0.8636,
+        "task_success": 0.525,
+        "tasks": 40,
+        "tokens_per_task": 1197.0
+      },
+      "tool_count": 4
+    },
+    "fine": {
+      "by_category": {
+        "multi_step": {
+          "argument_accuracy": 0.9333,
+          "input_tokens_per_task": 5556.9,
+          "output_tokens_per_second": 3.83,
+          "output_tokens_per_task": 96.2,
+          "selection_accuracy": 0.875,
+          "step_selection_accuracy": 0.9375,
+          "task_success": 0.75,
+          "tasks": 8,
+          "tokens_per_task": 5653.1
+        },
+        "near_miss": {
+          "argument_accuracy": 1.0,
+          "input_tokens_per_task": 3955.6,
+          "output_tokens_per_second": 3.71,
+          "output_tokens_per_task": 45.2,
+          "selection_accuracy": 0.875,
+          "step_selection_accuracy": 1.0,
+          "task_success": 0.875,
+          "tasks": 8,
+          "tokens_per_task": 4000.9
+        },
+        "no_tool": {
+          "argument_accuracy": null,
+          "input_tokens_per_task": 1960.8,
+          "output_tokens_per_second": 4.62,
+          "output_tokens_per_task": 40.8,
+          "selection_accuracy": 1.0,
+          "step_selection_accuracy": null,
+          "task_success": 1.0,
+          "tasks": 4,
+          "tokens_per_task": 2001.5
+        },
+        "read": {
+          "argument_accuracy": 1.0,
+          "input_tokens_per_task": 3797,
+          "output_tokens_per_second": 2.96,
+          "output_tokens_per_task": 57.2,
+          "selection_accuracy": 0.75,
+          "step_selection_accuracy": 0.9167,
+          "task_success": 0.75,
+          "tasks": 12,
+          "tokens_per_task": 3854.2
+        },
+        "write": {
+          "argument_accuracy": 1.0,
+          "input_tokens_per_task": 4018.6,
+          "output_tokens_per_second": 4.36,
+          "output_tokens_per_task": 92.9,
+          "selection_accuracy": 1.0,
+          "step_selection_accuracy": 1.0,
+          "task_success": 1.0,
+          "tasks": 8,
+          "tokens_per_task": 4111.5
+        }
+      },
+      "overall": {
+        "argument_accuracy": 0.9762,
+        "input_tokens_per_task": 4041.4,
+        "output_tokens_per_second": 3.7,
+        "output_tokens_per_task": 68.1,
+        "selection_accuracy": 0.875,
+        "step_selection_accuracy": 0.9545,
+        "task_success": 0.85,
+        "tasks": 40,
+        "tokens_per_task": 4109.5
+      },
+      "tool_count": 34
+    },
+    "rewritten": {
+      "by_category": {
+        "multi_step": {
+          "argument_accuracy": 0.9375,
+          "input_tokens_per_task": 7051.5,
+          "output_tokens_per_second": 4.01,
+          "output_tokens_per_task": 116.4,
+          "selection_accuracy": 1.0,
+          "step_selection_accuracy": 1.0,
+          "task_success": 0.875,
+          "tasks": 8,
+          "tokens_per_task": 7167.9
+        },
+        "near_miss": {
+          "argument_accuracy": 1.0,
+          "input_tokens_per_task": 3901.9,
+          "output_tokens_per_second": 4.11,
+          "output_tokens_per_task": 52.8,
+          "selection_accuracy": 0.625,
+          "step_selection_accuracy": 0.625,
+          "task_success": 0.625,
+          "tasks": 8,
+          "tokens_per_task": 3954.6
+        },
+        "no_tool": {
+          "argument_accuracy": null,
+          "input_tokens_per_task": 2388.8,
+          "output_tokens_per_second": 4.5,
+          "output_tokens_per_task": 29,
+          "selection_accuracy": 1.0,
+          "step_selection_accuracy": null,
+          "task_success": 1.0,
+          "tasks": 4,
+          "tokens_per_task": 2417.8
+        },
+        "read": {
+          "argument_accuracy": 1.0,
+          "input_tokens_per_task": 4812,
+          "output_tokens_per_second": 2.89,
+          "output_tokens_per_task": 67.8,
+          "selection_accuracy": 1.0,
+          "step_selection_accuracy": 1.0,
+          "task_success": 1.0,
+          "tasks": 12,
+          "tokens_per_task": 4879.8
+        },
+        "write": {
+          "argument_accuracy": 0.875,
+          "input_tokens_per_task": 4875.8,
+          "output_tokens_per_second": 3.19,
+          "output_tokens_per_task": 93,
+          "selection_accuracy": 1.0,
+          "step_selection_accuracy": 1.0,
+          "task_success": 0.875,
+          "tasks": 8,
+          "tokens_per_task": 4968.8
+        }
+      },
+      "overall": {
+        "argument_accuracy": 0.9512,
+        "input_tokens_per_task": 4848.3,
+        "output_tokens_per_second": 3.46,
+        "output_tokens_per_task": 75.7,
+        "selection_accuracy": 0.925,
+        "step_selection_accuracy": 0.9318,
+        "task_success": 0.875,
+        "tasks": 40,
+        "tokens_per_task": 4924.0
+      },
+      "tool_count": 18
+    }
+  }
+}

@@ -1,0 +1,206 @@
+{
+  "data_source": "devsim",
+  "embedding_model": "nomic-ai/nomic-embed-text-v1.5-Q",
+  "gold_check": {
+    "jobs": 600,
+    "labelled_requirements": 1416,
+    "requirements": 1884
+  },
+  "official_gigsim": false,
+  "per_requirement": {
+    "by_job_type": {
+      "good_fit": {
+        "count": 852,
+        "hit_at_fit_k": 0.6115,
+        "mrr": 0.5962,
+        "ndcg_at_10": 0.5528,
+        "recall_at_5": 0.5192
+      },
+      "injection_fit": {
+        "count": 97,
+        "hit_at_fit_k": 0.5464,
+        "mrr": 0.5365,
+        "ndcg_at_10": 0.5034,
+        "recall_at_5": 0.4924
+      },
+      "low_budget": {
+        "count": 167,
+        "hit_at_fit_k": 0.5808,
+        "mrr": 0.5808,
+        "ndcg_at_10": 0.5306,
+        "recall_at_5": 0.504
+      },
+      "partial_fit": {
+        "count": 60,
+        "hit_at_fit_k": 0.5,
+        "mrr": 0.5114,
+        "ndcg_at_10": 0.4564,
+        "recall_at_5": 0.4163
+      },
+      "scam": {
+        "count": 60,
+        "hit_at_fit_k": 0.55,
+        "mrr": 0.4472,
+        "ndcg_at_10": 0.2994,
+        "recall_at_5": 0.1895
+      },
+      "vague": {
+        "count": 180,
+        "hit_at_fit_k": 0.4667,
+        "mrr": 0.4692,
+        "ndcg_at_10": 0.3588,
+        "recall_at_5": 0.2624
+      }
+    },
+    "by_persona": {
+      "ai_ml_engineer": {
+        "count": 471,
+        "hit_at_fit_k": 0.4968,
+        "mrr": 0.4759,
+        "ndcg_at_10": 0.4553,
+        "recall_at_5": 0.4381
+      },
+      "data_analyst": {
+        "count": 470,
+        "hit_at_fit_k": 0.5532,
+        "mrr": 0.5347,
+        "ndcg_at_10": 0.4893,
+        "recall_at_5": 0.4777
+      },
+      "fullstack_developer": {
+        "count": 475,
+        "hit_at_fit_k": 0.6821,
+        "mrr": 0.681,
+        "ndcg_at_10": 0.5768,
+        "recall_at_5": 0.478
+      }
+    },
+    "by_requirement_count": {
+      "4_or_more": {
+        "count": 744,
+        "hit_at_fit_k": 0.6089,
+        "mrr": 0.5994,
+        "ndcg_at_10": 0.5491,
+        "recall_at_5": 0.5124
+      },
+      "under_4": {
+        "count": 672,
+        "hit_at_fit_k": 0.5432,
+        "mrr": 0.5252,
+        "ndcg_at_10": 0.4611,
+        "recall_at_5": 0.4116
+      }
+    },
+    "distinct_queries": 487,
+    "fit_k": 3,
+    "latency_ms": {
+      "p50": 14.8,
+      "p95": 34.2
+    },
+    "no_evidence_refusal_rate": 0,
+    "no_evidence_requirements": 468,
+    "overall": {
+      "count": 1416,
+      "hit_at_fit_k": 0.5777,
+      "mrr": 0.5642,
+      "ndcg_at_10": 0.5073,
+      "recall_at_5": 0.4646
+    }
+  },
+  "reranker_model": "Xenova/ms-marco-MiniLM-L-6-v2",
+  "variant": "combo:decompose+hybrid+rerank",
+  "whole_job": {
+    "by_job_type": {
+      "good_fit": {
+        "count": 240,
+        "mrr": 0.4333,
+        "ndcg_at_10": 0.2672,
+        "recall_at_5": 0.158
+      },
+      "injection_fit": {
+        "count": 30,
+        "mrr": 0.5176,
+        "ndcg_at_10": 0.3448,
+        "recall_at_5": 0.2496
+      },
+      "low_budget": {
+        "count": 45,
+        "mrr": 0.3917,
+        "ndcg_at_10": 0.2504,
+        "recall_at_5": 0.1492
+      },
+      "partial_fit": {
+        "count": 60,
+        "mrr": 0.2516,
+        "ndcg_at_10": 0.2773,
+        "recall_at_5": 0.275
+      },
+      "scam": {
+        "count": 60,
+        "mrr": 0.1657,
+        "ndcg_at_10": 0.1436,
+        "recall_at_5": 0.0944
+      },
+      "vague": {
+        "count": 60,
+        "mrr": 0.1915,
+        "ndcg_at_10": 0.1265,
+        "recall_at_5": 0.0783
+      }
+    },
+    "by_persona": {
+      "ai_ml_engineer": {
+        "count": 165,
+        "mrr": 0.3143,
+        "ndcg_at_10": 0.228,
+        "recall_at_5": 0.1676
+      },
+      "data_analyst": {
+        "count": 165,
+        "mrr": 0.3996,
+        "ndcg_at_10": 0.2566,
+        "recall_at_5": 0.1669
+      },
+      "fullstack_developer": {
+        "count": 165,
+        "mrr": 0.3386,
+        "ndcg_at_10": 0.234,
+        "recall_at_5": 0.1444
+      }
+    },
+    "by_requirement_count": {
+      "4_or_more": {
+        "count": 190,
+        "mrr": 0.4023,
+        "ndcg_at_10": 0.2465,
+        "recall_at_5": 0.1473
+      },
+      "under_4": {
+        "count": 305,
+        "mrr": 0.3188,
+        "ndcg_at_10": 0.2352,
+        "recall_at_5": 0.1672
+      }
+    },
+    "latency_ms": {
+      "p50": 175.9,
+      "p95": 292.7
+    },
+    "overall": {
+      "count": 495,
+      "mrr": 0.3509,
+      "ndcg_at_10": 0.2396,
+      "recall_at_5": 0.1596
+    },
+    "refusal_rate_by_job_type": {
+      "good_fit": 0,
+      "injection_fit": 0,
+      "injection_poor": 0,
+      "low_budget": 0,
+      "other_field": 0,
+      "partial_fit": 0,
+      "scam": 0,
+      "vague": 0
+    }
+  }
+}
