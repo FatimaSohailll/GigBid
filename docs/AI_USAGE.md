@@ -15,6 +15,7 @@ The student remains accountable for every line in this repository.
 | Claude Code (desktop app) | Claude Opus 5.5 | `mcp_servers/workspace/`, `agent/memory/`, `agent/graphs/conversation_graph.py`, `agent/nodes/client_liaison.py`, tests | Student to confirm |
 | Claude Code (desktop app) | Claude Opus 5.5 | `apps/api/`, `worker/`, `docs/RUNBOOK.md`, tests | Student to confirm |
 | Claude Code (desktop app) | Claude Opus 5.5 | `apps/web/`, paragraph regeneration in `apps/api/`, `tests/support/e2e_backend.py` | Student to confirm |
+| Claude Code (desktop app) | Claude Opus 5.5 | `rag/variants/`, `rag/index/bm25.py`, `rag/index/reranker.py`, `evals/`, `devsim/src/devsim/client_sim.py`, tests | Student to confirm |
 
 ## One thing the AI got wrong that I caught
 
@@ -24,3 +25,5 @@ The assignment requires this to be the student's own finding. To be completed by
 
 - DevSim's first version used plain `def` routes. FastAPI runs those in a thread pool, so two
   simultaneous submits could both spend Connects. They were changed to `async def`.
+- Hybrid retrieval first gave BM25 and vector chunks different ids, so fusion never combined them.
+  A review found it before any result was reported as final, and a regression test now covers it.

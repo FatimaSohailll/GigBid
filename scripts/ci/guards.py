@@ -1,9 +1,6 @@
 """Repository rules that CI must enforce (assignment, "Rules your CI must enforce").
 
-Usage: python scripts/ci/guards.py [secrets|gigsim|prompts|all|record-gigsim]
-
-The fourth rule, that every reported number traces to evals/results/, is added with the
-evaluation pipelines because there are no results to trace yet.
+Usage: python scripts/ci/guards.py [secrets|gigsim|prompts|numbers|all|record-gigsim]
 """
 
 import argparse
@@ -50,6 +47,11 @@ PROMPT_CALLS = {
 PROMPT_VARIABLE = re.compile(r"prompt|instruction", re.IGNORECASE)
 PERSONA_TEXT = re.compile(r"\byou are an? \w+", re.IGNORECASE)
 MIN_PROMPT_LENGTH = 40
+
+RESULTS_DIR = "evals/results"
+REPORT_FILES = ("README.md", "docs/REPORT.md")
+RESULT_BLOCK = re.compile(r"<!-- results:start -->(.*?)<!-- results:end -->", re.DOTALL)
+NUMBER = re.compile(r"(?<![\w.@-])\d+(?:\.\d+)?(?![\w.])")
 
 
 @dataclass(frozen=True)
@@ -260,6 +262,35 @@ def check_prompts(root: Path) -> list[Violation]:
     return violations
 
 
+# ---- Every reported number traces to evals/results/ ------------------------------------------
+
+
+def _result_numbers(root: Path) -> set[str]:
+    numbers: set[str] = set()
+    for path in sorted((root / RESULTS_DIR).glob("*")):
+        if path.suffix in {".json", ".csv"}:
+            numbers |= set(NUMBER.findall(path.read_text(encoding="utf-8")))
+    return numbers
+
+
+def check_numbers(root: Path) -> list[Violation]:
+    """Numbers inside the results markers of a report must appear in a results file."""
+    violations: list[Violation] = []
+    known = _result_numbers(root)
+    for relative in REPORT_FILES:
+        path = root / relative
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for block in RESULT_BLOCK.finditer(text):
+            for match in NUMBER.finditer(block.group(1)):
+                if match.group() not in known:
+                    line = text.count("\n", 0, block.start(1) + match.start()) + 1
+                    message = f"{match.group()} is not in any file under {RESULTS_DIR}/"
+                    violations.append(Violation(relative, message, line))
+    return violations
+
+
 # ---- Command line --------------------------------------------------------------------------
 
 
@@ -267,7 +298,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "check",
-        choices=["secrets", "gigsim", "prompts", "all", "record-gigsim"],
+        choices=["secrets", "gigsim", "prompts", "numbers", "all", "record-gigsim"],
     )
     arguments = parser.parse_args(argv)
 
@@ -283,6 +314,8 @@ def main(argv: list[str] | None = None) -> int:
         violations += check_gigsim(REPO_ROOT)
     if arguments.check in {"prompts", "all"}:
         violations += check_prompts(REPO_ROOT)
+    if arguments.check in {"numbers", "all"}:
+        violations += check_numbers(REPO_ROOT)
 
     for violation in violations:
         print(violation)

@@ -49,9 +49,13 @@ seed:
 ingest:
 	uv run --locked python -m rag.ingest.pipeline --personas data/processed/devsim/personas
 
+# The last two steps call a model for every job. See docs/RUNBOOK.md for free-tier limits.
 eval:
-	@echo make eval is not built yet. It arrives with the evaluation pipelines in Phase 11.
-	@exit 1
+	uv run --locked python -m evals.runners.rag_eval --all
+	uv run --locked python -m evals.runners.ablation
+	uv run --locked python -m evals.runners.decision_eval
+	uv run --locked python -m evals.runners.gigsim_outcomes --judge
+	uv run --locked python -m evals.results_table
 
 demo:
 	@echo make demo is not built yet. It needs the bid graph and web interface.

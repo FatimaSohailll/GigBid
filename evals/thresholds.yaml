@@ -1,0 +1,5 @@
+# Pull requests fail if the smoke evaluation crosses these lines.
+# Provisional until the full DevSim evaluation is run; then set them just below measured values.
+min_bid_or_skip_f1: 0.5
+max_unsupported_claims_after_verification: 1.0
+max_failed_jobs: 3

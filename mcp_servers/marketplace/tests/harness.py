@@ -3,6 +3,7 @@
 import socket
 import threading
 import time
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -20,7 +21,7 @@ TOKENS = {"sim-ai": "ai_ml_engineer", "sim-web": "fullstack_developer"}
 def devsim_app(faults: FaultConfig | None = None) -> FastAPI:
     settings = Settings(
         config=SimConfig(
-            start_time="2026-11-01T00:00:00Z",
+            start_time=datetime(2026, 11, 1, tzinfo=UTC),
             rate_limit=RateLimitConfig(requests_per_minute=100_000),
             faults=faults or FaultConfig(),
         ),
