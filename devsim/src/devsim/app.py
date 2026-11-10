@@ -27,6 +27,8 @@ from devsim.models import (
     PriceStats,
     Proposal,
     ProposalDraftIn,
+    SimulateClientIn,
+    SimulatedOutcome,
     StatusChangeIn,
 )
 from devsim.runtime import FaultInjector, Monotonic, SimClock, SlidingWindowRateLimiter
@@ -317,6 +319,15 @@ def create_app(settings: Settings, monotonic: Monotonic = time.monotonic) -> Fas
     )
     async def change_status(proposal_id: str, body: StatusChangeIn) -> Proposal:
         return store.change_status(proposal_id, body.status)
+
+    @app.post(
+        "/admin/proposals/{proposal_id}/simulate-client",
+        response_model=SimulatedOutcome,
+        dependencies=[Admin],
+        tags=["admin"],
+    )
+    async def simulate_client(proposal_id: str, body: SimulateClientIn) -> SimulatedOutcome:
+        return store.simulate_client(proposal_id, body.seed)
 
     @app.post(
         "/admin/proposals/{proposal_id}/client-message",

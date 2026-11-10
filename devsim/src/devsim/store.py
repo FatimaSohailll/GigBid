@@ -14,6 +14,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from devsim.client_sim import react
 from devsim.config import LimitsConfig
 from devsim.models import (
     ClientHistory,
@@ -29,6 +30,7 @@ from devsim.models import (
     Proposal,
     ProposalDraftIn,
     ProposalStatus,
+    SimulatedOutcome,
 )
 from devsim.runtime import SimClock
 from devsim.seed_loader import SeedData
@@ -400,6 +402,30 @@ class MarketplaceStore:
                 f"Cannot move a proposal from '{current.value}' to '{status.value}'.",
             )
         return self._set_status(proposal, status)
+
+    def simulate_client(self, proposal_id: str, seed: int) -> SimulatedOutcome:
+        proposal = self._any_proposal(proposal_id)
+        if proposal.status is not ProposalStatus.SUBMITTED:
+            raise ApiError(
+                409,
+                "proposal_not_open",
+                f"Only a submitted proposal can be simulated, not '{proposal.status.value}'.",
+            )
+        job = self._jobs[proposal.job_id]
+        reaction = react(job, self._clients[job.client_id], proposal, seed)
+        if reaction.replied:
+            self.receive_client_message(proposal_id, "Thanks for applying. Can we talk further?")
+        if reaction.hired:
+            self.change_status(proposal_id, ProposalStatus.HIRED)
+        elif not reaction.replied:
+            self.change_status(proposal_id, ProposalStatus.VIEWED)
+        return SimulatedOutcome(
+            proposal_id=proposal_id,
+            status=self._any_proposal(proposal_id).status,
+            replied=reaction.replied,
+            hired=reaction.hired,
+            reply_probability=reaction.reply_probability,
+        )
 
     def receive_client_message(self, proposal_id: str, body: str) -> Message:
         proposal = self._any_proposal(proposal_id)

@@ -110,6 +110,13 @@ class RagConfig(_Strict):
     candidate_multiplier: int = Field(ge=1)
     embedding_query_prefix: str = ""
     embedding_document_prefix: str = ""
+    max_subqueries: int = Field(ge=1)
+    fusion_candidates: int = Field(ge=1)
+    rerank_candidates: int = Field(ge=1)
+    rrf_k: int = Field(ge=1)
+    outcome_boosts: dict[str, float]
+    corrective_min_coverage: float = Field(ge=0, le=1)
+    corrective_max_retries: int = Field(ge=0)
 
     @model_validator(mode="after")
     def _overlap_smaller_than_chunk(self) -> Self:

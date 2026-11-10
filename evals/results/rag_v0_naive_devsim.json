@@ -57,14 +57,42 @@
       "recall_at_5": 0.0726
     }
   },
+  "by_requirement_count": {
+    "4_or_more": {
+      "jobs": 190,
+      "mrr": 0.1977,
+      "ndcg_at_10": 0.1076,
+      "recall_at_5": 0.074
+    },
+    "under_4": {
+      "jobs": 305,
+      "mrr": 0.1722,
+      "ndcg_at_10": 0.1272,
+      "recall_at_5": 0.1048
+    }
+  },
   "data_source": "devsim",
   "embedding_model": "nomic-ai/nomic-embed-text-v1.5-Q",
+  "latency_ms": {
+    "p50": 42.5,
+    "p95": 74.1
+  },
   "official_gigsim": false,
   "overall": {
     "jobs": 495,
     "mrr": 0.182,
     "ndcg_at_10": 0.1196,
     "recall_at_5": 0.093
+  },
+  "refusal_rate_by_job_type": {
+    "good_fit": 0,
+    "injection_fit": 0,
+    "injection_poor": 0,
+    "low_budget": 0,
+    "other_field": 0,
+    "partial_fit": 0,
+    "scam": 0,
+    "vague": 0
   },
   "variant": "v0_naive"
 }

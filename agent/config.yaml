@@ -30,7 +30,8 @@ agent_tools:
 models:
   active_profile: open
   embeddings: nomic-ai/nomic-embed-text-v1.5-Q
-  reranker: bge-reranker-v2-m3
+  # bge-reranker-v2-m3 is 2.3 GB and too slow to compare variants on a CPU-only laptop.
+  reranker: Xenova/ms-marco-MiniLM-L-6-v2
   profiles:
     # Open-weight models only. Choices are a starting point until measured on the dev set.
     open:
@@ -51,6 +52,7 @@ models:
         rewrite: {tier: strong}
         critic: {tier: strong}
         client_liaison: {tier: strong}
+        judge: {tier: strong} # evaluation only
     # Optional. Used only where it beats the open profile enough to justify its cost.
     paid:
       tiers:
@@ -70,6 +72,7 @@ models:
         rewrite: {tier: strong}
         critic: {tier: strong}
         client_liaison: {tier: strong}
+        judge: {tier: strong} # evaluation only
 
 rag:
   variant: v0_naive # chosen by evaluation (R6); V0 until other variants are measured
@@ -79,6 +82,13 @@ rag:
   candidate_multiplier: 4 # chunks fetched per requested item, before merging by item
   embedding_query_prefix: "search_query: "
   embedding_document_prefix: "search_document: "
+  max_subqueries: 8
+  fusion_candidates: 30
+  rerank_candidates: 20
+  rrf_k: 60
+  outcome_boosts: {won: 1.3, replied: 1.1, ignored: 0.4}
+  corrective_min_coverage: 0.34
+  corrective_max_retries: 1
 
 verification:
   supported_coverage: 0.75
