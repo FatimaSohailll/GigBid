@@ -187,3 +187,16 @@ class FaultRatesIn(_Strict):
 
 class StatusChangeIn(_Strict):
     status: ProposalStatus
+
+
+class SimulateClientIn(_Strict):
+    seed: int
+
+
+class SimulatedOutcome(_Strict):
+    proposal_id: str
+    status: ProposalStatus
+    replied: bool
+    hired: bool
+    reply_probability: float
+    official_gigsim: bool = False
