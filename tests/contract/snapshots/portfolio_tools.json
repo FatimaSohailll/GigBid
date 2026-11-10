@@ -15,7 +15,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "description": "Get the full text of one case study by its id.",
+      "description": "Get the full text of one case study when you already have its id.",
       "input": {
         "properties": {
           "id": {
@@ -111,7 +111,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "description": "List every skill the portfolio can evidence, with how many items show it.",
+      "description": "List every skill the portfolio can prove and how many items show each one. Takes no arguments. Use this for an overview, and search_evidence to prove a specific requirement.",
       "input": {
         "properties": {},
         "title": "list_skillsArguments",
@@ -169,7 +169,7 @@
         "openWorldHint": false,
         "readOnlyHint": true
       },
-      "description": "Find portfolio evidence for a requirement. Returns type, source, date and outcome.",
+      "description": "Search the freelancer's portfolio for proof of one requirement, across case studies, code, reviews and past proposals. Use filters to limit by type, skills, outcome, client industry or year. Returns items with type, source, date and outcome.",
       "input": {
         "$defs": {
           "EvidenceFilters": {
