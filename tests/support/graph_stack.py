@@ -42,8 +42,13 @@ def fast_config() -> AppConfig:
             "mcp_client": config.mcp_client.model_copy(
                 update={"backoff_base_seconds": 0.01, "max_retries": 1}
             ),
+            # Every test shares one marketplace account, so the per-user limit must not apply.
             "marketplace": config.marketplace.model_copy(
-                update={"backoff_base_seconds": 0.01, "max_retries": 1}
+                update={
+                    "backoff_base_seconds": 0.01,
+                    "max_retries": 1,
+                    "max_requests_per_minute": 100_000,
+                }
             ),
             "graph": config.graph.model_copy(update={"node_backoff_seconds": 0.0}),
             "verification": config.verification.model_copy(update={"judge": "lexical"}),
