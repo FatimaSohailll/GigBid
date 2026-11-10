@@ -2,7 +2,7 @@
 
 import uuid
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from qdrant_client import QdrantClient, models
 
@@ -10,6 +10,7 @@ from rag.ingest.loaders import PortfolioDocument
 from rag.types import EvidenceFilters
 
 _POINT_NAMESPACE = uuid.UUID("8f1c9a52-7f4e-4a53-9d2e-0c5a7f3e1b64")
+_COPY_BATCH = 256
 
 
 @dataclass(frozen=True)
@@ -67,6 +68,40 @@ class VectorIndex:
         self._client.delete(
             self._collection,
             points_selector=models.FilterSelector(filter=self._item_filter(tenant, item_id)),
+        )
+
+    def copy_tenant(self, source: str, target: str) -> None:
+        """Copy stored vectors to another tenant, so nothing is embedded again."""
+        scope = models.Filter(
+            must=[models.FieldCondition(key="tenant", match=models.MatchValue(value=source))]
+        )
+        offset: Any = None
+        while True:
+            points, offset = self._client.scroll(
+                self._collection,
+                scroll_filter=scope,
+                limit=_COPY_BATCH,
+                offset=offset,
+                with_payload=True,
+                with_vectors=True,
+            )
+            if points:
+                self._client.upsert(
+                    self._collection,
+                    points=[self._copied(point, target) for point in points],
+                )
+            if offset is None:
+                return
+
+    @staticmethod
+    def _copied(point: models.Record, target: str) -> models.PointStruct:
+        payload = dict(point.payload or {})
+        identity = f"{target}|{payload['item_id']}|{payload['chunk']}"
+        assert point.vector is not None
+        return models.PointStruct(
+            id=str(uuid.uuid5(_POINT_NAMESPACE, identity)),
+            vector=cast(Any, point.vector),
+            payload={**payload, "tenant": target},
         )
 
     def replace_item(

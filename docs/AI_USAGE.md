@@ -16,6 +16,7 @@ The student remains accountable for every line in this repository.
 | Claude Code (desktop app) | Claude Opus 5.5 | `apps/api/`, `worker/`, `docs/RUNBOOK.md`, tests | Student to confirm |
 | Claude Code (desktop app) | Claude Opus 5.5 | `apps/web/`, paragraph regeneration in `apps/api/`, `tests/support/e2e_backend.py` | Student to confirm |
 | Claude Code (desktop app) | Claude Opus 5.5 | `rag/variants/`, `rag/index/bm25.py`, `rag/index/reranker.py`, `evals/`, `devsim/src/devsim/client_sim.py`, tests | Student to confirm |
+| Claude Code (desktop app) | Claude Opus 5.5 | Stage 0: `agent/usage.py`, `agent/tracing.py`, `evals/job_runner.py`, per-user tenancy, Qdrant service, tests | Student to confirm |
 
 ## One thing the AI got wrong that I caught
 

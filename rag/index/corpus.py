@@ -53,6 +53,13 @@ class CorpusStore:
         ).fetchone()
         return PortfolioDocument.model_validate_json(row[0]) if row else None
 
+    def copy_tenant(self, source: str, target: str) -> None:
+        self._db.execute(
+            "insert or replace into items "
+            "select ?, item_id, content_hash, document from items where tenant=?",
+            (target, source),
+        )
+
     def documents(self, tenant: str) -> list[PortfolioDocument]:
         rows = self._db.execute(
             "select document from items where tenant=? order by item_id",

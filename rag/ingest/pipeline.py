@@ -68,6 +68,18 @@ def ingest_documents(
     return IngestReport(added, updated, unchanged, removed, embedded)
 
 
+def provision_tenant(template: str, tenant: str, components: RagComponents) -> None:
+    """Give a user a private copy of a persona's portfolio, once.
+
+    Vectors are copied first: an interrupted copy leaves the corpus empty, so it simply runs again.
+    Each user can then add or delete evidence without affecting anyone else.
+    """
+    if components.corpus.hashes(tenant):
+        return
+    components.index.copy_tenant(template, tenant)
+    components.corpus.copy_tenant(template, tenant)
+
+
 def remove_item(tenant: str, item_id: str, components: RagComponents) -> None:
     components.index.delete_item(tenant, item_id)
     components.corpus.delete(tenant, item_id)

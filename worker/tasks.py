@@ -4,6 +4,7 @@ Every task is safe to run twice. A run looks at the checkpoint first, and writes
 idempotency keys, so a worker restart never double-analyses or double-submits.
 """
 
+import asyncio
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -23,11 +24,12 @@ from agent.mcp_client import ToolRateLimited, ToolServerUnavailable
 from agent.nodes.scout import discover_jobs
 from agent.runtime import AgentRuntime
 from agent.state import ApprovalAction, ThreadStatus, UserSettings
+from agent.tracing import run_config
 from apps.api.db import Repository
 from apps.api.services import DEGRADED_KEY, bid_thread, conversation_thread
 from apps.api.streaming import publish_event
 from rag.ingest.loaders import load_upload
-from rag.ingest.pipeline import ingest_documents
+from rag.ingest.pipeline import ingest_documents, provision_tenant
 from rag.types import RagComponents
 
 _WEEK_DAYS = 7
@@ -38,18 +40,25 @@ _POSITIVE_STATUSES = {"viewed", "replied", "interview", "hired", "lost"}
 class WorkerServices:
     repository: Repository
     redis: Redis
-    runtime_for: Callable[[str], AgentRuntime]
+    runtime_for: Callable[[dict[str, Any]], AgentRuntime]
     saver: BaseCheckpointSaver[Any]
     rag: Callable[[], RagComponents]
 
     def __post_init__(self) -> None:
         self._graphs: dict[tuple[str, str], CompiledStateGraph[Any, Any, Any, Any]] = {}
+        self._provisioned: set[str] = set()
 
-    def graph(self, kind: str, persona: str) -> CompiledStateGraph[Any, Any, Any, Any]:
-        key = (kind, persona)
+    async def ensure_portfolio(self, user: dict[str, Any]) -> None:
+        """Give this user a private copy of their persona's portfolio before it is needed."""
+        if user["id"] not in self._provisioned:
+            await asyncio.to_thread(provision_tenant, user["persona"], user["id"], self.rag())
+            self._provisioned.add(user["id"])
+
+    def graph(self, kind: str, user: dict[str, Any]) -> CompiledStateGraph[Any, Any, Any, Any]:
+        key = (kind, user["id"])
         if key not in self._graphs:
             build = build_bid_graph if kind == "bid" else build_conversation_graph
-            self._graphs[key] = build(self.runtime_for(persona), self.saver)
+            self._graphs[key] = build(self.runtime_for(user), self.saver)
         return self._graphs[key]
 
 
@@ -142,8 +151,12 @@ async def run_thread(
     services = _services(ctx)
     repository = services.repository
     user = await repository.user(user_id)
-    graph = services.graph(kind, user["persona"])
+    await services.ensure_portfolio(user)
+    graph = services.graph(kind, user)
     config: Any = {"configurable": {"thread_id": thread_id}}
+    traced: Any = run_config(
+        services.runtime_for(user).config, thread_id, trace_id, user_id, f"{kind}-graph"
+    )
 
     snapshot = await graph.aget_state(config)
     pending = any(task.interrupts for task in snapshot.tasks)
@@ -167,7 +180,7 @@ async def run_thread(
     await repository.set_run_status(thread_id, "running")
     await publish_event(services.redis, thread_id, {"type": "run_start", "thread_id": thread_id})
     try:
-        async for update in graph.astream(graph_input, config, stream_mode="updates"):
+        async for update in graph.astream(graph_input, traced, stream_mode="updates"):
             for node, values in update.items():
                 if node == "__interrupt__":
                     continue
@@ -185,7 +198,7 @@ async def run_thread(
             thread_id,
             {"type": "waiting_for_service", "server": error.server},
         )
-        config_worker = services.runtime_for(user["persona"]).config.worker
+        config_worker = services.runtime_for(user).config.worker
         raise Retry(defer=config_worker.service_retry_seconds) from error
     await services.redis.delete(DEGRADED_KEY)
 
@@ -217,7 +230,7 @@ async def scout_search(ctx: dict[str, Any], search_id: str, user_id: str) -> int
     repository = services.repository
     user = await repository.user(user_id)
     search = next(s for s in await repository.searches(user_id) if s["id"] == search_id)
-    runtime = services.runtime_for(user["persona"])
+    runtime = services.runtime_for(user)
     try:
         fresh = await discover_jobs(
             runtime,
@@ -265,7 +278,7 @@ async def sync_user(ctx: dict[str, Any], user_id: str) -> int:
     services = _services(ctx)
     repository = services.repository
     user = await repository.user(user_id)
-    runtime = services.runtime_for(user["persona"])
+    runtime = services.runtime_for(user)
     after = await repository.sync_cursor(user_id)
     try:
         page = await runtime.tools.call("sync", "list_events", {"after": after, "limit": 100})
@@ -319,6 +332,7 @@ async def ingest_upload(
     """Index one uploaded file. Existing items are left alone (incremental re-indexing)."""
     services = _services(ctx)
     user = await services.repository.user(user_id)
+    await services.ensure_portfolio(user)  # first, or the copy would be skipped as already done
     document = load_upload(Path(path), upload_id, title)
-    ingest_documents([document], user["persona"], services.rag())
+    ingest_documents([document], user_id, services.rag())
     await services.repository.set_upload_status(upload_id, "indexed")

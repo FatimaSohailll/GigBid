@@ -1,9 +1,15 @@
 """Deterministic safety checks that no model output can switch off."""
 
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
+from typing import Any
 
 from agent.handoffs import RiskFlag
+
+_defences_enabled: ContextVar[bool] = ContextVar("gigbid_injection_defences", default=True)
 
 _INJECTION_PATTERNS = (
     r"ignore (?:all |your |the )?(?:previous|prior|above) (?:instructions|rules)",
@@ -47,6 +53,7 @@ _SCAM_FLAGS = {
     RiskFlag.CREDENTIAL_REQUEST,
 }
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
+_CARD = re.compile(r"\b(?:\d[ -]?){13,19}\b")
 _PHONE = re.compile(r"(?<![\w(])(?!\d{4}-\d{2}-\d{2})\+?\(?\d[\d ()-]{7,}\d(?!\w)")
 _URL = re.compile(r"\bhttps?://\S+|\bwww\.\S+", re.IGNORECASE)
 _HANDLE = re.compile(r"\b(?:telegram|whatsapp|skype|signal|discord)\b[^.!?\n]*", re.IGNORECASE)
@@ -78,8 +85,37 @@ class ComplianceScan:
     blocked: bool = False
 
 
+@contextmanager
+def defences_off() -> Iterator[None]:
+    """Run without injection defences, only to measure attack success before and after.
+
+    A context switch rather than a setting, so no config value can turn defences off in production.
+    Outgoing Compliance checks stay on.
+    """
+    token = _defences_enabled.set(False)
+    try:
+        yield
+    finally:
+        _defences_enabled.reset(token)
+
+
+def mask_pii(value: Any) -> Any:
+    """Mask emails, card numbers and phone numbers in any JSON-like value."""
+    if isinstance(value, str):
+        masked = _EMAIL.sub("[email]", value)
+        masked = _CARD.sub("[payment]", masked)
+        return _PHONE.sub("[phone]", masked)
+    if isinstance(value, list):
+        return [mask_pii(item) for item in value]
+    if isinstance(value, dict):
+        return {key: mask_pii(item) for key, item in value.items()}
+    return value
+
+
 def delimit_untrusted(label: str, text: str) -> str:
     """Wrap outside text in tags that it cannot close itself."""
+    if not _defences_enabled.get():
+        return text
     safe = text.replace("</", "<\\/")
     return f"<untrusted_{label}>\n{safe}\n</untrusted_{label}>"
 
@@ -92,7 +128,8 @@ def scan_job_post(text: str) -> RiskSignals:
         if any(re.search(pattern, lowered) for pattern in patterns)
     }
     injected = []
-    for sentence in re.split(r"(?<=[.!?])\s+|\n+", text):
+    sentences = re.split(r"(?<=[.!?])\s+|\n+", text) if _defences_enabled.get() else []
+    for sentence in sentences:
         if any(re.search(pattern, sentence, re.IGNORECASE) for pattern in _INJECTION_PATTERNS):
             injected.append(sentence.strip())
     if injected:

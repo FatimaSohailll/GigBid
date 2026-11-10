@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import time
 from collections.abc import Awaitable, Callable, Mapping
 from typing import Any
 
@@ -11,6 +12,8 @@ from agent.marketplace_port import current_trace_id
 from agent.mcp_client import ToolCallError, ToolServerUnavailable
 from agent.runtime import AgentRuntime
 from agent.state import NodeError, ThreadStatus
+from agent.tracing import annotate_node
+from agent.usage import ModelCall, collect_model_calls, node_usage
 
 logger = logging.getLogger(__name__)
 NodeFunction = Callable[[Any, AgentRuntime], Awaitable[dict[str, Any]]]
@@ -52,30 +55,38 @@ def guarded(name: str, function: NodeFunction, runtime: AgentRuntime) -> Callabl
         if problem:
             return {"status": ThreadStatus.NEEDS_ATTENTION, "attention_reason": problem}
         trace = current_trace_id.set(state.get("trace_id"))
+        started = time.perf_counter()
+
+        def finished(calls: list[ModelCall]) -> dict[str, Any]:
+            usage = node_usage(name, calls, time.perf_counter() - started)
+            annotate_node(usage)
+            return {"steps_used": 1, "node_usage": [usage]}
+
         try:
-            failure: Exception | None = None
-            for attempt in range(settings.node_max_attempts):
-                try:
-                    update = await asyncio.wait_for(
-                        function(state, runtime), settings.node_timeout_seconds
-                    )
-                    return {**update, "steps_used": 1}
-                except ToolServerUnavailable:
-                    raise
-                except (ToolCallError, PermissionError) as error:
-                    failure = error
-                    break
-                except Exception as error:  # a bad model reply or a transient failure
-                    failure = error
-                    logger.warning("Node %s attempt %d failed: %r", name, attempt + 1, error)
-                    if attempt + 1 < settings.node_max_attempts:
-                        await asyncio.sleep(settings.node_backoff_seconds * (2**attempt))
-            return {
-                "status": ThreadStatus.DEAD_LETTER,
-                "attention_reason": f"{name} could not complete.",
-                "errors": [NodeError(node=name, message=repr(failure))],
-                "steps_used": 1,
-            }
+            with collect_model_calls() as calls:
+                failure: Exception | None = None
+                for attempt in range(settings.node_max_attempts):
+                    try:
+                        update = await asyncio.wait_for(
+                            function(state, runtime), settings.node_timeout_seconds
+                        )
+                        return {**update, **finished(calls)}
+                    except ToolServerUnavailable:
+                        raise
+                    except (ToolCallError, PermissionError) as error:
+                        failure = error
+                        break
+                    except Exception as error:  # a bad model reply or a transient failure
+                        failure = error
+                        logger.warning("Node %s attempt %d failed: %r", name, attempt + 1, error)
+                        if attempt + 1 < settings.node_max_attempts:
+                            await asyncio.sleep(settings.node_backoff_seconds * (2**attempt))
+                return {
+                    "status": ThreadStatus.DEAD_LETTER,
+                    "attention_reason": f"{name} could not complete.",
+                    "errors": [NodeError(node=name, message=repr(failure))],
+                    **finished(calls),
+                }
         finally:
             current_trace_id.reset(trace)
 

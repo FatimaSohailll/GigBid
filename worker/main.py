@@ -1,6 +1,7 @@
 """Arq worker: `arq worker.main.WorkerSettings`."""
 
 import os
+from functools import cache
 from typing import Any
 
 from arq import cron
@@ -13,6 +14,7 @@ from agent.checkpoint import checkpoint_serde
 from agent.config import get_config
 from agent.runtime import AgentRuntime, default_runtime
 from apps.api.db import Repository, open_pool
+from mcp_servers.tenant_auth import mint_user_token
 from worker.tasks import (
     WorkerServices,
     ingest_upload,
@@ -32,14 +34,6 @@ FUNCTIONS = [
 ]
 
 
-def parse_persona_tokens(raw: str) -> dict[str, str]:
-    """Parse ``persona=bearer`` pairs: the token each persona uses on the MCP servers."""
-    tokens = dict(pair.strip().split("=", 1) for pair in raw.split(",") if pair.strip())
-    if not tokens:
-        raise ValueError("MCP_PERSONA_TOKENS must define at least one persona=token pair")
-    return tokens
-
-
 async def startup(ctx: dict[str, Any]) -> None:
     from rag.retriever import open_components
 
@@ -52,16 +46,19 @@ async def startup(ctx: dict[str, Any]) -> None:
     await saver.setup()
     store = AsyncPostgresStore(pool)  # type: ignore[arg-type]
     await store.setup()
-    tokens = parse_persona_tokens(os.environ["MCP_PERSONA_TOKENS"])
+    signing_key = os.environ["MCP_TENANT_SIGNING_KEY"]
     runtimes: dict[str, AgentRuntime] = {}
 
-    def runtime_for(persona: str) -> AgentRuntime:
-        if persona not in runtimes:
-            runtimes[persona] = default_runtime(store, config, tokens[persona])
-        return runtimes[persona]
+    def runtime_for(user: dict[str, Any]) -> AgentRuntime:
+        if user["id"] not in runtimes:
+            bearer = mint_user_token(signing_key, user["id"], user["persona"])
+            runtimes[user["id"]] = default_runtime(store, config, bearer)
+        return runtimes[user["id"]]
 
     ctx["pool"] = pool
-    ctx["services"] = WorkerServices(repository, ctx["redis"], runtime_for, saver, open_components)
+    ctx["services"] = WorkerServices(
+        repository, ctx["redis"], runtime_for, saver, cache(open_components)
+    )
 
 
 async def shutdown(ctx: dict[str, Any]) -> None:

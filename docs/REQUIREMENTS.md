@@ -13,7 +13,7 @@ make a requirement complete.
 | Tested | Automated tests pass |
 | Verified | Demonstrated end to end in the conditions the assignment describes |
 
-Roadmap: Stage 0 (shared prerequisites), then Parts A, B, C, D and E in order, each with its R&D question. Older "Phase" numbers below are superseded by that order. Steps completed so far: DevSim marketplace API, Step 0, DevSim data, contracts and Marketplace MCP, Portfolio MCP and RAG core, model routing and bid graph, conversation graph and memory, API and worker, web interface, RAG variants and evaluation runners (written, not yet measured).
+Roadmap: Stage 0 (shared prerequisites), then Parts A, B, C, D and E in order, each with its R&D question. Older "Phase" numbers below are superseded by that order. Steps completed so far: DevSim marketplace API, Step 0, DevSim data, contracts and Marketplace MCP, Portfolio MCP and RAG core, model routing and bid graph, conversation graph and memory, API and worker, web interface, RAG variants and evaluation runners (written, not yet measured), Stage 0 (run record, masked tracing, defence switch, job runner, per-user tenancy, Qdrant service).
 
 Automated graph tests use scripted model replies, so that they are repeatable and free. The graph
 has also been run by hand on real open models through Groq, on DevSim data. Part A's single-agent
@@ -42,8 +42,8 @@ proposal has not been built separately yet.
 | R5 | No unsupported claims; rate measured and reported | `rag/verify.py` | Partial, Tested | `tests/unit/test_claim_verification.py` | LLM judge not run on a real model yet; reporting in Phase 11 |
 | R6 | Deployed RAG design chosen by evaluation | `rag/retriever.py`, `evals/runners/rag_eval.py` | Partial | V0 measured on DevSim | Measure every variant on the per-requirement queries production uses, Part B |
 | R7 | Memory updated only through an explicit promotion rule | `agent/memory/` | Tested | `tests/unit/test_memory.py` | Marketplace event feed, Phase 8; memory viewer UI, Phase 9 |
-| R8 | Every run traced; p95 latency and cost reported | `agent/config.yaml` has budgets | Stub | None | Phases 2, 12 |
-| R9 | Injection defence, PII masking, polite scheduling, no scraping | Policy text only | Missing | None | Phases 8, 12 |
+| R8 | Every run traced; p95 latency and cost reported | `agent/tracing.py`, `agent/usage.py`, `evals/runners/` | Partial, real trace checked | `tests/unit/test_stage_zero.py` | Report measured values, Parts B, C, E |
+| R9 | Injection defence, PII masking, polite scheduling, no scraping | `agent/guardrails.py`, `agent/tracing.py`, `worker/` | Partial, Tested | `tests/unit/test_stage_zero.py`, `tests/unit/test_agent_units.py` | Measure attack success; mask application logs, Part E |
 | R10 | `docker compose up` and a public URL with reviewer login | `infra/docker-compose.yml` empty | Stub | None | Phase 16 |
 
 ## Part A: MCP tool layer
@@ -107,9 +107,9 @@ proposal has not been built separately yet.
 |---|---|---|---|---|---|
 | E1 | Redis worker, schedules, idempotent jobs | `worker/`, `docs/RUNBOOK.md` | Tested | `tests/integration/test_api_worker.py` | Cron schedule not run live; real worker kill in testing phase |
 | E2 | `make eval`; CI runs tests and a 30-job gated smoke eval | `Makefile`, `evals/runners/smoke.py`, `evals/thresholds.yaml` | Partial, not run | `tests/unit/test_eval_pipeline.py` | `eval.yml` needs the Groq secret and measured thresholds, Part E |
-| E3 | One trace id across UI, API, graph, MCP and audit log | `apps/api/main.py`, `agent/graphs/common.py`, `agent/mcp_client.py`, Marketplace server | Partial, API to audit log implemented | `tests/integration/test_bid_graph.py` | UI and tracing tool, Phases 9, 12 |
-| E4 | Delimited untrusted data, attack rate, masking, encrypted tokens, tenancy | None | Missing | None | Phases 7, 12, 13 |
-| E5 | Declared and measured budgets; one optimisation | None | Missing | None | Phases 12, 14 |
+| E3 | One trace id across UI, API, graph, MCP and audit log; tokens and cost per node | `agent/tracing.py`, `agent/usage.py`, `agent/graphs/common.py`, `agent/mcp_client.py`, Marketplace server | Partial, real LangSmith trace checked | `tests/unit/test_stage_zero.py` | Trace link in the UI and API trace id across resumes, Part D |
+| E4 | Delimited untrusted data, attack rate, masking, encrypted tokens, tenancy | `agent/guardrails.py`, `apps/api/auth/security.py`, `mcp_servers/tenant_auth.py`, `rag/ingest/pipeline.py` | Partial, Tested | `tests/unit/test_stage_zero.py`, `tests/integration/test_qdrant_service.py` | Attack rate and application log masking, Part E; audit log names the shared persona account |
+| E5 | Declared and measured budgets; one optimisation | `evals/job_runner.py`, `agent/usage.py` record cost and latency | Partial | `tests/unit/test_stage_zero.py` | Declare budgets, measure, one optimisation, Part E |
 | E6 | Full Docker stack and stable public deployment | `infra/` empty | Missing | None | Phase 16 |
 
 ## Repository rules and structure

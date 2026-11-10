@@ -221,7 +221,7 @@ def create_http_server(environ: Mapping[str, str] | None = None) -> FastMCP:
     url = AnyHttpUrl(env.get("MCP_WORKSPACE_PUBLIC_URL", f"http://{host}:{port}"))
     return build_server(
         WorkspaceStore(env.get("MCP_WORKSPACE_DB", "data/processed/workspace_mcp.sqlite3")),
-        token_verifier=TenantBearerVerifier(tenants),
+        token_verifier=TenantBearerVerifier(tenants, env.get("MCP_TENANT_SIGNING_KEY")),
         auth=AuthSettings(issuer_url=url, resource_server_url=url, validate_token_resource=False),
         host=host,
         port=port,
