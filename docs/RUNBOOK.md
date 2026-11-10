@@ -6,6 +6,14 @@ Start the stores with `make db`, then start the API with `make api` and the work
 `make worker`. On Windows the API and worker need a selector event loop for Postgres, so run them
 in Docker or Linux. The packaging phase adds the full stack to `docker compose up`.
 
+`make db` also starts Qdrant. The worker and Portfolio server are separate processes, so they need
+`QDRANT_URL`; embedded Qdrant allows only one process. Set `MCP_TENANT_SIGNING_KEY` to the same
+value for the worker and all three MCP servers. Each GigBid user gets a private copy of their
+persona's portfolio on first use, so adding or deleting evidence affects only that user.
+
+Tracing needs `LANGSMITH_API_KEY`. Emails, phone numbers and card numbers are masked before a trace
+is sent. Set `tracing.enabled` to false in `agent/config.yaml` to send nothing.
+
 ## Schedules and rate limits
 
 | Work | Schedule | Why |

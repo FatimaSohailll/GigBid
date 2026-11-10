@@ -47,15 +47,18 @@ def stack(tmp_path: Path) -> Iterator[EvalStack]:
 
 async def test_decision_run_stops_before_the_writer(stack: EvalStack) -> None:
     llm = ScriptedLlm()
-    row = await score_job(stack.graph(PERSONA, llm), GOLD)
+    row = await score_job(stack.runner(PERSONA, llm), GOLD)
     assert row["error"] is None
     assert row["predicted"] == "bid"
     assert row["price_in_band"] is True
     assert llm.calls["writer"] == 0
+    assert {"analyst", "risk_assessor", "fit_matcher", "pricing"} <= {
+        item["node"] for item in row["usage"]
+    }
 
 
 async def test_outcome_run_submits_and_records_the_client_reaction(stack: EvalStack) -> None:
-    row = await run_job(stack.graph(PERSONA, ScriptedLlm()), GOLD, stack, 42, None)
+    row = await run_job(stack.runner(PERSONA, ScriptedLlm()), GOLD, stack, 42, None)
     assert row["status"] == "submitted"
     assert row["cover_letter"]
     assert row["unsupported_after"] == 0

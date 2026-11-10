@@ -8,7 +8,6 @@ import argparse
 import asyncio
 import sys
 import tempfile
-import time
 from collections import defaultdict
 from pathlib import Path
 from statistics import mean
@@ -17,54 +16,66 @@ from typing import Any
 from dotenv import load_dotenv
 
 from agent.config import get_config
-from agent.handoffs import BidAction, RiskFlag
+from agent.handoffs import BidAction
 from agent.llm import ModelRouter
+from agent.tracing import flush_traces
 from evals.harness import (
     append_row,
     eval_config,
-    initial_state,
     load_gold,
     read_finished_rows,
     rewrite_rows,
     select_jobs,
     start_eval_stack,
-    thread_config,
 )
+from evals.job_runner import JobRunner
 from evals.metrics import percentile, precision_recall_f1
 from evals.runners.rag_eval import RESULTS_DIR, write_result
 from rag.retriever import open_components
 
 
-async def score_job(graph: Any, gold: dict[str, Any]) -> dict[str, Any]:
-    started = time.perf_counter()
-    state = await graph.ainvoke(
-        initial_state(gold), thread_config(gold), interrupt_before=["writer"]
-    )
-    decision = state.get("decision")
-    risk = state.get("risk_report")
-    quote = state.get("price_quote")
+async def score_job(runner: JobRunner, gold: dict[str, Any]) -> dict[str, Any]:
+    result = await runner.decide(gold)
     band = gold["fair_price_band"]
-    flags = risk.flags if risk else []
     return {
+        **result.as_row(),
         "job_id": gold["job_id"],
         "persona": gold["persona"],
         "job_type": gold["job_type"],
         "gold_bid": gold["decision"] == "bid",
-        "predicted": decision.action.value if decision else None,
+        "predicted": result.decision,
         "is_scam": gold["is_scam"],
-        "flagged_scam": RiskFlag.SCAM in flags,
         "has_injection": gold["has_injection"],
-        "flagged_injection": RiskFlag.INJECTION in flags,
-        "price": quote.amount if quote else None,
-        "price_in_band": band["min"] <= quote.amount <= band["max"] if quote else None,
-        "tokens": state.get("tokens_used", 0),
-        "latency_seconds": round(time.perf_counter() - started, 2),
-        "error": None if decision else (state.get("attention_reason") or "no decision reached"),
+        "price_in_band": None
+        if result.price is None
+        else band["min"] <= result.price <= band["max"],
     }
 
 
 def _rate(values: list[bool]) -> float | None:
     return round(mean(values), 4) if values else None
+
+
+def mean_cost(rows: list[dict[str, Any]]) -> float | None:
+    """Unknown if any row used a model without a configured price."""
+    costs: list[float | None] = [row.get("cost_usd") for row in rows]
+    if not costs or any(cost is None for cost in costs):
+        return None
+    return round(sum(cost for cost in costs if cost is not None) / len(costs), 6)
+
+
+def usage_by_node(rows: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
+    """Mean tokens and latency per job for each node, to show where budget goes."""
+    totals: defaultdict[str, defaultdict[str, float]] = defaultdict(lambda: defaultdict(float))
+    for row in rows:
+        for item in row.get("usage", []):
+            node = totals[item["node"]]
+            node["tokens"] += item["input_tokens"] + item["output_tokens"]
+            node["latency_seconds"] += item["latency_seconds"]
+    return {
+        name: {key: round(value / len(rows), 2) for key, value in node.items()}
+        for name, node in sorted(totals.items())
+    }
 
 
 def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
@@ -86,6 +97,8 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
             [row["flagged_injection"] for row in done if row["has_injection"]]
         ),
         "tokens_per_job": round(mean(row["tokens"] for row in done), 1),
+        "cost_per_job_usd": mean_cost(done),
+        "usage_by_node": usage_by_node(done),
         "latency_seconds": {
             "p50": round(percentile(latencies, 50), 2),
             "p95": round(percentile(latencies, 95), 2),
@@ -122,17 +135,20 @@ async def run(arguments: argparse.Namespace) -> dict[str, Any]:
     llm = ModelRouter(config)
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as workdir:
         stack = start_eval_stack(Path(workdir), components, config, arguments.data / "marketplace")
-        graphs: dict[str, Any] = {}
+        runners: dict[str, JobRunner] = {}
         rows: list[dict[str, Any]] = []
         for gold in jobs:
             key = f"{gold['persona']}:{gold['job_id']}"
             if key not in finished:
-                graph = graphs.setdefault(gold["persona"], stack.graph(gold["persona"], llm))
-                row = await score_job(graph, gold)
+                persona = gold["persona"]
+                if persona not in runners:
+                    runners[persona] = stack.runner(persona, llm, not arguments.no_defences)
+                row = await score_job(runners[persona], gold)
                 append_row(rows_path, row)
                 print(key, row["predicted"], row["tokens"], row["error"] or "", flush=True)
             rows.append(finished.get(key) or row)
         stack.stop()
+    flush_traces(config)
     components.close()
     result = report(rows, arguments.source)
     write_result(f"decision_{arguments.source}{tag}.json", result)
@@ -146,6 +162,9 @@ def parser() -> argparse.ArgumentParser:
     options.add_argument("--source", default="devsim")
     options.add_argument("--tag", default="", help="Added to result file names, e.g. smoke")
     options.add_argument("--fresh", action="store_true", help="Ignore rows from an earlier run")
+    options.add_argument(
+        "--no-defences", action="store_true", help="Measure attack success without defences"
+    )
     return options
 
 

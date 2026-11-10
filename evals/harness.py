@@ -21,9 +21,9 @@ from agent.llm import LlmGateway
 from agent.mcp_client import Toolbox, ToolGateway, connections_from_env
 from agent.memory.store import LongTermMemory
 from agent.runtime import AgentRuntime
-from agent.state import UserSettings
 from devsim.app import create_app
 from devsim.config import RateLimitConfig, Settings, SimConfig
+from evals.job_runner import GraphJobRunner
 from mcp_servers.marketplace.server import StaticBearerVerifier, UserAccess, gigsim_port_factory
 from mcp_servers.marketplace.server import build_server as build_marketplace
 from mcp_servers.marketplace.store import ServerStore
@@ -36,8 +36,6 @@ from rag.types import RagComponents
 
 PERSONAS = ("ai_ml_engineer", "fullstack_developer", "data_analyst")
 ADMIN_TOKEN = "eval-admin"
-# Generous on purpose: evaluation measures decisions, not the user's weekly Connects budget.
-EVAL_SETTINGS = UserSettings(floor_usd=50, weekly_connects_budget=100_000)
 _CORE_SEED_START = datetime(2026, 11, 1, tzinfo=UTC)
 _UNLIMITED_RPM = 100_000
 
@@ -89,6 +87,9 @@ class EvalStack:
         memory = LongTermMemory(InMemoryStore(), self.config.memory)
         runtime = AgentRuntime(self.config, llm, ToolGateway(toolbox), memory)
         return build_bid_graph(runtime, InMemorySaver(serde=checkpoint_serde()))
+
+    def runner(self, persona: str, llm: LlmGateway, defences: bool = True) -> GraphJobRunner:
+        return GraphJobRunner(self.graph(persona, llm), self.config, defences)
 
     def simulate_client(self, proposal_id: str, seed: int) -> dict[str, Any]:
         """DevSim only. The official GigSim runs its own client model when it is added."""
@@ -162,19 +163,6 @@ def start_eval_stack(
         "MCP_WORKSPACE_URL": f"http://127.0.0.1:{workspace_port}/mcp",
     }
     return EvalStack(simulator, servers, env, config)
-
-
-def initial_state(gold: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "job_id": gold["job_id"],
-        "user_id": gold["persona"],
-        "trace_id": f"eval-{gold['persona']}-{gold['job_id']}",
-        "settings": EVAL_SETTINGS,
-    }
-
-
-def thread_config(gold: dict[str, Any]) -> dict[str, Any]:
-    return {"configurable": {"thread_id": f"eval-{gold['persona']}-{gold['job_id']}"}}
 
 
 def load_gold(data: Path) -> list[dict[str, Any]]:

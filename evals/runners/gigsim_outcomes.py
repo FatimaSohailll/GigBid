@@ -9,75 +9,58 @@ import asyncio
 import json
 import sys
 import tempfile
-import time
 from pathlib import Path
 from statistics import mean
 from typing import Any
 
 from dotenv import load_dotenv
-from langgraph.types import Command
 
 from agent.config import get_config
 from agent.llm import LlmGateway, ModelRouter
 from agent.state import ThreadStatus
+from agent.tracing import flush_traces
 from evals.harness import (
     EvalStack,
     append_row,
     eval_config,
-    initial_state,
     load_gold,
     read_finished_rows,
     rewrite_rows,
     select_jobs,
     start_eval_stack,
-    thread_config,
 )
+from evals.job_runner import JobRunner
 from evals.judge import score_proposal
 from evals.metrics import percentile
+from evals.runners.decision_eval import mean_cost, usage_by_node
 from evals.runners.rag_eval import RESULTS_DIR, safe_name, write_result
 from rag.retriever import open_components
 
-_FAILED = {ThreadStatus.NEEDS_ATTENTION.value, ThreadStatus.DEAD_LETTER.value}
-
 
 async def run_job(
-    graph: Any,
+    runner: JobRunner,
     gold: dict[str, Any],
     stack: EvalStack,
     seed: int,
     judge: LlmGateway | None,
 ) -> dict[str, Any]:
-    thread = thread_config(gold)
-    started = time.perf_counter()
-    state = await graph.ainvoke(initial_state(gold), thread)
-    if "__interrupt__" in state:
-        state = await graph.ainvoke(Command(resume={"action": "approve"}), thread)
-    latency = round(time.perf_counter() - started, 2)
-
-    status = ThreadStatus(state["status"]).value
-    reports = state.get("verification_reports", [])
-    drafts = state.get("drafts", [])
+    result = await runner.complete(gold)
     row: dict[str, Any] = {
+        **result.as_row(),
         "job_id": gold["job_id"],
         "persona": gold["persona"],
         "job_type": gold["job_type"],
-        "status": status,
-        "submitted": status == ThreadStatus.SUBMITTED.value,
+        "submitted": result.status == ThreadStatus.SUBMITTED.value,
         "replied": False,
         "hired": False,
-        "unsupported_before": reports[-1]["unsupported_before"] if reports else None,
-        "unsupported_after": reports[-1]["unsupported_after"] if reports else None,
-        "cover_letter": drafts[-1].cover_letter if drafts else None,
         "judge_overall": None,
-        "tokens": state.get("tokens_used", 0),
-        "latency_seconds": latency,
-        "error": (state.get("attention_reason") or status) if status in _FAILED else None,
     }
     if row["submitted"]:
-        outcome = stack.simulate_client(state["proposal_id"], seed)
+        assert result.proposal_id is not None and result.cover_letter is not None
+        outcome = stack.simulate_client(result.proposal_id, seed)
         row.update(replied=outcome["replied"], hired=outcome["hired"])
         if judge is not None:
-            score = await score_proposal(judge, state["job"], row["cover_letter"])
+            score = await score_proposal(judge, result.job, result.cover_letter)
             row["judge_overall"] = score.overall
     return row
 
@@ -109,6 +92,8 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
             [row["judge_overall"] for row in sent if row["judge_overall"] is not None]
         ),
         "tokens_per_proposal": _mean([row["tokens"] for row in sent]),
+        "cost_per_proposal_usd": mean_cost(sent),
+        "usage_by_node": usage_by_node(sent) if sent else {},
         "p50_latency_seconds": round(percentile(latencies, 50), 2) if latencies else None,
         "p95_latency_seconds": round(percentile(latencies, 95), 2) if latencies else None,
     }
@@ -132,17 +117,20 @@ async def run(arguments: argparse.Namespace) -> dict[str, Any]:
         stack = start_eval_stack(
             Path(workdir), components, config, arguments.data / "marketplace", variant
         )
-        graphs: dict[str, Any] = {}
+        runners: dict[str, JobRunner] = {}
         rows: list[dict[str, Any]] = []
         for gold in jobs:
             key = f"{gold['persona']}:{gold['job_id']}"
             if key not in finished:
-                graph = graphs.setdefault(gold["persona"], stack.graph(gold["persona"], llm))
-                row = await run_job(graph, gold, stack, arguments.seed, judge)
+                persona = gold["persona"]
+                if persona not in runners:
+                    runners[persona] = stack.runner(persona, llm)
+                row = await run_job(runners[persona], gold, stack, arguments.seed, judge)
                 append_row(rows_path, row)
                 print(key, row["status"], row["replied"], row["tokens"], flush=True)
             rows.append(finished.get(key) or row)
         stack.stop()
+    flush_traces(config)
     components.close()
     result = {
         "variant": variant,
