@@ -19,7 +19,7 @@ from redis.asyncio import Redis
 
 from agent.graphs.bid_graph import build_bid_graph
 from agent.graphs.conversation_graph import build_conversation_graph
-from agent.mcp_client import ToolServerUnavailable
+from agent.mcp_client import ToolRateLimited, ToolServerUnavailable
 from agent.nodes.scout import discover_jobs
 from agent.runtime import AgentRuntime
 from agent.state import ApprovalAction, ThreadStatus, UserSettings
@@ -51,6 +51,12 @@ class WorkerServices:
             build = build_bid_graph if kind == "bid" else build_conversation_graph
             self._graphs[key] = build(self.runtime_for(persona), self.saver)
         return self._graphs[key]
+
+
+async def _record_outage(redis: Redis, error: ToolServerUnavailable) -> None:
+    """Show the outage banner for a real outage, but not for a healthy, busy marketplace."""
+    if not isinstance(error, ToolRateLimited):
+        await redis.set(DEGRADED_KEY, error.server, ex=120)
 
 
 def _services(ctx: dict[str, Any]) -> WorkerServices:
@@ -172,7 +178,7 @@ async def run_thread(
                     {"type": "node", "node": node, "fields": fields, "at": datetime.now(UTC)},
                 )
     except ToolServerUnavailable as error:
-        await services.redis.set(DEGRADED_KEY, error.server, ex=120)
+        await _record_outage(services.redis, error)
         await repository.set_run_status(thread_id, "waiting_for_service")
         await publish_event(
             services.redis,
@@ -220,7 +226,7 @@ async def scout_search(ctx: dict[str, Any], search_id: str, user_id: str) -> int
             await repository.recent_jobs(user_id),
         )
     except ToolServerUnavailable as error:
-        await services.redis.set(DEGRADED_KEY, error.server, ex=120)
+        await _record_outage(services.redis, error)
         raise Retry(defer=runtime.config.worker.service_retry_seconds) from error
     added = 0
     for job in fresh[: runtime.config.worker.max_jobs_per_scout]:
@@ -264,7 +270,7 @@ async def sync_user(ctx: dict[str, Any], user_id: str) -> int:
     try:
         page = await runtime.tools.call("sync", "list_events", {"after": after, "limit": 100})
     except ToolServerUnavailable as error:
-        await services.redis.set(DEGRADED_KEY, error.server, ex=120)
+        await _record_outage(services.redis, error)
         return 0
     for event in page["items"]:
         proposal_id = event["proposal_id"]

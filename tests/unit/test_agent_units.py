@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from langchain_core.language_models.fake_chat_models import GenericFakeChatModel
 from langchain_core.messages import AIMessage
+from langchain_core.tools import ToolException
 from langgraph.store.memory import InMemoryStore
 from pydantic import BaseModel
 
@@ -11,6 +12,7 @@ from agent.config import ModelSpec, load_config
 from agent.guardrails import delimit_untrusted, scan_job_post, scan_outgoing_text
 from agent.handoffs import RiskFlag
 from agent.llm import ModelRouter, create_chat_model, rate_limit_delay, structured_runnable
+from agent.mcp_client import ToolGateway, ToolRateLimited, ToolServerUnavailable
 from agent.nodes.approval import ApprovalDecision, idempotency_key
 from agent.nodes.pricing import propose_amount
 from agent.nodes.risk_assessor import client_quality
@@ -269,6 +271,34 @@ def test_default_runtime_wires_the_router_and_gateway(monkeypatch: pytest.Monkey
     runtime = default_runtime(InMemoryStore(), CONFIG)
     assert isinstance(runtime.llm, ModelRouter)
     assert runtime.prompt("writer").startswith("You write a freelance proposal")
+
+
+@pytest.mark.parametrize(
+    ("code", "expected", "is_rate_limit"),
+    [
+        ("rate_limited", ToolRateLimited, True),
+        ("marketplace_unavailable", ToolServerUnavailable, False),
+    ],
+)
+async def test_gateway_separates_a_busy_marketplace_from_an_outage(
+    code: str,
+    expected: type[Exception],
+    is_rate_limit: bool,
+) -> None:
+    class Tool:
+        name = "search_jobs"
+
+        async def ainvoke(self, _: Any) -> Any:
+            raise ToolException(f"Error executing tool search_jobs: {code}: details")
+
+    class Box:
+        async def tools_for(self, _: str) -> list[Any]:
+            return [Tool()]
+
+    box: Any = Box()
+    with pytest.raises(expected) as caught:
+        await ToolGateway(box).call("scout", "search_jobs", {})
+    assert isinstance(caught.value, ToolRateLimited) is is_rate_limit
 
 
 def test_database_url_is_normalised_for_psycopg() -> None:
