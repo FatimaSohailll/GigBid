@@ -109,7 +109,7 @@ class ModelRouter:
         try:
             return await self._call(primary, instructions, data, schema)
         except Exception as error:
-            if fallback is None:
+            if fallback is None or not self._config.llm.allow_fallback:
                 raise
             logger.warning("Node %s falling back after %s", node, type(error).__name__)
             return await self._call(fallback, instructions, data, schema)

@@ -44,7 +44,8 @@ models:
       tiers:
         # Groq list prices, read from console.groq.com on 2026-11-10. Free-tier runs pay nothing.
         small: {provider: groq, model: openai/gpt-oss-20b, input_usd_per_million: 0.075, output_usd_per_million: 0.30}
-        small_fallback: {provider: ollama, model: "qwen3:4b"}
+        # Open weights, separate Groq limits from the primary. Groq's model page lists no price.
+        small_fallback: {provider: groq, model: llama-3.1-8b-instant}
         strong: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60}
       nodes:
         scout: {tier: small, fallback: small_fallback}
@@ -113,12 +114,15 @@ verification:
 llm:
   max_rate_limit_waits: 4 # Groq's free tier allows only 8,000 tokens a minute on small models
   max_rate_limit_wait_seconds: 30
+  allow_fallback: true # evaluations switch this off so one experiment never mixes models
 
 graph:
   node_timeout_seconds: 240
   node_max_attempts: 3
   node_backoff_seconds: 0.5
   duplicate_similarity: 0.8
+  critic_max_case_studies: 3 # cited case studies the Critic reads in full
+  critic_case_study_chars: 1500
 
 writing:
   min_cover_letter_words: 40

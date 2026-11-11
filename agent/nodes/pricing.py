@@ -17,11 +17,27 @@ def propose_amount(
     budget_max: float,
     floor: float,
 ) -> float:
-    """Market median, kept inside the client's budget, and never below the user's floor."""
-    target = median if median is not None else (budget_min + budget_max) / 2
-    if budget_max > 0:
-        target = min(max(target, budget_min), budget_max)
+    """The market median when it fits the client's budget, otherwise the budget's midpoint.
+
+    Clipping an outside median to the budget's edge bid the minimum whenever the market sat below
+    the budget, which under-priced most jobs (evals/results/pricing_rules_devsim.json).
+    """
+    has_budget = budget_max > 0
+    if median is not None and (not has_budget or budget_min <= median <= budget_max):
+        target = median
+    elif has_budget:
+        target = (budget_min + budget_max) / 2
+    else:
+        target = 0.0
     return round(max(target, floor), 2)
+
+
+def price_basis(median: float | None, budget_min: float, budget_max: float) -> str:
+    if median is None:
+        return "No market data for this category; priced at the middle of the client's budget."
+    if budget_max <= 0 or budget_min <= median <= budget_max:
+        return f"Market median {median:.0f}, which fits the client's budget."
+    return f"Market median {median:.0f} falls outside the client's budget; priced at its middle."
 
 
 async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
@@ -46,7 +62,7 @@ async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
     within_budget = settings.connects_spent_this_week + cost <= settings.weekly_connects_budget
     cost_share = (cost * rules.connect_value_usd) / amount if amount else 1.0
     worth_it = affordable and within_budget and cost_share <= rules.max_connects_share_of_bid
-    market = f"Market median {stats['p50']:.0f}." if stats else "No market data for this category."
+    market = price_basis(stats.get("p50"), budget["min"], budget["max"])
     rationale = (
         f"{market} Client budget {budget['min']:.0f} to {budget['max']:.0f}. "
         f"Your floor {settings.floor_usd:.0f}. Bid {amount:.0f}. "

@@ -36,6 +36,7 @@ class ThreadStatus(StrEnum):
     SKIPPED = "skipped"
     WATCHING = "watching"
     SUBMITTED = "submitted"
+    AWAITING_PLATFORM_CONFIRMATION = "awaiting_platform_confirmation"
     SENT = "sent"
     REJECTED = "rejected"
     BLOCKED = "blocked"

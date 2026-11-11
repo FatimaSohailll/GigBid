@@ -1504,6 +1504,13 @@
       },
       "RegenerateOut": {
         "properties": {
+          "missing_evidence": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Evidence",
+            "type": "array"
+          },
           "removed_claims": {
             "items": {
               "type": "string"

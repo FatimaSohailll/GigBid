@@ -134,7 +134,11 @@ async def _persist_bid(
         quote.amount if quote else None,
         [flag.value for flag in risk.flags] if risk else [],
     )
-    if run_status == ThreadStatus.SUBMITTED.value:
+    sent = {
+        ThreadStatus.SUBMITTED.value: "submitted",
+        ThreadStatus.AWAITING_PLATFORM_CONFIRMATION.value: "drafted",  # confirmed on Upwork
+    }
+    if run_status in sent:
         job = values["job"]
         await repository.upsert_card(
             user["id"],
@@ -142,7 +146,7 @@ async def _persist_bid(
             job_id,
             job["category"],
             job["title"],
-            "submitted",
+            sent[run_status],
             job["connects_cost"],
         )
 

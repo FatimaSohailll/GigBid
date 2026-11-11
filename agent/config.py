@@ -142,6 +142,7 @@ class VerificationConfig(_Strict):
 class LlmConfig(_Strict):
     max_rate_limit_waits: int = Field(ge=0)
     max_rate_limit_wait_seconds: float = Field(ge=0)
+    allow_fallback: bool = True
 
 
 class GraphConfig(_Strict):
@@ -149,6 +150,8 @@ class GraphConfig(_Strict):
     node_max_attempts: int = Field(ge=1)
     node_backoff_seconds: float = Field(ge=0)
     duplicate_similarity: float = Field(gt=0, le=1)
+    critic_max_case_studies: int = Field(ge=0)
+    critic_case_study_chars: int = Field(ge=100)
 
 
 class WritingConfig(_Strict):
