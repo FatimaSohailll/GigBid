@@ -25,6 +25,7 @@ agent_tools:
   fit_matcher: [search_evidence, get_case_study, list_skills]
   pricing: [get_price_stats, get_client_history, get_connects_balance]
   writer: [search_evidence, get_case_study]
+  single_agent: [get_job, get_client_history, search_evidence, get_case_study, list_skills]
   critic: [search_evidence, get_case_study]
   compliance: []
   sync: [list_events, get_proposal]
@@ -58,6 +59,7 @@ models:
         rewrite: {tier: strong}
         critic: {tier: strong}
         client_liaison: {tier: strong}
+        single_agent: {tier: strong} # Part A deliverable and R&D question C baseline
         judge: {tier: strong} # evaluation only
     # Optional. Used only where it beats the open profile enough to justify its cost.
     paid:
@@ -78,6 +80,7 @@ models:
         rewrite: {tier: strong}
         critic: {tier: strong}
         client_liaison: {tier: strong}
+        single_agent: {tier: strong} # Part A deliverable and R&D question C baseline
         judge: {tier: strong} # evaluation only
 
 rag:

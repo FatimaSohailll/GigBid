@@ -19,7 +19,7 @@ Roadmap: Stage 0 (shared prerequisites), then Parts A, B, C, D and E in order, e
 
 Automated graph tests use scripted model replies, so that they are repeatable and free. The graph
 has also been run by hand on real open models through Groq, on DevSim data. Part A's single-agent
-proposal has not been built separately yet.
+proposal is built (`agent/single_agent.py`); its real run waits for the Part B sample to finish.
 
 ## Instructor resources
 
@@ -137,7 +137,7 @@ proposal has not been built separately yet.
 | P1 | README with GIF, diagram, results tables, trace links | Stub | Phase 17 |
 | P2 | Public live URL with reviewer login | Missing | Phase 16 |
 | P3 | 3-minute demo video and UI screen recording | Missing | Student, after Phase 16 |
-| P4 | Portfolio MCP server published with its own README | Missing | Phase 16 |
+| P4 | Portfolio MCP server published with its own README | Implemented: `infra/docker/portfolio.Dockerfile`, `mcp_servers/portfolio/README.md`, `local.py`; image not built yet | Build and check the image; student publishes it |
 | P5 | Technical write-up, 1,200 to 1,800 words | Missing | Student |
 | P6 | Two-line résumé bullet from results files | Missing | Phase 17 |
 | P7 | Signature extension in `docs/EXTENSION.md` | Stub | Phase 15 |
