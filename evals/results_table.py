@@ -14,8 +14,8 @@ MISSING = "not measured"
 HEADER = (
     "| Variant | Evidence Recall@5, whole job | Evidence Recall@5, per requirement "
     "| nDCG@10, per requirement | Unsupported claims per proposal | Judge score "
-    "| Simulated reply rate | p95 latency (s) | Cost per proposal (USD) |\n"
-    "|---|---|---|---|---|---|---|---|---|"
+    "| Simulated reply rate | p95 latency (s) | Cost per proposal (USD) | Proposals measured |\n"
+    "|---|---|---|---|---|---|---|---|---|---|"
 )
 
 
@@ -45,6 +45,7 @@ def table_row(label: str, variant: str, source: str, results: Path) -> str:
         _cell(outcomes, "reply_rate"),
         _cell(outcomes, "p95_latency_seconds"),
         _cell(outcomes, "cost_per_proposal_usd"),
+        _cell(outcomes, "submitted"),
     ]
     return "| " + " | ".join(cells) + " |"
 

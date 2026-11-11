@@ -34,6 +34,7 @@ COMPARED_VARIANTS = (
     "v8_corrective",
     "combo:decompose+hybrid",
     "combo:hybrid+rerank",
+    "combo:decompose+hybrid+outcome",
     f"combo:{ALL_STAGES}",
 )
 RETRIEVED = 10

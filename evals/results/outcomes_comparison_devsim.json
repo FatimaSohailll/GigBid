@@ -1,0 +1,15 @@
+{
+  "baseline": "v0_naive",
+  "baseline_results": null,
+  "data_source": "devsim",
+  "official_gigsim": false,
+  "paired_jobs": 0,
+  "reply_outcome_by_job": {
+    "baseline_only": 0,
+    "both": 0,
+    "neither": 0,
+    "treated_only": 0
+  },
+  "treated": "combo:decompose+hybrid+outcome",
+  "treated_results": null
+}

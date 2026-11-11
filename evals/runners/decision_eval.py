@@ -64,6 +64,13 @@ def mean_cost(rows: list[dict[str, Any]]) -> float | None:
     return round(sum(cost for cost in costs if cost is not None) / len(costs), 6)
 
 
+def models_used(rows: list[dict[str, Any]]) -> list[str]:
+    """Shows at a glance whether a fallback model entered the sample."""
+    return sorted(
+        {model for row in rows for item in row.get("usage", []) for model in item["models"]}
+    )
+
+
 def usage_by_node(rows: list[dict[str, Any]]) -> dict[str, dict[str, float]]:
     """Mean tokens and latency per job for each node, to show where budget goes."""
     totals: defaultdict[str, defaultdict[str, float]] = defaultdict(lambda: defaultdict(float))
@@ -98,6 +105,7 @@ def summarise(rows: list[dict[str, Any]]) -> dict[str, Any]:
         ),
         "tokens_per_job": round(mean(row["tokens"] for row in done), 1),
         "cost_per_job_usd": mean_cost(done),
+        "models_used": models_used(done),
         "usage_by_node": usage_by_node(done),
         "latency_seconds": {
             "p50": round(percentile(latencies, 50), 2),
@@ -137,6 +145,8 @@ async def run(arguments: argparse.Namespace) -> dict[str, Any]:
         stack = start_eval_stack(Path(workdir), components, config, arguments.data / "marketplace")
         runners: dict[str, JobRunner] = {}
         rows: list[dict[str, Any]] = []
+        failures_in_a_row = 0
+        stopped_early = False
         for gold in jobs:
             key = f"{gold['persona']}:{gold['job_id']}"
             if key not in finished:
@@ -146,11 +156,16 @@ async def run(arguments: argparse.Namespace) -> dict[str, Any]:
                 row = await score_job(runners[persona], gold)
                 append_row(rows_path, row)
                 print(key, row["predicted"], row["tokens"], row["error"] or "", flush=True)
+                failures_in_a_row = failures_in_a_row + 1 if row["error"] else 0
             rows.append(finished.get(key) or row)
+            if failures_in_a_row >= arguments.max_failures:
+                print("Stopping: repeated failures, probably a provider limit.", flush=True)
+                stopped_early = True
+                break
         stack.stop()
     flush_traces(config)
     components.close()
-    result = report(rows, arguments.source)
+    result = {**report(rows, arguments.source), "stopped_early": stopped_early}
     write_result(f"decision_{arguments.source}{tag}.json", result)
     return result
 
@@ -162,6 +177,9 @@ def parser() -> argparse.ArgumentParser:
     options.add_argument("--source", default="devsim")
     options.add_argument("--tag", default="", help="Added to result file names, e.g. smoke")
     options.add_argument("--fresh", action="store_true", help="Ignore rows from an earlier run")
+    options.add_argument(
+        "--max-failures", type=int, default=3, help="Stop after this many in a row"
+    )
     options.add_argument(
         "--no-defences", action="store_true", help="Measure attack success without defences"
     )

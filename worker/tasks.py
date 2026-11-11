@@ -49,12 +49,20 @@ class WorkerServices:
     def __post_init__(self) -> None:
         self._graphs: dict[tuple[str, str], CompiledStateGraph[Any, Any, Any, Any]] = {}
         self._provisioned: set[str] = set()
+        # Portfolio stores are not safe for two threads at once, so writes take turns.
+        self._rag_lock = asyncio.Lock()
 
     async def ensure_portfolio(self, user: dict[str, Any]) -> None:
         """Give this user a private copy of their persona's portfolio before it is needed."""
-        if user["id"] not in self._provisioned:
-            await asyncio.to_thread(provision_tenant, user["persona"], user["id"], self.rag())
-            self._provisioned.add(user["id"])
+        async with self._rag_lock:
+            if user["id"] not in self._provisioned:
+                await asyncio.to_thread(provision_tenant, user["persona"], user["id"], self.rag())
+                self._provisioned.add(user["id"])
+
+    async def on_portfolio(self, function: Callable[..., Any], *arguments: Any) -> Any:
+        """Run one blocking portfolio change off the event loop, one at a time."""
+        async with self._rag_lock:
+            return await asyncio.to_thread(function, *arguments)
 
     def graph(self, kind: str, user: dict[str, Any]) -> CompiledStateGraph[Any, Any, Any, Any]:
         key = (kind, user["id"])
@@ -338,7 +346,7 @@ async def ingest_upload(
     await services.ensure_portfolio(user)  # first, or the copy would be skipped as already done
     details = UploadMetadata.model_validate(metadata or {})
     document = load_upload(Path(path), upload_id, title, details)
-    ingest_documents([document], user_id, services.rag())
+    await services.on_portfolio(ingest_documents, [document], user_id, services.rag())
     await services.repository.set_upload_status(upload_id, "indexed")
 
 
@@ -359,7 +367,7 @@ async def ingest_github(
         return
     components = services.rag()
     documents = await read_repository(gateway, owner, repo, components.config)
-    await asyncio.to_thread(ingest_documents, documents, user_id, components)
+    await services.on_portfolio(ingest_documents, documents, user_id, components)
     await services.repository.set_upload_status(upload_id, "indexed")
 
 
@@ -368,4 +376,4 @@ async def delete_evidence(ctx: dict[str, Any], user_id: str, item_id: str) -> No
     services = _services(ctx)
     user = await services.repository.user(user_id)
     await services.ensure_portfolio(user)
-    await asyncio.to_thread(remove_item, user_id, item_id, services.rag())
+    await services.on_portfolio(remove_item, user_id, item_id, services.rag())

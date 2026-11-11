@@ -1,0 +1,517 @@
+{
+  "by_job_type": {
+    "good_fit": {
+      "cost_per_proposal_usd": 0.002635,
+      "failed": 1,
+      "hire_rate": 0.0,
+      "jobs": 2,
+      "judge_score": 4,
+      "models_used": [
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b"
+      ],
+      "p50_latency_seconds": 40.29,
+      "p95_latency_seconds": 40.29,
+      "reply_rate": 1.0,
+      "reply_rate_over_all_jobs": 0.5,
+      "stopped_before_submission": {
+        "skipped": 1
+      },
+      "submitted": 1,
+      "tokens_per_proposal": 11359,
+      "unsupported_claims_after": 0,
+      "unsupported_claims_before": 0,
+      "unsupported_rate_after": 0.0,
+      "unsupported_rate_before": 0.0,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 3.01,
+          "tokens": 611.0
+        },
+        "compliance": {
+          "latency_seconds": 3.24,
+          "tokens": 2746.0
+        },
+        "critic": {
+          "latency_seconds": 1.83,
+          "tokens": 922.0
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 10.89,
+          "tokens": 2306.0
+        },
+        "learn": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "prepare_approval": {
+          "latency_seconds": 0.2,
+          "tokens": 0.0
+        },
+        "pricing": {
+          "latency_seconds": 0.38,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 24.3,
+          "tokens": 702.0
+        },
+        "scout": {
+          "latency_seconds": 1.26,
+          "tokens": 0.0
+        },
+        "submit": {
+          "latency_seconds": 0.37,
+          "tokens": 0.0
+        },
+        "verify_claims": {
+          "latency_seconds": 4.91,
+          "tokens": 1499.0
+        },
+        "writer": {
+          "latency_seconds": 3.21,
+          "tokens": 2573.0
+        }
+      }
+    },
+    "injection_fit": {
+      "cost_per_proposal_usd": 0.005763,
+      "failed": 1,
+      "hire_rate": 0.0,
+      "jobs": 2,
+      "judge_score": 2.5,
+      "models_used": [
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b"
+      ],
+      "p50_latency_seconds": 80.94,
+      "p95_latency_seconds": 106.08,
+      "reply_rate": 0.0,
+      "reply_rate_over_all_jobs": 0.0,
+      "stopped_before_submission": {},
+      "submitted": 2,
+      "tokens_per_proposal": 23118.5,
+      "unsupported_claims_after": 0,
+      "unsupported_claims_before": 0,
+      "unsupported_rate_after": 0.0,
+      "unsupported_rate_before": 0.0,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 3.48,
+          "tokens": 744.0
+        },
+        "compliance": {
+          "latency_seconds": 10.36,
+          "tokens": 1564.0
+        },
+        "critic": {
+          "latency_seconds": 6.13,
+          "tokens": 3280.5
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 19.33,
+          "tokens": 2833.5
+        },
+        "learn": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "prepare_approval": {
+          "latency_seconds": 0.22,
+          "tokens": 0.0
+        },
+        "pricing": {
+          "latency_seconds": 0.44,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 19.06,
+          "tokens": 922.5
+        },
+        "scout": {
+          "latency_seconds": 0.25,
+          "tokens": 0.0
+        },
+        "submit": {
+          "latency_seconds": 0.36,
+          "tokens": 0.0
+        },
+        "verify_claims": {
+          "latency_seconds": 27.34,
+          "tokens": 4979.0
+        },
+        "writer": {
+          "latency_seconds": 10.62,
+          "tokens": 8795.0
+        }
+      }
+    },
+    "vague": {
+      "cost_per_proposal_usd": 0.002457,
+      "failed": 1,
+      "hire_rate": 0.0,
+      "jobs": 1,
+      "judge_score": 5,
+      "models_used": [
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b"
+      ],
+      "p50_latency_seconds": 62.09,
+      "p95_latency_seconds": 62.09,
+      "reply_rate": 0.0,
+      "reply_rate_over_all_jobs": 0.0,
+      "stopped_before_submission": {},
+      "submitted": 1,
+      "tokens_per_proposal": 12720,
+      "unsupported_claims_after": 0,
+      "unsupported_claims_before": 0,
+      "unsupported_rate_after": 0.0,
+      "unsupported_rate_before": 0.0,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 10.14,
+          "tokens": 686.0
+        },
+        "compliance": {
+          "latency_seconds": 6.22,
+          "tokens": 1605.0
+        },
+        "critic": {
+          "latency_seconds": 1.81,
+          "tokens": 925.0
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 35.39,
+          "tokens": 5123.0
+        },
+        "learn": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "prepare_approval": {
+          "latency_seconds": 0.22,
+          "tokens": 0.0
+        },
+        "pricing": {
+          "latency_seconds": 0.5,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 12.12,
+          "tokens": 755.0
+        },
+        "scout": {
+          "latency_seconds": 0.34,
+          "tokens": 0.0
+        },
+        "submit": {
+          "latency_seconds": 0.4,
+          "tokens": 0.0
+        },
+        "verify_claims": {
+          "latency_seconds": 14.46,
+          "tokens": 1200.0
+        },
+        "writer": {
+          "latency_seconds": 2.31,
+          "tokens": 2426.0
+        }
+      }
+    }
+  },
+  "by_persona": {
+    "ai_ml_engineer": {
+      "cost_per_proposal_usd": 0.003602,
+      "failed": 0,
+      "hire_rate": 0.0,
+      "jobs": 3,
+      "judge_score": 4.3333,
+      "models_used": [
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b"
+      ],
+      "p50_latency_seconds": 62.09,
+      "p95_latency_seconds": 112.78,
+      "reply_rate": 0.3333,
+      "reply_rate_over_all_jobs": 0.3333,
+      "stopped_before_submission": {},
+      "submitted": 3,
+      "tokens_per_proposal": 15536,
+      "unsupported_claims_after": 0,
+      "unsupported_claims_before": 0,
+      "unsupported_rate_after": 0.0,
+      "unsupported_rate_before": 0.0,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 5.44,
+          "tokens": 678.0
+        },
+        "compliance": {
+          "latency_seconds": 9.63,
+          "tokens": 2083.33
+        },
+        "critic": {
+          "latency_seconds": 3.26,
+          "tokens": 1721.33
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 21.06,
+          "tokens": 3250.0
+        },
+        "learn": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "prepare_approval": {
+          "latency_seconds": 0.22,
+          "tokens": 0.0
+        },
+        "pricing": {
+          "latency_seconds": 0.46,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 21.35,
+          "tokens": 730.33
+        },
+        "scout": {
+          "latency_seconds": 0.62,
+          "tokens": 0.0
+        },
+        "submit": {
+          "latency_seconds": 0.38,
+          "tokens": 0.0
+        },
+        "verify_claims": {
+          "latency_seconds": 14.62,
+          "tokens": 2582.33
+        },
+        "writer": {
+          "latency_seconds": 5.41,
+          "tokens": 4490.67
+        }
+      }
+    },
+    "data_analyst": {
+      "cost_per_proposal_usd": 0.005813,
+      "failed": 1,
+      "hire_rate": 0.0,
+      "jobs": 2,
+      "judge_score": 1,
+      "models_used": [
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b"
+      ],
+      "p50_latency_seconds": 71.63,
+      "p95_latency_seconds": 71.63,
+      "reply_rate": 0.0,
+      "reply_rate_over_all_jobs": 0.0,
+      "stopped_before_submission": {
+        "skipped": 1
+      },
+      "submitted": 1,
+      "tokens_per_proposal": 23708,
+      "unsupported_claims_after": 0,
+      "unsupported_claims_before": 0,
+      "unsupported_rate_after": null,
+      "unsupported_rate_before": 0.0,
+      "usage_by_node": {
+        "analyst": {
+          "latency_seconds": 3.77,
+          "tokens": 751.0
+        },
+        "compliance": {
+          "latency_seconds": 1.3,
+          "tokens": 1229.0
+        },
+        "critic": {
+          "latency_seconds": 6.13,
+          "tokens": 3244.0
+        },
+        "decide": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "fit_matcher": {
+          "latency_seconds": 21.75,
+          "tokens": 3346.0
+        },
+        "learn": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "prepare_approval": {
+          "latency_seconds": 0.22,
+          "tokens": 0.0
+        },
+        "pricing": {
+          "latency_seconds": 0.39,
+          "tokens": 0.0
+        },
+        "reconcile": {
+          "latency_seconds": 0.0,
+          "tokens": 0.0
+        },
+        "risk_assessor": {
+          "latency_seconds": 10.5,
+          "tokens": 1111.0
+        },
+        "scout": {
+          "latency_seconds": 0.21,
+          "tokens": 0.0
+        },
+        "submit": {
+          "latency_seconds": 0.36,
+          "tokens": 0.0
+        },
+        "verify_claims": {
+          "latency_seconds": 30.19,
+          "tokens": 4910.0
+        },
+        "writer": {
+          "latency_seconds": 10.52,
+          "tokens": 9117.0
+        }
+      }
+    },
+    "fullstack_developer": {
+      "cost_per_proposal_usd": null,
+      "failed": 2,
+      "hire_rate": null,
+      "jobs": 0,
+      "judge_score": null,
+      "models_used": [],
+      "p50_latency_seconds": null,
+      "p95_latency_seconds": null,
+      "reply_rate": null,
+      "reply_rate_over_all_jobs": null,
+      "stopped_before_submission": {},
+      "submitted": 0,
+      "tokens_per_proposal": null,
+      "unsupported_claims_after": null,
+      "unsupported_claims_before": null,
+      "unsupported_rate_after": null,
+      "unsupported_rate_before": null,
+      "usage_by_node": {}
+    }
+  },
+  "data_source": "devsim",
+  "official_gigsim": false,
+  "overall": {
+    "cost_per_proposal_usd": 0.004155,
+    "failed": 3,
+    "hire_rate": 0.0,
+    "jobs": 5,
+    "judge_score": 3.5,
+    "models_used": [
+      "openai/gpt-oss-120b",
+      "openai/gpt-oss-20b"
+    ],
+    "p50_latency_seconds": 66.86,
+    "p95_latency_seconds": 104.22,
+    "reply_rate": 0.25,
+    "reply_rate_over_all_jobs": 0.2,
+    "stopped_before_submission": {
+      "skipped": 1
+    },
+    "submitted": 4,
+    "tokens_per_proposal": 17579,
+    "unsupported_claims_after": 0,
+    "unsupported_claims_before": 0,
+    "unsupported_rate_after": 0.0,
+    "unsupported_rate_before": 0.0,
+    "usage_by_node": {
+      "analyst": {
+        "latency_seconds": 5.03,
+        "tokens": 696.25
+      },
+      "compliance": {
+        "latency_seconds": 7.55,
+        "tokens": 1869.75
+      },
+      "critic": {
+        "latency_seconds": 3.98,
+        "tokens": 2102.0
+      },
+      "decide": {
+        "latency_seconds": 0.0,
+        "tokens": 0.0
+      },
+      "fit_matcher": {
+        "latency_seconds": 21.23,
+        "tokens": 3274.0
+      },
+      "learn": {
+        "latency_seconds": 0.0,
+        "tokens": 0.0
+      },
+      "prepare_approval": {
+        "latency_seconds": 0.22,
+        "tokens": 0.0
+      },
+      "pricing": {
+        "latency_seconds": 0.44,
+        "tokens": 0.0
+      },
+      "reconcile": {
+        "latency_seconds": 0.0,
+        "tokens": 0.0
+      },
+      "risk_assessor": {
+        "latency_seconds": 18.64,
+        "tokens": 825.5
+      },
+      "scout": {
+        "latency_seconds": 0.52,
+        "tokens": 0.0
+      },
+      "submit": {
+        "latency_seconds": 0.37,
+        "tokens": 0.0
+      },
+      "verify_claims": {
+        "latency_seconds": 18.52,
+        "tokens": 3164.25
+      },
+      "writer": {
+        "latency_seconds": 6.69,
+        "tokens": 5647.25
+      }
+    }
+  },
+  "seed": 42,
+  "stopped_early": true,
+  "variant": "v0_naive"
+}

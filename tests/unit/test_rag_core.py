@@ -174,9 +174,14 @@ def test_filters(components: RagComponents, filters: EvidenceFilters, expected: 
 
 
 def test_retriever_factory_uses_config_and_rejects_unknown(components: RagComponents) -> None:
-    assert components.config.variant in VARIANTS
+    # The deployed variant may be a named one or a measured combination; either must build.
+    variant = components.config.variant
+    assert variant in VARIANTS or variant.startswith("combo:")
+    assert build_retriever(components) is not None
     with pytest.raises(ValueError, match="Unknown retrieval variant"):
         build_retriever(components, "v99_magic")
+    with pytest.raises(ValueError, match="Unknown retrieval stages"):
+        build_retriever(components, "combo:hybrid+magic")
 
 
 def test_removed_item_is_gone_from_store_and_index(components: RagComponents) -> None:

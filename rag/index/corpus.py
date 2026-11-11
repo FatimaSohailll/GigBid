@@ -1,6 +1,7 @@
 """The full text and metadata of each portfolio item, always scoped by tenant."""
 
 import sqlite3
+import threading
 from collections import defaultdict
 from pathlib import Path
 
@@ -28,44 +29,55 @@ class SkillSummary(BaseModel):
 class CorpusStore:
     def __init__(self, path: Path | str) -> None:
         self._db = sqlite3.connect(path, isolation_level=None, check_same_thread=False)
+        # One connection serves the worker's threads, so every use takes this lock.
+        self._lock = threading.RLock()
         self._db.executescript(_SCHEMA)
 
     def close(self) -> None:
-        self._db.close()
+        with self._lock:
+            self._db.close()
 
     def hashes(self, tenant: str) -> dict[str, str]:
-        rows = self._db.execute("select item_id, content_hash from items where tenant=?", (tenant,))
-        return dict(rows.fetchall())
+        with self._lock:
+            rows = self._db.execute(
+                "select item_id, content_hash from items where tenant=?", (tenant,)
+            )
+            return dict(rows.fetchall())
 
     def upsert(self, tenant: str, document: PortfolioDocument, content_hash: str) -> None:
-        self._db.execute(
-            "insert or replace into items values (?, ?, ?, ?)",
-            (tenant, document.item_id, content_hash, document.model_dump_json()),
-        )
+        with self._lock:
+            self._db.execute(
+                "insert or replace into items values (?, ?, ?, ?)",
+                (tenant, document.item_id, content_hash, document.model_dump_json()),
+            )
 
     def delete(self, tenant: str, item_id: str) -> None:
-        self._db.execute("delete from items where tenant=? and item_id=?", (tenant, item_id))
+        with self._lock:
+            self._db.execute("delete from items where tenant=? and item_id=?", (tenant, item_id))
 
     def get(self, tenant: str, item_id: str) -> PortfolioDocument | None:
-        row = self._db.execute(
-            "select document from items where tenant=? and item_id=?",
-            (tenant, item_id),
-        ).fetchone()
-        return PortfolioDocument.model_validate_json(row[0]) if row else None
+        with self._lock:
+            row = self._db.execute(
+                "select document from items where tenant=? and item_id=?",
+                (tenant, item_id),
+            ).fetchone()
+            return PortfolioDocument.model_validate_json(row[0]) if row else None
 
     def copy_tenant(self, source: str, target: str) -> None:
-        self._db.execute(
-            "insert or replace into items "
-            "select ?, item_id, content_hash, document from items where tenant=?",
-            (target, source),
-        )
+        with self._lock:
+            self._db.execute(
+                "insert or replace into items "
+                "select ?, item_id, content_hash, document from items where tenant=?",
+                (target, source),
+            )
 
     def documents(self, tenant: str) -> list[PortfolioDocument]:
-        rows = self._db.execute(
-            "select document from items where tenant=? order by item_id",
-            (tenant,),
-        )
-        return [PortfolioDocument.model_validate_json(row[0]) for row in rows]
+        with self._lock:
+            rows = self._db.execute(
+                "select document from items where tenant=? order by item_id",
+                (tenant,),
+            )
+            return [PortfolioDocument.model_validate_json(row[0]) for row in rows.fetchall()]
 
     def skills(self, tenant: str) -> list[SkillSummary]:
         """Every skill the portfolio can evidence, with how many items show it."""
