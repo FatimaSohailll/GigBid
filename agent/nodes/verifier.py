@@ -17,7 +17,7 @@ from rag.verify import (
 )
 
 
-def _claim_judge(runtime: AgentRuntime, tokens: list[int]) -> ClaimJudge:
+def claim_judge(runtime: AgentRuntime, tokens: list[int]) -> ClaimJudge:
     """The configured judge. Model calls return to the routed gateway from a worker thread."""
     settings = runtime.config.verification
     if settings.judge != "llm":
@@ -47,7 +47,7 @@ async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
         verify_draft,
         state["drafts"][-1],
         state.get("evidence", []),
-        _claim_judge(runtime, tokens),
+        claim_judge(runtime, tokens),
         vocabulary,
         runtime.config.verification.max_evidence_per_claim,
         shown,
@@ -73,7 +73,7 @@ async def check_final_text(state: Mapping[str, Any], runtime: AgentRuntime) -> F
         recheck_final_text,
         state["drafts"][-1],
         state.get("evidence", []),
-        _claim_judge(runtime, [0]),
+        claim_judge(runtime, [0]),
         vocabulary,
         runtime.config.verification.max_evidence_per_claim,
         shown,

@@ -86,6 +86,11 @@ class EvalStack:
         memory = LongTermMemory(InMemoryStore(), self.config.memory)
         return AgentRuntime(self.config, llm, ToolGateway(toolbox), memory)
 
+    def toolbox(self, persona: str) -> Toolbox:
+        """For agents that hold LangChain tools directly, such as the single ReAct agent."""
+        connections = connections_from_env(self.env, bearer=_token(persona))
+        return Toolbox(connections, self.config, handle_tool_errors=True)
+
     def runner(self, persona: str, llm: LlmGateway, defences: bool = True) -> GraphJobRunner:
         runtime = self.runtime(persona, llm)
         graph = build_bid_graph(runtime, InMemorySaver(serde=checkpoint_serde()))
