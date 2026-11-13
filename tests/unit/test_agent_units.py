@@ -191,11 +191,12 @@ def test_outgoing_scan_blocks_payment_and_credentials(text: str) -> None:
     ("median", "low", "high", "floor", "expected"),
     [
         (1000, 800, 1800, 200, 1000),
-        (5000, 800, 1800, 200, 1800),
-        (100, 800, 1800, 200, 800),
+        (5000, 800, 1800, 200, 1300),
+        (100, 800, 1800, 200, 1300),
         (1000, 300, 500, 900, 900),
         (None, 800, 1800, 200, 1300),
         (700, 0, 0, 200, 700),
+        (None, 0, 0, 200, 200),
     ],
 )
 def test_price_stays_within_budget_and_above_floor(

@@ -81,9 +81,9 @@ proposal is built (`agent/single_agent.py`) and was run once on Groq for a DevSi
 | C2 | Typed state, reducers, trace and memory separation, two stores | `agent/state.py`, `agent/memory/store.py` | Tested | `tests/unit/test_contracts.py`, `test_memory.py` | Tracing tool, Phase 12 |
 | C3 | Eight Pydantic hand-offs | `agent/handoffs.py` | Tested | `tests/unit/test_contracts.py` | Used by nodes from Phase 4 |
 | C4 | Critic limit, Compliance block, step and token budgets | `agent/graphs/bid_graph.py`, `agent/nodes/` | Tested | `tests/integration/test_bid_graph.py` | Show in UI, Phase 9 |
-| C5 | Interrupts with full payload; approve, edit, reject | `agent/nodes/approval.py`, `apps/web/src/app/studio/[id]` | Tested | `tests/integration/test_bid_graph.py`, `apps/web/tests/e2e/gigbid.spec.ts` | None |
+| C5 | Interrupts with full payload; approve, edit, reject | `agent/nodes/approval.py`, `agent/nodes/critic.py`, `apps/api/routers/proposals.py`, `apps/web/src/app/studio/[id]` | Tested; deleted evidence is caught by the Critic and dropped on regeneration | `tests/integration/test_bid_graph.py`, `apps/web/tests/e2e/gigbid.spec.ts` | None |
 | C6 | Postgres checkpointer, crash and resume, replay | `agent/checkpoint.py`, `infra/docker-compose.yml` | Tested | `tests/integration/test_crash_recovery.py` kills real processes | Demo from the UI, Phase 9 |
-| C7 | Retries, timeouts, fallback model, dead-letter state | `agent/graphs/bid_graph.py`, `agent/llm.py` | Tested | `tests/integration/test_bid_graph.py`, `tests/unit/test_agent_units.py` | Fallback not yet run against real providers |
+| C7 | Retries, timeouts, fallback model, dead-letter state | `agent/graphs/bid_graph.py`, `agent/llm.py` | Tested | `tests/integration/test_bid_graph.py`, `tests/unit/test_agent_units.py` | Fallback is now `llama-3.1-8b-instant` on Groq and is switched off in evaluations; not yet triggered against the live provider |
 | RQ-C | ReAct, supervisor and graph comparison on 50 jobs | None | Missing | None | Phase 14 |
 
 ## Part D: Web interface

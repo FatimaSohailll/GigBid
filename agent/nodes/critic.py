@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from agent.guardrails import delimit_untrusted, scan_job_post
 from agent.handoffs import ClaimSupport, Critique, CritiqueVerdict, RiskFlag
+from agent.mcp_client import ToolCallError
 from agent.nodes.analyst import job_text
 from agent.runtime import AgentRuntime
 from agent.state import BidState
@@ -26,14 +27,37 @@ class _ModelCritique(BaseModel):
     reasons: list[str] = Field(default_factory=list)
 
 
+async def _cited_case_studies(
+    evidence_ids: list[str], runtime: AgentRuntime
+) -> tuple[list[str], list[str]]:
+    """Full text of cited case studies from Portfolio, and any that no longer exist."""
+    settings = runtime.config.graph
+    texts: list[str] = []
+    missing: list[str] = []
+    for item in [i for i in evidence_ids if i.startswith("case:")][
+        : settings.critic_max_case_studies
+    ]:
+        try:
+            case = await runtime.tools.call("critic", "get_case_study", {"id": item})
+        except ToolCallError as error:
+            if error.code != "not_found":
+                raise
+            missing.append(item)
+            continue
+        texts.append(f"[{item}] {case['content'][: settings.critic_case_study_chars]}")
+    return texts, missing
+
+
 async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
     draft = state["drafts"][-1]
     claims = "\n".join(f"- [{c.support}] {c.text} {c.evidence_ids}" for c in draft.claims)
+    cases, missing = await _cited_case_studies(draft.evidence_ids, runtime)
     result = await runtime.llm.structured(
         "critic",
         runtime.prompt("critic"),
         f"{delimit_untrusted('job_post', job_text(state['job']))}\n\n"
-        f"Draft:\n{draft.cover_letter}\n\nVerified claims:\n{claims}",
+        f"Draft:\n{draft.cover_letter}\n\nVerified claims:\n{claims}\n\n"
+        f"Cited case studies:\n{delimit_untrusted('evidence', chr(10).join(cases))}",
         _ModelCritique,
     )
     words = len(draft.cover_letter.split())
@@ -59,8 +83,13 @@ async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
     personalised = result.value.personalised and not _GENERIC_OPENING.match(draft.cover_letter)
     if personalised != result.value.personalised:
         reasons.append("Replace the generic opening with something specific to this job.")
+    if missing:
+        reasons.append(
+            f"Evidence no longer in the portfolio: {', '.join(missing)}. Remove claims citing it."
+        )
     grounded = (
-        result.value.grounded
+        not missing
+        and result.value.grounded
         and not state.get("needs_rewrite", False)
         and all(c.support is not ClaimSupport.UNSUPPORTED for c in draft.claims)
     )

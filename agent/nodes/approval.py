@@ -163,7 +163,11 @@ async def submit(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
     )
     return {
         "proposal_id": proposal_id,
-        "status": ThreadStatus.SUBMITTED,
+        "status": (
+            ThreadStatus.AWAITING_PLATFORM_CONFIRMATION
+            if submitted["proposal"].get("requires_platform_confirmation")
+            else ThreadStatus.SUBMITTED
+        ),
         "outcomes": [
             OutcomeRecord(
                 proposal_id=proposal_id,

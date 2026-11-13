@@ -118,6 +118,7 @@ class RegenerateIn(_Input):
 class RegenerateOut(BaseModel):
     text: str
     removed_claims: list[str]
+    missing_evidence: list[str] = Field(default_factory=list)
 
 
 class PipelineCard(BaseModel):

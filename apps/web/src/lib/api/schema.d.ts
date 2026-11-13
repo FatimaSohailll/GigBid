@@ -1075,6 +1075,8 @@ export interface components {
         };
         /** RegenerateOut */
         RegenerateOut: {
+            /** Missing Evidence */
+            missing_evidence?: string[];
             /** Removed Claims */
             removed_claims: string[];
             /** Text */

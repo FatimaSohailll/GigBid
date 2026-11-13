@@ -1,0 +1,22 @@
+{
+  "data_source": "devsim",
+  "jobs": 540,
+  "official_gigsim": false,
+  "rules": {
+    "budget midpoint only (ignores market data)": {
+      "above": 0.0,
+      "below": 0.0833,
+      "in_band": 0.9167
+    },
+    "previous: median clipped to budget": {
+      "above": 0.0796,
+      "below": 0.2333,
+      "in_band": 0.687
+    },
+    "shipped: median if inside budget, else midpoint": {
+      "above": 0.0407,
+      "below": 0.1852,
+      "in_band": 0.7741
+    }
+  }
+}

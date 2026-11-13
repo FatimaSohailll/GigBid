@@ -57,7 +57,9 @@ def eval_config(base: AppConfig) -> AppConfig:
         update={
             "marketplace": base.marketplace.model_copy(
                 update={"max_requests_per_minute": _UNLIMITED_RPM}
-            )
+            ),
+            # A fallback would silently mix two models in one experiment.
+            "llm": base.llm.model_copy(update={"allow_fallback": False}),
         }
     )
 
