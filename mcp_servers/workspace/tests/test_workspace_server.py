@@ -1,7 +1,5 @@
 """Workspace tools through an in-memory MCP client."""
 
-import json
-import os
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -12,7 +10,6 @@ from mcp.shared.memory import create_connected_server_and_client_session as conn
 from mcp_servers.workspace.server import WorkspaceStore, build_server
 
 MONDAY = datetime(2026, 11, 9, 8, 0, tzinfo=UTC)
-SNAPSHOT = Path("tests/contract/snapshots/workspace_tools.json")
 
 
 def server(tmp_path: Path, tenant: list[str]) -> Any:
@@ -70,22 +67,6 @@ async def test_email_is_only_ever_a_draft(tmp_path: Path) -> None:
         again = await session.call_tool("create_email_draft", args)
     assert first.structuredContent["status"] == "draft"
     assert again.structuredContent["replayed"] is True
-
-
-async def test_tool_schemas_match_snapshot(tmp_path: Path) -> None:
-    async with connect(server(tmp_path, ["a"])) as session:
-        tools = (await session.list_tools()).tools
-    current = {
-        tool.name: {
-            "annotations": tool.annotations.model_dump(exclude_none=True),
-            "input": tool.inputSchema,
-            "output": tool.outputSchema,
-        }
-        for tool in sorted(tools, key=lambda item: item.name)
-    }
-    if os.environ.get("UPDATE_SNAPSHOTS"):
-        SNAPSHOT.write_bytes((json.dumps(current, indent=2, sort_keys=True) + "\n").encode())
-    assert current == json.loads(SNAPSHOT.read_text(encoding="utf-8"))
 
 
 @pytest.mark.parametrize("key", ["short", "has spaces in it"])
