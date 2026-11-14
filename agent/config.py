@@ -134,6 +134,7 @@ class RagConfig(_Strict):
     github_max_file_bytes: int = Field(ge=1)
     github_max_depth: int = Field(ge=1)
     github_code_extensions: list[str]
+    github_case_studies: bool = False
 
     @model_validator(mode="after")
     def _overlap_smaller_than_chunk(self) -> Self:
