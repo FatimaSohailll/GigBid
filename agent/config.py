@@ -93,10 +93,19 @@ class ModelsConfig(_Strict):
         return self
 
 
+class ServiceBudget(_Strict):
+    """A declared target, checked against measured runs by evals/runners/budget_report.py."""
+
+    p95_seconds: float = Field(gt=0)
+    usd: float = Field(gt=0)
+
+
 class Budgets(_Strict):
     max_graph_steps: int = Field(gt=0)
     max_revisions: int = Field(ge=0, le=2)
     max_tokens_per_job: int = Field(gt=0)
+    per_job_analysed: ServiceBudget
+    per_proposal: ServiceBudget
 
 
 class Thresholds(_Strict):

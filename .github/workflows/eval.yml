@@ -1,0 +1,41 @@
+name: Smoke evaluation
+
+# 30 bid-or-skip decisions and 3 full proposals on DevSim, failing the pull request if bid-or-skip
+# F1 drops or unsupported claims rise past evals/thresholds.yaml.
+#
+# One run uses about 155,000 tokens of the small model. On Groq's free tier that is most of a
+# day's limit, so a pull request runs it when labelled "eval" (or from the Actions tab). With a
+# paid key, or a separate free key kept only for CI, delete the "if" line to run it on every PR.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'eval')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      LANGSMITH_TRACING: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --locked
+      - name: Check the model key is configured
+        run: test -n "$GROQ_API_KEY" || (echo "Add GROQ_API_KEY as a repository secret" && exit 1)
+      - name: Build the DevSim data and portfolio index
+        run: |
+          make seed
+          make ingest
+      - name: Run the gated smoke evaluation
+        run: uv run --locked python -m evals.runners.smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-results
+          path: evals/results/*smoke*

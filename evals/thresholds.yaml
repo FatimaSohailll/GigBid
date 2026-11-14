@@ -1,5 +1,7 @@
 # Pull requests fail if the smoke evaluation crosses these lines.
-# Provisional until the full DevSim evaluation is run; then set them just below measured values.
-min_bid_or_skip_f1: 0.5
-max_unsupported_claims_after_verification: 1.0
+# Set just below the values measured on DevSim (evals/results/decision_devsim.json: bid-or-skip
+# F1 0.50 on 30 jobs; outcomes_rows_v0_naive_devsim.jsonl: 0 unsupported claims after
+# verification). Thirty jobs is a small sample, so the F1 line leaves room for noise.
+min_bid_or_skip_f1: 0.4
+max_unsupported_claims_after_verification: 0.5
 max_failed_jobs: 3

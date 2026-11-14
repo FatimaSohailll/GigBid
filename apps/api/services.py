@@ -12,6 +12,7 @@ from redis.asyncio import Redis
 
 from agent.config import AppConfig
 from agent.llm import LlmGateway
+from agent.marketplace_port import current_trace_id
 from agent.memory.store import LongTermMemory
 from apps.api.auth.security import TokenVault, hash_token
 from apps.api.db import Repository
@@ -94,3 +95,10 @@ def bid_thread(user_id: str, job_id: str) -> str:
 
 def conversation_thread(user_id: str, conversation_id: str) -> str:
     return f"conv:{user_id}:{conversation_id}"
+
+
+def adopt_trace(request: Request, trace_id: str) -> None:
+    """Resuming or replaying a run continues its trace: the UI request, the API, the graph,
+    the MCP servers and the audit log then share one id, and the response header says which."""
+    request.state.trace_id = trace_id
+    current_trace_id.set(trace_id)

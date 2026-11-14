@@ -15,6 +15,7 @@ from pydantic import AnyHttpUrl
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from agent.logging_setup import install_log_masking
 from mcp_servers.portfolio.prompts import register_prompts
 from mcp_servers.portfolio.resources import register_resources
 from mcp_servers.portfolio.tools import PortfolioBackend, TenantResolver, register_tools
@@ -53,6 +54,7 @@ def build_server(
 
 
 def create_server(environ: Mapping[str, str] | None = None) -> tuple[FastMCP, str]:
+    install_log_masking()
     env = os.environ if environ is None else environ
     if env.get("PORTFOLIO_TRANSPORT") == "stdio":
         tenant = env["PORTFOLIO_TENANT"]

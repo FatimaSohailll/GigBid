@@ -86,6 +86,28 @@ models:
         client_liaison: {tier: strong}
         single_agent: {tier: strong}
         judge: {tier: judge}
+    # Fully local, through the Ollama service in docker compose (MODEL_PROFILE=local). Qwen3 8B is
+    # the model R&D question A measured; it is slower than Groq on a laptop CPU and has no API cost.
+    local:
+      tiers:
+        small: {provider: ollama, model: "qwen3:8b"}
+        small_fallback: {provider: ollama, model: "qwen3:8b"}
+        strong: {provider: ollama, model: "qwen3:8b"}
+      nodes:
+        scout: {tier: small, fallback: small_fallback}
+        analyst: {tier: small, fallback: small_fallback}
+        risk_assessor: {tier: small, fallback: small_fallback}
+        fit_matcher: {tier: small, fallback: small_fallback}
+        pricing: {tier: small, fallback: small_fallback}
+        verifier: {tier: small, fallback: small_fallback}
+        compliance: {tier: small, fallback: small_fallback}
+        intent: {tier: small, fallback: small_fallback}
+        writer: {tier: strong}
+        rewrite: {tier: strong}
+        critic: {tier: strong}
+        client_liaison: {tier: strong}
+        single_agent: {tier: strong}
+        judge: {tier: strong}
     # Optional. Used only where it beats the open profile enough to justify its cost.
     paid:
       tiers:
@@ -196,6 +218,9 @@ budgets:
   max_graph_steps: 30
   max_revisions: 2
   max_tokens_per_job: 40000 # a real run with three drafts exceeded 12,000 before verification
+  # E5: declared targets on the open profile. Latency includes waiting out free-tier rate limits.
+  per_job_analysed: {p95_seconds: 60, usd: 0.002} # Scout to the bid-or-skip decision
+  per_proposal: {p95_seconds: 180, usd: 0.01} # a full job through Writer, Critic and Compliance
 
 thresholds:
   minimum_fit_score: 0.60

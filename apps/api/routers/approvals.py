@@ -3,13 +3,13 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import ValidationError
 
 from agent.nodes.approval import PLATFORM_STAGE, ApprovalDecision
 from agent.nodes.client_liaison import ReplyDecision
 from apps.api.schemas.api import ApprovalDetail, ApprovalIn, ApprovalSummary, QueuedRun
-from apps.api.services import CurrentUser, Services, read_thread
+from apps.api.services import CurrentUser, Services, adopt_trace, read_thread
 
 router = APIRouter(prefix="/api/approvals", tags=["approvals"])
 
@@ -58,10 +58,12 @@ async def decide(
     body: ApprovalIn,
     user: CurrentUser,
     services: Services,
+    request: Request,
 ) -> QueuedRun:
     run = await services.repository.run(user["id"], thread_id)
     if run is None:
         raise HTTPException(404, "Approval not found.")
+    adopt_trace(request, run["trace_id"])
     try:
         decision = _decision(run["kind"], body)
     except ValidationError as error:

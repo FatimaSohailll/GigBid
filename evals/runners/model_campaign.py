@@ -80,7 +80,7 @@ async def run_campaign() -> int:
 def finish() -> None:
     winner = get_config().rag.variant
     write_result(f"outcomes_comparison_{SOURCE}.json", paired_comparison(BASELINE, winner))
-    regenerate_table()
+    regenerate_table([])  # not the campaign's own command-line arguments
 
 
 _RETRY_IN = re.compile(r"try again in (?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)?")

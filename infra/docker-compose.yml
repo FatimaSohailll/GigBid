@@ -1,4 +1,48 @@
-# Grows into the full stack in the packaging phase.
+# The whole GigBid stack. From the repository root:  make dev   (or)
+#   docker compose -f infra/docker-compose.yml --env-file .env up --build
+# Then open http://localhost:3000 and sign in with DEMO_EMAIL / DEMO_PASSWORD from .env.
+#
+# Secrets (model keys, signing and encryption keys, the reviewer password) come only from .env.
+# The bearer tokens below guard services on the internal compose network, which no port reaches
+# from outside; they are fixed so the stack starts with no extra setup.
+
+x-app: &app
+  build:
+    context: ..
+    dockerfile: infra/docker/app.Dockerfile
+  image: gigbid-app:local
+  env_file: ../.env
+  volumes:
+    - gigbid_data:/data
+  restart: unless-stopped
+
+x-internal: &internal
+  # Overrides any local-development values in .env with the addresses inside this network.
+  # Its own database and Redis index: the stack starts clean and never touches local dev data.
+  DATABASE_URL: postgresql://gigbid:gigbid@postgres:5432/gigbid_stack
+  REDIS_URL: redis://redis:6379/1
+  QDRANT_URL: http://qdrant:6333
+  OLLAMA_HOST: http://ollama:11434
+  GIGSIM_BASE_URL: http://devsim:8081
+  DEVSIM_API_TOKENS: compose-devsim-ai=ai_ml_engineer,compose-devsim-fs=fullstack_developer,compose-devsim-da=data_analyst
+  DEVSIM_ADMIN_TOKEN: compose-devsim-admin
+  MCP_MARKETPLACE_URL: http://marketplace:8090/mcp
+  MCP_PORTFOLIO_URL: http://portfolio:8091/mcp
+  MCP_WORKSPACE_URL: http://workspace:8092/mcp
+  # One marketplace account per persona; the worker signs each user's token with their persona.
+  MCP_MARKETPLACE_USERS: compose-mkt-ai:ai_ml_engineer:compose-devsim-ai,compose-mkt-fs:fullstack_developer:compose-devsim-fs,compose-mkt-da:data_analyst:compose-devsim-da
+  MCP_PORTFOLIO_USERS: compose-portfolio:ai_ml_engineer
+  MCP_WORKSPACE_USERS: compose-workspace:ai_ml_engineer
+  MCP_MARKETPLACE_DB: /data/marketplace_mcp.sqlite3
+  MCP_WORKSPACE_DB: /data/workspace_mcp.sqlite3
+  DEVSIM_SEED_DIR: /data/devsim/marketplace
+  # Every path lives in the shared volume, whatever .env says for local development.
+  RAG_DATA_DIR: /data/rag
+  DEVSIM_DATA_DIR: /data/devsim
+  UPLOAD_DIR: /data/uploads
+  HF_HOME: /data/models
+  FASTEMBED_CACHE_PATH: /data/models
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -33,6 +77,102 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
 
+  # Local open models for MODEL_PROFILE=local. Pull once: docker compose exec ollama ollama pull qwen3:8b
+  ollama:
+    image: ollama/ollama:0.9.0
+    volumes:
+      - ollama_models:/root/.ollama
+
+  # One-time job: generate DevSim data, index the persona portfolios, create the reviewer login.
+  seed:
+    <<: *app
+    command: ["python", "-m", "scripts.seed_demo"]
+    environment: *internal
+    restart: "no"
+    depends_on:
+      postgres: {condition: service_healthy}
+      qdrant: {condition: service_started}
+
+  devsim:
+    <<: *app
+    command: ["python", "-m", "devsim"]
+    environment:
+      <<: *internal
+      DEVSIM_HOST: 0.0.0.0
+      DEVSIM_PORT: "8081"
+    depends_on:
+      seed: {condition: service_completed_successfully}
+
+  marketplace:
+    <<: *app
+    command: ["python", "-m", "mcp_servers.marketplace.server"]
+    environment:
+      <<: *internal
+      MCP_MARKETPLACE_HOST: 0.0.0.0
+      MCP_MARKETPLACE_PUBLIC_URL: http://marketplace:8090
+    depends_on:
+      devsim: {condition: service_started}
+
+  portfolio:
+    <<: *app
+    command: ["python", "-m", "mcp_servers.portfolio.server"]
+    environment:
+      <<: *internal
+      MCP_PORTFOLIO_HOST: 0.0.0.0
+      MCP_PORTFOLIO_PUBLIC_URL: http://portfolio:8091
+    depends_on:
+      seed: {condition: service_completed_successfully}
+
+  workspace:
+    <<: *app
+    command: ["python", "-m", "mcp_servers.workspace.server"]
+    environment:
+      <<: *internal
+      MCP_WORKSPACE_HOST: 0.0.0.0
+      MCP_WORKSPACE_PUBLIC_URL: http://workspace:8092
+    depends_on:
+      seed: {condition: service_completed_successfully}
+
+  api:
+    <<: *app
+    command: ["python", "-m", "scripts.run_api"]
+    environment:
+      <<: *internal
+      API_HOST: 0.0.0.0
+      WEB_APP_URL: http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      seed: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+      marketplace: {condition: service_started}
+
+  worker:
+    <<: *app
+    command: ["arq", "worker.main.WorkerSettings"]
+    environment: *internal
+    depends_on:
+      seed: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+      marketplace: {condition: service_started}
+      portfolio: {condition: service_started}
+      workspace: {condition: service_started}
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/docker/web.Dockerfile
+      args:
+        API_URL: http://api:8000
+    image: gigbid-web:local
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      api: {condition: service_started}
+
 volumes:
   postgres_data:
   qdrant_data:
+  gigbid_data:
+  ollama_models:

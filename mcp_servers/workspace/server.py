@@ -21,6 +21,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from agent.config import WorkspaceConfig, get_config
+from agent.logging_setup import install_log_masking
 from mcp_servers.tenant_auth import TenantBearerVerifier, bearer_tenant, parse_tenants
 from mcp_servers.tool_descriptions import TOOL_DESCRIPTIONS
 
@@ -215,6 +216,7 @@ def build_server(
 
 
 def create_http_server(environ: Mapping[str, str] | None = None) -> FastMCP:
+    install_log_masking()
     env = os.environ if environ is None else environ
     tenants = parse_tenants(env.get("MCP_WORKSPACE_USERS", ""))
     host = env.get("MCP_WORKSPACE_HOST", "127.0.0.1")
