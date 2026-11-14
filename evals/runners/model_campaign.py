@@ -21,7 +21,9 @@ from evals.runners import decision_eval, gigsim_outcomes
 from evals.runners.rag_eval import RESULTS_DIR, safe_name, write_result
 
 BASELINE = "v0_naive"
-ROUNDS = ((30, 10), (60, 20), (60, 30))  # (decision jobs, proposal jobs per variant)
+# (decision jobs, proposal jobs per variant). The first round is the smallest complete paired
+# comparison; later rounds only enlarge it, and finished jobs are always kept.
+ROUNDS = ((30, 5), (30, 10), (60, 20), (60, 30))
 SOURCE = "devsim"
 STOPPED = 3
 
