@@ -1,7 +1,7 @@
 """Deterministic safety checks that no model output can switch off."""
 
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
@@ -139,8 +139,15 @@ def scan_job_post(text: str) -> RiskSignals:
     return RiskSignals(flags, injected)
 
 
-def scan_outgoing_text(text: str) -> ComplianceScan:
-    """Redact contact details, remove guarantees, and block payment or credential requests."""
+def scan_outgoing_text(
+    text: str,
+    configured: Sequence[tuple[str, re.Pattern[str], bool]] = (),
+) -> ComplianceScan:
+    """Redact contact details, remove guarantees, and block payment or credential requests.
+
+    configured holds rules defined only in config, as (name, pattern, blocks): a match blocks the
+    text, or is redacted when the rule does not block.
+    """
     scan = ComplianceScan(text)
 
     def redact(pattern: re.Pattern[str], rule: str, replacement: str) -> None:
@@ -165,4 +172,11 @@ def scan_outgoing_text(text: str) -> ComplianceScan:
         for match in pattern.finditer(scan.text):
             scan.findings.append((rule, match.group(0)))
             scan.blocked = True
+
+    for rule, pattern, blocks in configured:
+        for match in pattern.finditer(scan.text):
+            scan.findings.append((rule, match.group(0)))
+            scan.blocked = scan.blocked or blocks
+        if not blocks:
+            scan.text = pattern.sub("[removed]", scan.text)
     return scan

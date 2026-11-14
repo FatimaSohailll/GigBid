@@ -175,13 +175,16 @@ async def delete_evidence(item_id: str, user: CurrentUser, services: Services) -
 
 @router.get("/status", response_model=ServiceStatus)
 async def status(services: Services) -> ServiceStatus:
-    """What the UI's degraded-mode banner reads."""
+    """What the UI's degraded-mode banner reads, and which marketplace this server uses."""
+    mode = services.config.marketplace.mode
     if await services.redis.get(DEGRADED_KEY):
-        return ServiceStatus(marketplace="unavailable", message=_UNAVAILABLE)
+        return ServiceStatus(marketplace="unavailable", message=_UNAVAILABLE, marketplace_mode=mode)
     if services.marketplace_health_url:
         try:
             async with httpx.AsyncClient(timeout=2) as client:
                 (await client.get(services.marketplace_health_url)).raise_for_status()
         except httpx.HTTPError:
-            return ServiceStatus(marketplace="unavailable", message=_UNAVAILABLE)
-    return ServiceStatus(marketplace="ok")
+            return ServiceStatus(
+                marketplace="unavailable", message=_UNAVAILABLE, marketplace_mode=mode
+            )
+    return ServiceStatus(marketplace="ok", marketplace_mode=mode)

@@ -465,6 +465,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/runs/{thread_id}/checkpoints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Checkpoints
+         * @description The thread's history, newest first: each point the graph could be replayed from.
+         */
+        get: operations["checkpoints_api_runs__thread_id__checkpoints_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{thread_id}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Replay */
+        post: operations["replay_api_runs__thread_id__replay_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/runs/{thread_id}/stream": {
         parameters: {
             query?: never;
@@ -477,6 +514,46 @@ export interface paths {
          * @description Node-by-node progress over Server-Sent Events, resumable with Last-Event-ID.
          */
         get: operations["stream_api_runs__thread_id__stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{thread_id}/trace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trace
+         * @description A link to this run's full trace in LangSmith, found by the GigBid trace id.
+         */
+        get: operations["trace_api_runs__thread_id__trace_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/runs/{thread_id}/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Usage
+         * @description Tokens, cost and latency per node, summed over every time the node ran in this thread.
+         */
+        get: operations["usage_api_runs__thread_id__usage_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -546,7 +623,7 @@ export interface paths {
         };
         /**
          * Status
-         * @description What the UI's degraded-mode banner reads.
+         * @description What the UI's degraded-mode banner reads, and which marketplace this server uses.
          */
         get: operations["status_api_status_get"];
         put?: never;
@@ -623,6 +700,10 @@ export interface components {
         Analytics: {
             /** By Category */
             by_category: components["schemas"]["CategoryStats"][];
+            /** Mean Cost Per Proposal Usd */
+            mean_cost_per_proposal_usd?: number | null;
+            /** Mean Cost Per Run Usd */
+            mean_cost_per_run_usd?: number | null;
             /** Mean Tokens Per Run */
             mean_tokens_per_run: number;
             /** P95 Latency Seconds */
@@ -736,6 +817,19 @@ export interface components {
             reply_rate: number;
             /** Submitted */
             submitted: number;
+        };
+        /** CheckpointOut */
+        CheckpointOut: {
+            /** Checkpoint Id */
+            checkpoint_id: string;
+            /** Created At */
+            created_at: string | null;
+            /** Next Nodes */
+            next_nodes: string[];
+            /** Replayable */
+            replayable: boolean;
+            /** Step */
+            step: number;
         };
         /**
          * ClaimSupport
@@ -988,6 +1082,23 @@ export interface components {
             /** Style */
             style: components["schemas"]["MemoryItem"][];
         };
+        /** NodeUsageOut */
+        NodeUsageOut: {
+            /** Calls */
+            calls: number;
+            /** Cost Usd */
+            cost_usd: number | null;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Latency Seconds */
+            latency_seconds: number;
+            /** Models */
+            models: string[];
+            /** Node */
+            node: string;
+            /** Output Tokens */
+            output_tokens: number;
+        };
         /** PipelineCard */
         PipelineCard: {
             /** Category */
@@ -1130,6 +1241,11 @@ export interface components {
             /** Reason */
             reason: string;
         };
+        /** ReplayIn */
+        ReplayIn: {
+            /** Checkpoint Id */
+            checkpoint_id: string;
+        };
         /** ReplyDraft */
         ReplyDraft: {
             /** Body */
@@ -1177,6 +1293,8 @@ export interface components {
         RunOut: {
             /** Attention Reason */
             attention_reason: string | null;
+            /** Cost Usd */
+            cost_usd?: number | null;
             /** Finished At */
             finished_at: string | null;
             /** Kind */
@@ -1235,6 +1353,12 @@ export interface components {
              * @enum {string}
              */
             marketplace: "ok" | "unavailable";
+            /**
+             * Marketplace Mode
+             * @default gigsim
+             * @enum {string}
+             */
+            marketplace_mode: "gigsim" | "upwork_live";
             /** Message */
             message?: string | null;
         };
@@ -1260,7 +1384,14 @@ export interface components {
              * Persona
              * @enum {string}
              */
-            persona: "ai_ml_engineer" | "fullstack_developer" | "data_analyst";
+            persona: "ai_ml_engineer" | "fullstack_developer" | "data_analyst" | "own";
+        };
+        /** TraceLinkOut */
+        TraceLinkOut: {
+            /** Reason */
+            reason?: string | null;
+            /** Url */
+            url: string | null;
         };
         /** UploadOut */
         UploadOut: {
@@ -2282,6 +2413,80 @@ export interface operations {
             };
         };
     };
+    checkpoints_api_runs__thread_id__checkpoints_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                thread_id: string;
+            };
+            cookie?: {
+                gigbid_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckpointOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    replay_api_runs__thread_id__replay_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                thread_id: string;
+            };
+            cookie?: {
+                gigbid_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplayIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueuedRun"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     stream_api_runs__thread_id__stream_get: {
         parameters: {
             query?: never;
@@ -2304,6 +2509,76 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trace_api_runs__thread_id__trace_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                thread_id: string;
+            };
+            cookie?: {
+                gigbid_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TraceLinkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    usage_api_runs__thread_id__usage_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                thread_id: string;
+            };
+            cookie?: {
+                gigbid_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NodeUsageOut"][];
+                };
             };
             /** @description Validation Error */
             422: {

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ErrorNote } from "@/components/States";
 import { api, call, type Schemas } from "@/lib/client";
+import { useResource } from "@/lib/useResource";
 
 type Persona = Schemas["SignupIn"]["persona"];
 
@@ -20,6 +21,10 @@ export default function OnboardingPage() {
   const [skills, setSkills] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
+  const [repository, setRepository] = useState("");
+  // The server decides the marketplace; an own profile needs live Upwork mode.
+  const status = useResource(() => call(api.GET("/api/status")), "status");
+  const live = status.data?.marketplace_mode === "upwork_live";
 
   async function guarded(action: () => Promise<void>) {
     setBusy(true);
@@ -72,6 +77,9 @@ export default function OnboardingPage() {
         const response = await fetch("/api/portfolio/uploads", { method: "POST", body: form });
         if (!response.ok) throw new Error("That file could not be uploaded.");
       }
+      if (repository) {
+        await call(api.POST("/api/portfolio/github", { body: { repository } }));
+      }
       window.location.href = "/inbox";
     });
   };
@@ -104,7 +112,9 @@ export default function OnboardingPage() {
               <option value="ai_ml_engineer">AI/ML engineer</option>
               <option value="fullstack_developer">Full-stack developer</option>
               <option value="data_analyst">Data analyst</option>
-              <option disabled>My own profile (needs live mode)</option>
+              <option value="own" disabled={!live}>
+                {live ? "My own profile (starts empty)" : "My own profile (needs live Upwork mode)"}
+              </option>
             </select>
           </label>
           <button className="primary" disabled={busy}>
@@ -120,12 +130,34 @@ export default function OnboardingPage() {
         <form onSubmit={savePreferences}>
           <fieldset className="panel">
             <legend>Marketplace</legend>
-            <label>
-              <input type="radio" checked readOnly style={{ width: "auto" }} /> GigSim simulator
+            <label className={live ? "muted" : undefined}>
+              <input type="radio" checked={!live} readOnly disabled={live} style={{ width: "auto" }} />{" "}
+              GigSim simulator
             </label>
-            <label className="muted">
-              <input type="radio" disabled style={{ width: "auto" }} /> Upwork (not available yet)
+            <label className={live ? undefined : "muted"}>
+              <input type="radio" checked={live} readOnly disabled={!live} style={{ width: "auto" }} />{" "}
+              Upwork, your own account
             </label>
+            {live ? (
+              <p className="small">
+                Sign in on Upwork&apos;s own page. Every proposal then needs your approval twice
+                before it is sent.{" "}
+                <button
+                  type="button"
+                  onClick={() =>
+                    void guarded(async () => {
+                      const { authorize_url } = await call(api.POST("/api/upwork/connect"));
+                      window.location.assign(authorize_url);
+                    })
+                  }
+                >
+                  Connect Upwork
+                </button>{" "}
+                You can also do this later in Settings.
+              </p>
+            ) : (
+              <p className="muted small">This server runs the simulator. Upwork needs live mode.</p>
+            )}
           </fieldset>
           <label>
             Lowest project price you accept (USD)
@@ -173,6 +205,20 @@ export default function OnboardingPage() {
             Title for this work
             <input value={title} onChange={(e) => setTitle(e.target.value)} />
           </label>
+          <label>
+            Import a GitHub repository (owner/name, optional)
+            <input
+              value={repository}
+              onChange={(e) => setRepository(e.target.value)}
+              pattern="[\w.-]+/[\w.-]+"
+              placeholder="octocat/hello-world"
+            />
+          </label>
+          {persona === "own" && (
+            <p className="small">
+              Your own profile starts empty: GigBid can only cite work you add here or in Settings.
+            </p>
+          )}
           <button className="primary" disabled={busy}>
             Go to my inbox
           </button>

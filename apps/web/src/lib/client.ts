@@ -42,3 +42,9 @@ export function statusLabel(status: string): string {
 export function money(value: number | null | undefined): string {
   return value == null ? "Not priced" : `$${Math.round(value).toLocaleString("en-US")}`;
 }
+
+/** Model costs are fractions of a cent, so they keep four decimals. Unknown is never shown as $0. */
+export function usd(value: number | null | undefined): string {
+  if (value == null) return "Not priced";
+  return value > 0 && value < 0.0001 ? "<$0.0001" : `$${value.toFixed(4)}`;
+}

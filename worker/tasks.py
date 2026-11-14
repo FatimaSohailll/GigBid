@@ -56,7 +56,10 @@ class WorkerServices:
         """Give this user a private copy of their persona's portfolio before it is needed."""
         async with self._rag_lock:
             if user["id"] not in self._provisioned:
-                await asyncio.to_thread(provision_tenant, user["persona"], user["id"], self.rag())
+                if user["persona"] != "own":  # an own profile starts empty
+                    await asyncio.to_thread(
+                        provision_tenant, user["persona"], user["id"], self.rag()
+                    )
                 self._provisioned.add(user["id"])
 
     async def on_portfolio(self, function: Callable[..., Any], *arguments: Any) -> Any:
@@ -110,6 +113,14 @@ async def _initial_state(
     }
 
 
+def run_cost(usage: list[Any]) -> float | None:
+    """The run's model cost in USD, or None when a model without a listed price was used."""
+    costs = [item.cost_usd if hasattr(item, "cost_usd") else item.get("cost_usd") for item in usage]
+    if not costs or any(cost is None for cost in costs):
+        return None
+    return round(sum(costs), 6)
+
+
 async def _persist_bid(
     services: WorkerServices,
     user: dict[str, Any],
@@ -160,8 +171,13 @@ async def run_thread(
     trace_id: str,
     decision: dict[str, Any] | None = None,
     new_message: bool = False,
+    checkpoint_id: str | None = None,
 ) -> None:
-    """Run or resume one thread, streaming each node's progress."""
+    """Run or resume one thread, streaming each node's progress.
+
+    With checkpoint_id, the thread is replayed from that point in its history: LangGraph forks a
+    new branch there, and what happened before it is left untouched.
+    """
     services = _services(ctx)
     repository = services.repository
     user = await repository.user(user_id)
@@ -175,7 +191,10 @@ async def run_thread(
     snapshot = await graph.aget_state(config)
     pending = any(task.interrupts for task in snapshot.tasks)
     graph_input: Any
-    if decision is not None:
+    if checkpoint_id is not None:
+        graph_input = None
+        traced["configurable"]["checkpoint_id"] = checkpoint_id
+    elif decision is not None:
         if pending:
             graph_input = Command(resume=decision)
         elif snapshot.next:
@@ -234,6 +253,7 @@ async def run_thread(
         values.get("tokens_used", 0),
         rejection,
         values.get("attention_reason"),
+        run_cost(values.get("node_usage", [])),
     )
     await publish_event(services.redis, thread_id, {"type": "run_end", "status": status})
 

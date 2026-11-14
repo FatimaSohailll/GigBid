@@ -65,6 +65,7 @@ create table if not exists runs (
     rejection_reason text,
     attention_reason text
 );
+alter table runs add column if not exists cost_usd double precision;
 create table if not exists pipeline (
     user_id text not null references users(id) on delete cascade,
     proposal_id text not null,
@@ -126,11 +127,13 @@ class Repository:
 
     # ---- Users and sessions --------------------------------------------------------------
 
-    async def create_user(self, email: str, password_hash: str, persona: str) -> dict[str, Any]:
+    async def create_user(
+        self, email: str, password_hash: str, persona: str, marketplace: str = "gigsim"
+    ) -> dict[str, Any]:
         row = await self._one(
-            "insert into users (id, email, password_hash, persona) values (%s, %s, %s, %s) "
-            "on conflict (email) do nothing returning *",
-            (uuid.uuid4().hex, email.lower(), password_hash, persona),
+            "insert into users (id, email, password_hash, persona, marketplace) "
+            "values (%s, %s, %s, %s, %s) on conflict (email) do nothing returning *",
+            (uuid.uuid4().hex, email.lower(), password_hash, persona, marketplace),
         )
         if row is None:
             raise ValueError("email_taken")
@@ -320,12 +323,13 @@ class Repository:
         tokens: int,
         rejection_reason: str | None,
         attention_reason: str | None,
+        cost_usd: float | None = None,
     ) -> None:
         finished = status != "awaiting_approval"
         await self._run(
             "update runs set status=%s, tokens=%s, rejection_reason=%s, attention_reason=%s, "
-            "finished_at=case when %s then now() else null end where thread_id=%s",
-            (status, tokens, rejection_reason, attention_reason, finished, thread_id),
+            "cost_usd=%s, finished_at=case when %s then now() else null end where thread_id=%s",
+            (status, tokens, rejection_reason, attention_reason, cost_usd, finished, thread_id),
         )
 
     # ---- Pipeline and sync ---------------------------------------------------------------
@@ -409,6 +413,9 @@ class Repository:
     async def analytics_runs(self, user_id: str) -> dict[str, Any]:
         row = await self._one(
             "select count(*)::int as runs, coalesce(avg(tokens),0)::float as mean_tokens, "
+            "avg(cost_usd)::float as mean_cost, "
+            "avg(cost_usd) filter (where status in ('awaiting_approval','submitted','rejected',"
+            "'awaiting_platform_confirmation'))::float as mean_proposal_cost, "
             "coalesce(percentile_cont(0.95) within group (order by "
             "extract(epoch from finished_at - started_at)),0)::float as p95_seconds "
             "from runs where user_id=%s and kind='bid' and finished_at is not null",

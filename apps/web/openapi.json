@@ -10,6 +10,28 @@
             "title": "By Category",
             "type": "array"
           },
+          "mean_cost_per_proposal_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Cost Per Proposal Usd"
+          },
+          "mean_cost_per_run_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean Cost Per Run Usd"
+          },
           "mean_tokens_per_run": {
             "title": "Mean Tokens Per Run",
             "type": "number"
@@ -330,6 +352,49 @@
           "hire_rate"
         ],
         "title": "CategoryStats",
+        "type": "object"
+      },
+      "CheckpointOut": {
+        "properties": {
+          "checkpoint_id": {
+            "title": "Checkpoint Id",
+            "type": "string"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "next_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next Nodes",
+            "type": "array"
+          },
+          "replayable": {
+            "title": "Replayable",
+            "type": "boolean"
+          },
+          "step": {
+            "title": "Step",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "checkpoint_id",
+          "step",
+          "next_nodes",
+          "created_at",
+          "replayable"
+        ],
+        "title": "CheckpointOut",
         "type": "object"
       },
       "ClaimSupport": {
@@ -1143,6 +1208,59 @@
         "title": "MemoryOut",
         "type": "object"
       },
+      "NodeUsageOut": {
+        "properties": {
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Usd"
+          },
+          "input_tokens": {
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "latency_seconds": {
+            "title": "Latency Seconds",
+            "type": "number"
+          },
+          "models": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Models",
+            "type": "array"
+          },
+          "node": {
+            "title": "Node",
+            "type": "string"
+          },
+          "output_tokens": {
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "node",
+          "calls",
+          "input_tokens",
+          "output_tokens",
+          "cost_usd",
+          "latency_seconds",
+          "models"
+        ],
+        "title": "NodeUsageOut",
+        "type": "object"
+      },
       "PipelineCard": {
         "properties": {
           "category": {
@@ -1548,6 +1666,22 @@
         "title": "RejectionStat",
         "type": "object"
       },
+      "ReplayIn": {
+        "additionalProperties": false,
+        "properties": {
+          "checkpoint_id": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Checkpoint Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "checkpoint_id"
+        ],
+        "title": "ReplayIn",
+        "type": "object"
+      },
       "ReplyDraft": {
         "additionalProperties": false,
         "properties": {
@@ -1680,6 +1814,17 @@
               }
             ],
             "title": "Attention Reason"
+          },
+          "cost_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost Usd"
           },
           "finished_at": {
             "anyOf": [
@@ -1865,6 +2010,15 @@
             "title": "Marketplace",
             "type": "string"
           },
+          "marketplace_mode": {
+            "default": "gigsim",
+            "enum": [
+              "gigsim",
+              "upwork_live"
+            ],
+            "title": "Marketplace Mode",
+            "type": "string"
+          },
           "message": {
             "anyOf": [
               {
@@ -1934,7 +2088,8 @@
             "enum": [
               "ai_ml_engineer",
               "fullstack_developer",
-              "data_analyst"
+              "data_analyst",
+              "own"
             ],
             "title": "Persona",
             "type": "string"
@@ -1946,6 +2101,37 @@
           "persona"
         ],
         "title": "SignupIn",
+        "type": "object"
+      },
+      "TraceLinkOut": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "TraceLinkOut",
         "type": "object"
       },
       "UploadOut": {
@@ -4039,6 +4225,169 @@
         ]
       }
     },
+    "/api/runs/{thread_id}/checkpoints": {
+      "get": {
+        "description": "The thread's history, newest first: each point the graph could be replayed from.",
+        "operationId": "checkpoints_api_runs__thread_id__checkpoints_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "thread_id",
+            "required": true,
+            "schema": {
+              "title": "Thread Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "gigbid_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Gigbid Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CheckpointOut"
+                  },
+                  "title": "Response Checkpoints Api Runs  Thread Id  Checkpoints Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Checkpoints",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/runs/{thread_id}/replay": {
+      "post": {
+        "operationId": "replay_api_runs__thread_id__replay_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "thread_id",
+            "required": true,
+            "schema": {
+              "title": "Thread Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "gigbid_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Gigbid Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplayIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueuedRun"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Replay",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
     "/api/runs/{thread_id}/stream": {
       "get": {
         "description": "Node-by-node progress over Server-Sent Events, resumable with Last-Event-ID.",
@@ -4118,6 +4467,160 @@
           }
         },
         "summary": "Stream",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/runs/{thread_id}/trace": {
+      "get": {
+        "description": "A link to this run's full trace in LangSmith, found by the GigBid trace id.",
+        "operationId": "trace_api_runs__thread_id__trace_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "thread_id",
+            "required": true,
+            "schema": {
+              "title": "Thread Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "gigbid_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Gigbid Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceLinkOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Trace",
+        "tags": [
+          "runs"
+        ]
+      }
+    },
+    "/api/runs/{thread_id}/usage": {
+      "get": {
+        "description": "Tokens, cost and latency per node, summed over every time the node ran in this thread.",
+        "operationId": "usage_api_runs__thread_id__usage_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "thread_id",
+            "required": true,
+            "schema": {
+              "title": "Thread Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "gigbid_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Gigbid Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/NodeUsageOut"
+                  },
+                  "title": "Response Usage Api Runs  Thread Id  Usage Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Usage",
         "tags": [
           "runs"
         ]
@@ -4409,7 +4912,7 @@
     },
     "/api/status": {
       "get": {
-        "description": "What the UI's degraded-mode banner reads.",
+        "description": "What the UI's degraded-mode banner reads, and which marketplace this server uses.",
         "operationId": "status_api_status_get",
         "responses": {
           "200": {

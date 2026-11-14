@@ -10,12 +10,10 @@ from agent.handoffs import ComplianceAction, ComplianceVerdict, PolicyViolation,
 from agent.runtime import AgentRuntime
 from agent.state import BidState, ThreadStatus
 
-_RULE_EXPLANATIONS = {
-    "contact": "Contact details before a contract are not allowed.",
-    "payment": "Payment outside the platform is not allowed.",
-    "guarantee": "Results cannot be guaranteed.",
-    "credentials": "Credentials must not be requested or shared.",
-}
+
+def scan(text: str, runtime: AgentRuntime) -> ComplianceScan:
+    """The deterministic check on outgoing text, with every rule configured for this deployment."""
+    return scan_outgoing_text(text, runtime.config.compliance.pattern_rules())
 
 
 class _ModelVerdict(BaseModel):
@@ -30,9 +28,9 @@ def rule_violations(scans: list[ComplianceScan], runtime: AgentRuntime) -> list[
     rules = runtime.config.compliance
     return [
         PolicyViolation(
-            rule_id=rules.rule_ids[rule],  # type: ignore[index]
+            rule_id=rules.rules[rule].rule_id,
             excerpt=excerpt,
-            explanation=_RULE_EXPLANATIONS[rule],
+            explanation=rules.rules[rule].explanation,
         )
         for scan in scans
         for rule, excerpt in scan.findings
@@ -61,8 +59,8 @@ async def model_review(
 
 async def run(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
     draft = state["drafts"][-1]
-    letter = scan_outgoing_text(draft.cover_letter)
-    answers = [(item, scan_outgoing_text(item.answer)) for item in draft.screening_answers]
+    letter = scan(draft.cover_letter, runtime)
+    answers = [(item, scan(item.answer, runtime)) for item in draft.screening_answers]
     scans = [letter, *(scan for _, scan in answers)]
     violations = rule_violations(scans, runtime)
     model_found, model_block, model_reason, tokens = await model_review(

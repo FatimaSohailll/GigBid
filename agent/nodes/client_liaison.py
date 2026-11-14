@@ -8,7 +8,7 @@ from typing import Any, Literal
 from langgraph.types import interrupt
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from agent.guardrails import delimit_untrusted, scan_job_post, scan_outgoing_text
+from agent.guardrails import delimit_untrusted, scan_job_post
 from agent.handoffs import (
     ClientIntent,
     ComplianceAction,
@@ -18,6 +18,7 @@ from agent.handoffs import (
     RiskFlag,
 )
 from agent.nodes.compliance import model_review, rule_violations
+from agent.nodes.compliance import scan as compliance_scan
 from agent.runtime import AgentRuntime
 from agent.state import (
     ApprovalAction,
@@ -141,7 +142,7 @@ async def draft(state: ConversationState, runtime: AgentRuntime) -> dict[str, An
 
 async def compliance(state: ConversationState, runtime: AgentRuntime) -> dict[str, Any]:
     reply = state["reply_drafts"][-1]
-    scan = scan_outgoing_text(reply.body)
+    scan = compliance_scan(reply.body, runtime)
     violations = rule_violations([scan], runtime)
     model_found, model_block, model_reason, tokens = await model_review(scan.text, runtime)
     violations += model_found

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { PortfolioManager } from "@/components/PortfolioManager";
 import { ErrorNote, Loading } from "@/components/States";
 import { api, call, type Schemas } from "@/lib/client";
 import { useResource } from "@/lib/useResource";
@@ -151,6 +152,11 @@ export default function SettingsPage() {
           {problem && <ErrorNote message={problem} />}
           <button>Add search</button>
         </form>
+      </section>
+
+      <section className="panel">
+        <h2>Portfolio</h2>
+        <PortfolioManager />
       </section>
 
       <section className="panel">
