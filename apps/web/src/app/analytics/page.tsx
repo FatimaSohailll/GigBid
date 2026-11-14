@@ -1,7 +1,7 @@
 "use client";
 
 import { Empty, ErrorNote, Loading } from "@/components/States";
-import { api, call } from "@/lib/client";
+import { api, call, usd } from "@/lib/client";
 import { useResource } from "@/lib/useResource";
 
 const percent = (value: number) => `${Math.round(value * 100)}%`;
@@ -25,6 +25,8 @@ export default function AnalyticsPage() {
     ["Connects spent", connects.toLocaleString("en-US")],
     ["Tokens per run", Math.round(data.mean_tokens_per_run).toLocaleString("en-US")],
     ["p95 run time", `${data.p95_latency_seconds.toFixed(1)}s`],
+    ["Model cost per run", usd(data.mean_cost_per_run_usd)],
+    ["Model cost per proposal", usd(data.mean_cost_per_proposal_usd)],
   ];
 
   return (

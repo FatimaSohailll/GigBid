@@ -98,6 +98,27 @@ async def main() -> None:
         await queue.delete(DEGRADED_KEY)
         return {"status": "started"}
 
+    @app.post("/__test/client-reply")
+    async def client_reply(body: dict[str, str]) -> dict[str, str]:
+        """The client answers a submitted proposal; the worker then syncs, as its cron would."""
+        async with httpx.AsyncClient() as client:
+            sent = await client.post(
+                f"{stack.simulator.url}/admin/proposals/{body['proposal_id']}/client-message",
+                json={"body": body.get("text", "Can you start Monday?")},
+                headers={"Authorization": "Bearer sim-admin"},
+            )
+            sent.raise_for_status()
+        await queue.enqueue_job("sync_user", body["user_id"])
+        return {"status": "replied"}
+
+    @app.post("/__test/learn-style")
+    async def learn_style(body: dict[str, str]) -> dict[str, str]:
+        """Three drafts with the same edit, which the promotion rule turns into a style rule."""
+        edit = {"before": "We are passionate engineers.", "after": "We are engineers."}
+        for number in range(3):
+            await memory.record_edits(body["user_id"], f"job-{number}", [edit])
+        return {"status": "learned"}
+
     worker = Worker(
         functions=[
             func(run_thread, max_tries=200),

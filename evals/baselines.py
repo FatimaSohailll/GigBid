@@ -19,8 +19,8 @@ from langgraph_supervisor import create_supervisor
 from pydantic import BaseModel, ConfigDict, Field
 
 from agent.config import AppConfig, ModelSpec
-from agent.guardrails import scan_outgoing_text
 from agent.handoffs import ProposalDraft
+from agent.nodes.compliance import scan as compliance_scan
 from agent.nodes.verifier import claim_judge
 from agent.prompt_loader import PROMPT_DIR, load_prompt
 from agent.runtime import AgentRuntime
@@ -138,7 +138,7 @@ class BaselineRunner:
         result.claims_after = check.total_claims
         result.unsupported_after = check.unsupported
         result.unsupported_final_claims = check.unsupported_claims
-        result.compliance_issues_in_output = len(scan_outgoing_text(letter).findings)
+        result.compliance_issues_in_output = len(compliance_scan(letter, self._runtime).findings)
 
     async def _submit(self, gold: dict[str, Any], answer: FinalAnswer, result: JobResult) -> None:
         key = f"rqc-{self.name}-{self._seed_key}-{gold['job_id']}"

@@ -18,7 +18,9 @@ from agent.handoffs import (
     RiskReport,
 )
 
-Persona = Literal["ai_ml_engineer", "fullstack_developer", "data_analyst"]
+# "own" starts with an empty portfolio of the user's own work. It needs live Upwork mode.
+OWN_PROFILE = "own"
+Persona = Literal["ai_ml_engineer", "fullstack_developer", "data_analyst", "own"]
 Autonomy = Literal["manual", "auto_skip_low_fit"]
 
 
@@ -170,10 +172,40 @@ class RunOut(BaseModel):
     status: str
     trace_id: str
     tokens: int
+    cost_usd: float | None = None
     started_at: datetime
     finished_at: datetime | None
     attention_reason: str | None
     rejection_reason: str | None
+
+
+class NodeUsageOut(BaseModel):
+    node: str
+    calls: int
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float | None
+    latency_seconds: float
+    models: list[str]
+
+
+class TraceLinkOut(BaseModel):
+    url: str | None
+    reason: str | None = None
+
+
+class CheckpointOut(BaseModel):
+    checkpoint_id: str
+    step: int
+    next_nodes: list[str]
+    created_at: str | None
+    replayable: bool
+
+
+class ReplayIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    checkpoint_id: str = Field(min_length=1, max_length=128)
 
 
 class CategoryStats(BaseModel):
@@ -196,12 +228,16 @@ class Analytics(BaseModel):
     runs: int
     mean_tokens_per_run: float
     p95_latency_seconds: float
+    # None until runs with priced models exist; never shown as zero.
+    mean_cost_per_run_usd: float | None = None
+    mean_cost_per_proposal_usd: float | None = None
     top_rejection_reasons: list[RejectionStat]
 
 
 class ServiceStatus(BaseModel):
     marketplace: Literal["ok", "unavailable"]
     message: str | None = None
+    marketplace_mode: Literal["gigsim", "upwork_live"] = "gigsim"
 
 
 class MemoryItem(BaseModel):

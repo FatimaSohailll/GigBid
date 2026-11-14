@@ -11,8 +11,9 @@ from typing import Any, Protocol
 
 from langgraph.types import Command
 
-from agent.guardrails import defences_off, scan_outgoing_text
+from agent.guardrails import defences_off
 from agent.handoffs import RiskFlag
+from agent.nodes.compliance import scan as compliance_scan
 from agent.nodes.verifier import check_final_text
 from agent.runtime import AgentRuntime
 from agent.state import NodeUsage, ThreadStatus
@@ -142,7 +143,7 @@ class GraphJobRunner:
                 len(verdict.violations) for verdict in state.get("compliance_verdicts", [])
             )
             result.compliance_issues_in_output = len(
-                scan_outgoing_text(state["drafts"][-1].cover_letter).findings
+                compliance_scan(state["drafts"][-1].cover_letter, self._runtime).findings
             )
         return result
 

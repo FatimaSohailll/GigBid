@@ -4,6 +4,7 @@ Tracing attaches per run through callbacks, so a run without a key or with traci
 behaves exactly the same and sends nothing.
 """
 
+import asyncio
 import os
 from functools import lru_cache
 from typing import Any
@@ -64,3 +65,35 @@ def flush_traces(config: AppConfig) -> None:
         tracer = _tracer(config.tracing.project)
         tracer.wait_for_futures()
         tracer.client.flush()
+
+
+_found_urls: dict[str, str] = {}
+
+
+async def trace_url(config: AppConfig, trace_id: str) -> tuple[str | None, str | None]:
+    """The LangSmith address of the run tagged with this trace id, or why there is none."""
+    if not tracing_active(config):
+        return None, "Tracing is off, so this run has no trace."
+    if trace_id in _found_urls:
+        return _found_urls[trace_id], None
+    project = config.tracing.project
+
+    def find() -> str | None:
+        client = _tracer(project).client
+        runs = client.list_runs(
+            project_name=project,
+            is_root=True,
+            filter=f'and(eq(metadata_key, "trace_id"), eq(metadata_value, "{trace_id}"))',
+            limit=1,
+        )
+        root = next(iter(runs), None)
+        return client.get_run_url(run=root, project_name=project) if root else None
+
+    try:
+        url = await asyncio.to_thread(find)
+    except Exception as error:  # LangSmith is optional: a lookup failure must not break the page
+        return None, f"LangSmith could not be reached: {type(error).__name__}"
+    if url is None:
+        return None, "LangSmith has no trace for this run yet. It can take a minute to appear."
+    _found_urls[trace_id] = url
+    return url, None

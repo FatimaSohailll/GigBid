@@ -10,7 +10,7 @@ from apps.api.auth.security import (
     new_session_token,
     verify_password,
 )
-from apps.api.schemas.api import LoginIn, SignupIn, UserOut
+from apps.api.schemas.api import OWN_PROFILE, LoginIn, SignupIn, UserOut
 from apps.api.services import SESSION_COOKIE, ApiServices, CurrentUser, Services
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -32,9 +32,14 @@ async def _start_session(services: ApiServices, user: dict[str, Any], response: 
 
 @router.post("/signup", response_model=UserOut, status_code=201)
 async def signup(body: SignupIn, response: Response, services: Services) -> dict[str, Any]:
+    mode = services.config.marketplace.mode
+    if body.persona == OWN_PROFILE and mode != "upwork_live":
+        raise HTTPException(
+            422, "Your own profile needs live Upwork mode; choose a persona to use the simulator."
+        )
     try:
         user = await services.repository.create_user(
-            body.email, hash_password(body.password), body.persona
+            body.email, hash_password(body.password), body.persona, mode
         )
     except ValueError:
         raise HTTPException(409, "An account with this email already exists.") from None

@@ -63,6 +63,9 @@ async def run_job(
         if judge is not None:
             score = await score_proposal(judge, result.job, result.cover_letter)
             row["judge_overall"] = score.overall
+            # Kept for the failure taxonomy: generic openings and missed evidence.
+            row["judge_specificity"] = score.specificity
+            row["judge_evidence"] = score.evidence
     return row
 
 

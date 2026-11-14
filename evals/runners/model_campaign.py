@@ -5,9 +5,13 @@ winner advance together, so a provider limit cannot leave one far ahead. Finishe
 when a run stops at a daily limit, run the same command later and it continues.
 """
 
+import argparse
 import asyncio
 import json
+import re
 import sys
+import time
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -79,10 +83,47 @@ def finish() -> None:
     regenerate_table()
 
 
-async def main() -> int:
-    code = await run_campaign()
-    finish()
-    if code == STOPPED:
+_RETRY_IN = re.compile(r"try again in (?:(\d+)h)?(?:(\d+)m)?(?:([\d.]+)s)?")
+DEFAULT_WAIT_SECONDS = 600.0
+
+
+def daily_limit_wait(error: BaseException) -> float | None:
+    """Seconds until the provider frees tokens, if this error is a rate limit; else None.
+
+    Groq's daily token limit is a rolling window, so tokens come back gradually and the message
+    says when the next request will fit.
+    """
+    text = str(error)
+    if "rate_limit" not in text and "429" not in text and type(error).__name__ != "RateLimitError":
+        return None
+    match = _RETRY_IN.search(text)
+    if not match or not any(match.groups()):
+        return DEFAULT_WAIT_SECONDS
+    hours, minutes, seconds = (float(part) if part else 0.0 for part in match.groups())
+    return hours * 3600 + minutes * 60 + seconds + 15  # a little slack after the stated time
+
+
+async def main(wait: bool = False, hours: float = 30.0) -> int:
+    deadline = time.monotonic() + hours * 3600
+    while True:
+        try:
+            code = await run_campaign()
+            pause = DEFAULT_WAIT_SECONDS if code == STOPPED else None
+        except Exception as error:  # a limit can surface outside the graph, in the final check
+            pause = daily_limit_wait(error)
+            if pause is None:
+                raise
+            code = STOPPED
+        finish()
+        if code != STOPPED or not wait or pause is None:
+            break
+        if time.monotonic() + pause > deadline:
+            print("Deadline reached; results so far are saved.", flush=True)
+            break
+        resume = datetime.now() + timedelta(seconds=pause)
+        print(f"Provider limit reached. Waiting until {resume:%H:%M} to continue.", flush=True)
+        await asyncio.sleep(pause)
+    if code == STOPPED and not wait:
         print("Stopped at a provider limit. Run the same command later to continue.", flush=True)
     return code
 
@@ -90,4 +131,10 @@ async def main() -> int:
 if __name__ == "__main__":
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    sys.exit(asyncio.run(main()))
+    options = argparse.ArgumentParser(description=__doc__)
+    options.add_argument(
+        "--wait", action="store_true", help="Wait at provider limits and continue, until --hours"
+    )
+    options.add_argument("--hours", type=float, default=30.0)
+    arguments = options.parse_args()
+    sys.exit(asyncio.run(main(arguments.wait, arguments.hours)))

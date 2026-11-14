@@ -62,6 +62,30 @@ models:
         client_liaison: {tier: strong}
         single_agent: {tier: strong} # Part A deliverable and R&D question C baseline
         judge: {tier: strong} # evaluation only
+    # The second open configuration the assignment asks to compare: gpt-oss-20b everywhere, so
+    # Writer, Critic and Client Liaison lose the larger model. Run with MODEL_PROFILE=open_small.
+    open_small:
+      tiers:
+        small: {provider: groq, model: openai/gpt-oss-20b, input_usd_per_million: 0.075, output_usd_per_million: 0.30}
+        small_fallback: {provider: groq, model: llama-3.1-8b-instant}
+        strong: {provider: groq, model: openai/gpt-oss-20b, input_usd_per_million: 0.075, output_usd_per_million: 0.30}
+        # The judge stays the same as in the open profile, so both configurations get one scorer.
+        judge: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60}
+      nodes:
+        scout: {tier: small, fallback: small_fallback}
+        analyst: {tier: small, fallback: small_fallback}
+        risk_assessor: {tier: small, fallback: small_fallback}
+        fit_matcher: {tier: small, fallback: small_fallback}
+        pricing: {tier: small, fallback: small_fallback}
+        verifier: {tier: small, fallback: small_fallback}
+        compliance: {tier: small, fallback: small_fallback}
+        intent: {tier: small, fallback: small_fallback}
+        writer: {tier: strong}
+        rewrite: {tier: strong}
+        critic: {tier: strong}
+        client_liaison: {tier: strong}
+        single_agent: {tier: strong}
+        judge: {tier: judge}
     # Optional. Used only where it beats the open profile enough to justify its cost.
     paid:
       tiers:
@@ -156,12 +180,14 @@ workspace:
 
 compliance:
   policy_path: devsim/src/devsim/datagen/policy_pack.md # stand-in until the real pack exists
-  rule_ids:
-    contact: POL-01
-    payment: POL-02
-    guarantee: POL-04
-    credentials: POL-10
-    fabrication: POL-03
+  # A new platform rule is added here: rule_id, explanation, and a pattern that blocks or redacts.
+  # The five built-in rules are scanned in code; their ids and wording are set here.
+  rules:
+    contact: {rule_id: POL-01, explanation: Contact details before a contract are not allowed.}
+    payment: {rule_id: POL-02, explanation: Payment outside the platform is not allowed.}
+    guarantee: {rule_id: POL-04, explanation: Results cannot be guaranteed.}
+    credentials: {rule_id: POL-10, explanation: Credentials must not be requested or shared.}
+    fabrication: {rule_id: POL-03, explanation: Every claim must be supported by portfolio evidence.}
 
 # Pinned prompt version per node. A node without a pin uses its highest version.
 prompt_versions: {}

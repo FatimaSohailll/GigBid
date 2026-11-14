@@ -82,7 +82,7 @@ proposal is built (`agent/single_agent.py`) and was run once on Groq for a DevSi
 | C3 | Eight Pydantic hand-offs | `agent/handoffs.py` | Tested | `tests/unit/test_contracts.py` | Used by nodes from Phase 4 |
 | C4 | Critic limit, Compliance block, step and token budgets | `agent/graphs/bid_graph.py`, `agent/nodes/` | Tested | `tests/integration/test_bid_graph.py` | Show in UI, Phase 9 |
 | C5 | Interrupts with full payload; approve, edit, reject | `agent/nodes/approval.py`, `agent/nodes/critic.py`, `apps/api/routers/proposals.py`, `apps/web/src/app/studio/[id]` | Tested; deleted evidence is caught by the Critic and dropped on regeneration | `tests/integration/test_bid_graph.py`, `apps/web/tests/e2e/gigbid.spec.ts` | None |
-| C6 | Postgres checkpointer, crash and resume, replay | `agent/checkpoint.py`, `infra/docker-compose.yml` | Tested | `tests/integration/test_crash_recovery.py` kills real processes | Demo from the UI, Phase 9 |
+| C6 | Postgres checkpointer, crash and resume, replay | `agent/checkpoint.py`, `worker/tasks.py` (`checkpoint_id`), `apps/api/routers/runs.py` (checkpoints, replay), run viewer | Tested; replay from any step in the UI, sending steps refused | `tests/integration/test_crash_recovery.py` kills real processes | Record the crash-and-resume demo and its trace |
 | C7 | Retries, timeouts, fallback model, dead-letter state | `agent/graphs/bid_graph.py`, `agent/llm.py` | Tested | `tests/integration/test_bid_graph.py`, `tests/unit/test_agent_units.py` | Fallback is now `llama-3.1-8b-instant` on Groq and is switched off in evaluations; not yet triggered against the live provider |
 | RQ-C | ReAct, supervisor and graph comparison on 50 jobs | `evals/baselines.py`, `evals/runners/orchestration_compare.py` | Implemented, not run by the student's choice | `tests/unit/test_part_c_baselines.py` | Run on 50 jobs; needs about 150 job runs of model quota |
 
@@ -90,15 +90,15 @@ proposal is built (`agent/single_agent.py`) and was run once on Groq for a DevSi
 
 | ID | Requirement | Files | Status | Tests | Outstanding |
 |---|---|---|---|---|---|
-| D1 | Sign-in and onboarding | `apps/web/src/app/login`, `onboarding` | Partial, Tested | `apps/web/tests/e2e/gigbid.spec.ts` | Own profile and Upwork OAuth, Phase 13 |
+| D1 | Sign-in and onboarding | `apps/web/src/app/onboarding`, `apps/api/routers/auth.py`, `apps/api/routers/upwork.py` | Tested | Playwright onboarding test; own profile needs live mode (`tests/unit/test_upwork_live.py`) | None |
 | D2 | Job inbox | `apps/web/src/app/inbox` | Tested | `apps/web/tests/e2e/gigbid.spec.ts` | None |
-| D3 | Job detail with evidence matrix | `apps/web/src/app/jobs/[id]` | Implemented | No browser test yet | Testing phase |
+| D3 | Job detail with evidence matrix | `apps/web/src/app/jobs/[id]` | Tested | Playwright: job detail test | None |
 | D4 | Proposal studio | `apps/web/src/app/studio/[id]`, `EvidenceHover`, `ApprovalPanel` | Tested | `apps/web/tests/e2e/gigbid.spec.ts` | None |
 | D5 | Pipeline board | `apps/web/src/app/pipeline` | Tested | `apps/web/tests/e2e/gigbid.spec.ts` | None |
-| D6 | Messages | `apps/web/src/app/messages` | Implemented | Backend tested; no browser test yet | Testing phase |
-| D7 | Agent run viewer | `apps/web/src/app/runs`, `RunTimeline` | Partial, Tested | `apps/web/tests/e2e/gigbid.spec.ts` | Link to the full trace, Phase 12 |
-| D8 | Analytics | `apps/web/src/app/analytics` | Tested | `apps/web/tests/e2e/gigbid.spec.ts` | Cost in USD, Phase 12 |
-| D9 | Settings and memory viewer | `apps/web/src/app/settings` | Partial, Tested | `apps/web/tests/e2e/gigbid.spec.ts` | Deleting memory from the UI has no browser test yet |
+| D6 | Messages | `apps/web/src/app/messages` | Tested | Playwright: client reply needs approval | None |
+| D7 | Agent run viewer | `apps/web/src/app/runs/[id]`, `apps/api/routers/runs.py` | Tested | Trace link checked against the real LangSmith project; cost per step; replay | None |
+| D8 | Analytics | `apps/web/src/app/analytics`, `apps/api/routers/analytics.py` | Tested | Cost per run and per proposal in USD, never shown as zero when unknown | None |
+| D9 | Settings and memory viewer | `apps/web/src/app/settings`, `apps/web/src/components/PortfolioManager.tsx` | Tested | Playwright: memory delete, portfolio upload | None |
 | D10 | Streaming; approvals survive refresh | `apps/api/streaming.py`, `RunTimeline`, `apps/api/routers/approvals.py` | Tested | `apps/web/tests/e2e/gigbid.spec.ts`, `tests/integration/test_api_worker.py` | None |
 | D11 | TypeScript client generated from OpenAPI | `apps/web/src/lib/api/schema.d.ts`, `make openapi` | Tested | CI compares it with the API | None |
 | D12 | Phone layout, keyboard access, empty, loading and error states | `apps/web/src/app/globals.css`, `States.tsx` | Tested | `apps/web/tests/e2e/gigbid.spec.ts` | Wider accessibility check in testing phase |

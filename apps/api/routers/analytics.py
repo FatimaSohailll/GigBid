@@ -8,6 +8,10 @@ from apps.api.services import CurrentUser, Services
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 
+def _usd(value: float | None) -> float | None:
+    return None if value is None else round(value, 6)
+
+
 @router.get("", response_model=Analytics)
 async def analytics(user: CurrentUser, services: Services) -> Analytics:
     repository = services.repository
@@ -25,6 +29,8 @@ async def analytics(user: CurrentUser, services: Services) -> Analytics:
         runs=runs["runs"],
         mean_tokens_per_run=round(runs["mean_tokens"], 1),
         p95_latency_seconds=round(runs["p95_seconds"], 2),
+        mean_cost_per_run_usd=_usd(runs["mean_cost"]),
+        mean_cost_per_proposal_usd=_usd(runs["mean_proposal_cost"]),
         top_rejection_reasons=[
             RejectionStat(**row) for row in await repository.top_rejections(user["id"])
         ],

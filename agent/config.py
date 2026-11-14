@@ -1,6 +1,7 @@
 """Typed access to agent/config.yaml. Models, thresholds and budgets live there, not in code."""
 
 import os
+import re
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
@@ -187,9 +188,54 @@ class WorkspaceConfig(_Strict):
     days_ahead: int = Field(ge=1, le=30)
 
 
+# Rules the deterministic scanner implements in code. Their ids and wording still live in config.
+BUILT_IN_RULES = frozenset({"contact", "payment", "guarantee", "credentials", "fabrication"})
+
+
+class PolicyRule(_Strict):
+    rule_id: str = Field(min_length=1)
+    explanation: str = Field(min_length=1)
+    # A rule with a pattern is checked on every outgoing text without any code change.
+    pattern: str | None = None
+    action: Literal["block", "redact"] = "block"
+
+    @model_validator(mode="after")
+    def _pattern_compiles(self) -> "PolicyRule":
+        if self.pattern is not None:
+            try:
+                re.compile(self.pattern)
+            except re.error as error:
+                raise ValueError(
+                    f"pattern {self.pattern!r} is not a valid regex: {error}"
+                ) from None
+        return self
+
+
 class ComplianceConfig(_Strict):
     policy_path: Path
-    rule_ids: dict[Literal["contact", "payment", "guarantee", "credentials", "fabrication"], str]
+    rules: dict[str, PolicyRule]
+
+    @model_validator(mode="after")
+    def _built_ins_present(self) -> "ComplianceConfig":
+        missing = BUILT_IN_RULES - set(self.rules)
+        if missing:
+            raise ValueError(f"compliance.rules is missing built-in rules: {sorted(missing)}")
+        for name, rule in self.rules.items():
+            if name not in BUILT_IN_RULES and rule.pattern is None:
+                raise ValueError(f"compliance rule '{name}' needs a pattern")
+        return self
+
+    @property
+    def rule_ids(self) -> dict[str, str]:
+        return {name: rule.rule_id for name, rule in self.rules.items()}
+
+    def pattern_rules(self) -> list[tuple[str, "re.Pattern[str]", bool]]:
+        """(name, compiled pattern, blocks) for every rule defined only in config."""
+        return [
+            (name, re.compile(rule.pattern, re.IGNORECASE), rule.action == "block")
+            for name, rule in self.rules.items()
+            if rule.pattern is not None
+        ]
 
 
 class TracingConfig(_Strict):

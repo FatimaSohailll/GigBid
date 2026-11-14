@@ -138,3 +138,74 @@ test("the inbox fits a phone screen and is reachable by keyboard", async ({ page
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
 });
+
+async function userId(page: Page): Promise<string> {
+  const me = await page.request.get("/api/auth/me");
+  return (await me.json()).id;
+}
+
+test("job detail shows the analysis, the evidence matrix and the price", async ({ page }) => {
+  await signUp(page);
+  await page.request.post("/api/searches", {
+    data: { query: "churn", skills: [], interval_minutes: 60 },
+  });
+  await page.goto("/inbox");
+  await page.getByRole("button", { name: "Check for new jobs" }).click();
+  await page.getByRole("link", { name: JOB }).click();
+
+  await expect(page.getByRole("heading", { level: 1, name: JOB })).toBeVisible();
+  for (const section of ["Bid or skip", "Requirements and evidence", "Risk", "Price"]) {
+    await expect(page.getByRole("heading", { name: section })).toBeVisible();
+  }
+});
+
+test("a client reply gets a suggested answer that needs approval", async ({ page }) => {
+  await openProposal(page);
+  await page.getByRole("button", { name: "Approve and submit" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Submitted" })).toBeVisible();
+
+  const card = (await (await page.request.get("/api/pipeline")).json())[0];
+  const replied = await page.request.post(`${BACKEND}/__test/client-reply`, {
+    data: { proposal_id: card.proposal_id, user_id: await userId(page) },
+  });
+  expect(replied.ok()).toBeTruthy();
+
+  await page.goto("/messages");
+  await expect(page.getByText("Can you start Monday?")).toBeVisible();
+  const send = page.getByRole("button", { name: "Approve and send" });
+  await expect(send).toBeEnabled();
+  await send.click();
+  await expect(send).toBeHidden();
+});
+
+test("the user can see and delete what GigBid has learned", async ({ page }) => {
+  await signUp(page);
+  const learned = await page.request.post(`${BACKEND}/__test/learn-style`, {
+    data: { user_id: await userId(page) },
+  });
+  expect(learned.ok()).toBeTruthy();
+
+  await page.goto("/settings");
+  const rule = page.getByRole("listitem").filter({ hasText: "passionate" });
+  await expect(rule).toBeVisible();
+  await rule.getByRole("button", { name: "Forget" }).click();
+  await expect(rule).toBeHidden();
+  await page.reload();
+  await expect(page.getByRole("listitem").filter({ hasText: "passionate" })).toHaveCount(0);
+});
+
+test("a portfolio file uploaded in settings is indexed", async ({ page }) => {
+  await signUp(page);
+  await page.goto("/settings");
+  const form = page.getByRole("form", { name: "Upload portfolio item" });
+  await form.getByLabel(/^File/).setInputFiles({
+    name: "billing.md",
+    mimeType: "text/markdown",
+    buffer: Buffer.from("I rebuilt a billing system with Stripe and Postgres."),
+  });
+  await form.getByLabel("Title").fill("Billing rebuild");
+  await form.getByLabel(/^Skills/).fill("Stripe, Postgres");
+  await form.getByRole("button", { name: "Upload" }).click();
+  await expect(page.getByText(/Uploaded\. GigBid is indexing it/)).toBeVisible();
+  await expect(page.getByText("billing.md: indexed")).toBeVisible({ timeout: 15_000 });
+});
