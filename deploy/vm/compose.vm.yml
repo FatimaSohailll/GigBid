@@ -1,0 +1,28 @@
+# Overlay for the public backend VM. The web app runs on Vercel; this VM serves the API over
+# HTTPS for Vercel to forward /api to. Used with the main stack:
+#   docker compose -f infra/docker-compose.yml -f deploy/vm/compose.vm.yml --env-file .env up -d
+#
+# Only Caddy (ports 80 and 443) is meant to be reachable from the internet; the VM's network
+# rules keep every other port closed.
+services:
+  api:
+    environment:
+      APP_ENV: production # session cookies are marked Secure; Vercel serves the site over HTTPS
+      WEB_APP_URL: ${WEB_APP_URL:-http://localhost:3000}
+
+  caddy:
+    image: caddy:2.8.4
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?Set API_DOMAIN in .env to the VM's DNS name}
+    volumes:
+      - ../deploy/vm/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      api: {condition: service_started}
+
+volumes:
+  caddy_data:

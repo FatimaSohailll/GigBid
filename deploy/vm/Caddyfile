@@ -1,0 +1,8 @@
+# HTTPS for the API, with a certificate Caddy obtains and renews by itself.
+{$API_DOMAIN} {
+	encode gzip
+	reverse_proxy api:8000 {
+		# Live run progress is streamed (Server-Sent Events); send it on as it arrives.
+		flush_interval -1
+	}
+}
