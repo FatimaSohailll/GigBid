@@ -82,7 +82,14 @@ TokenSource = Callable[[], Awaitable[str]]
 
 
 def _error_for(text: str) -> MarketplaceError:
+    """Map an Upwork tool error onto the port. Upwork sends JSON with a retryable flag."""
     lowered = text.lower()
+    try:
+        detail = json.loads(text)
+    except json.JSONDecodeError:
+        detail = None
+    if isinstance(detail, dict) and detail.get("retryable") is True:
+        return MarketplaceUnavailable(f"Upwork is temporarily unavailable: {text[:200]}")
     if any(word in lowered for word in ("invalid_token", "unauthor", "401", "expired token")):
         return MarketplaceAuthError("Upwork refused the sign-in. Connect Upwork again in Settings.")
     if ("rate" in lowered and "limit" in lowered) or "429" in lowered:
@@ -418,7 +425,7 @@ class UpworkLiveAdapter:
 
     async def list_conversations(self) -> list[Conversation]:
         listed = await self._call("get_messages", "list_rooms", {"limit": 20})
-        rooms = listed.get("rooms") or listed.get("items") or []
+        rooms = _find(listed, "rooms") or _find(listed, "items") or []  # Upwork nests: data.rooms
         return [
             Conversation(
                 conversation_id=str(room.get("id") or room.get("room_id")),
@@ -435,7 +442,9 @@ class UpworkLiveAdapter:
         listed = await self._call(
             "get_messages", "list_messages", {"room_id": conversation_id, "limit": 50}
         )
-        stories = listed.get("messages") or listed.get("stories") or listed.get("items") or []
+        stories = (
+            _find(listed, "messages") or _find(listed, "stories") or _find(listed, "items") or []
+        )
         messages = [
             Message(
                 message_id=str(item.get("story_id") or item.get("id")),

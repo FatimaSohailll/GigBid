@@ -24,6 +24,7 @@ from agent.marketplace_port import (
     MarketplaceNotFound,
     MarketplaceRateLimited,
     MarketplaceRejected,
+    MarketplaceUnavailable,
     ProposalDraftRequest,
 )
 from agent.nodes import approval
@@ -227,6 +228,10 @@ def test_upwork_budget_text(text: str | None, expected: tuple[float, float]) -> 
         ("Job not found", MarketplaceNotFound),
         ("VJ-JA-10: a proposal already exists", MarketplaceConflict),
         ("charged_amount must be a number", MarketplaceRejected),
+        (
+            '{"error_code":"UPSTREAM","reason":"upstream service error","retryable":true}',
+            MarketplaceUnavailable,
+        ),
     ],
 )
 def test_upwork_errors_map_onto_port_errors(text: str, error: type[Exception]) -> None:
@@ -297,6 +302,27 @@ class FakeUpwork:
             return {"status": "ok", "proposal_id": "upwork-555"}
         if (tool, action) == ("send_message", "send"):
             return {"story_id": "s-1"}
+        if (tool, action) == ("get_messages", "list_rooms"):  # nested, as Upwork returned it live
+            return {"data": {"rooms": [{"id": "room-7"}]}, "hasMore": False, "status": "ok"}
+        if (tool, action) == ("get_messages", "list_messages"):
+            return {
+                "data": {
+                    "messages": [
+                        {
+                            "story_id": "m2",
+                            "message": "Sounds good",
+                            "from_self": True,
+                            "created": "2026-11-14T10:05:00Z",
+                        },
+                        {
+                            "story_id": "m1",
+                            "message": "Can you start?",
+                            "from_self": False,
+                            "created": "2026-11-14T10:00:00Z",
+                        },
+                    ]
+                }
+            }
         raise AssertionError(f"unexpected {tool} {action}")
 
 
@@ -385,6 +411,16 @@ async def test_another_users_proposal_is_not_found(tmp_path: Path) -> None:
     )
     with pytest.raises(MarketplaceNotFound):
         await bob.get_proposal(draft.proposal_id)
+
+
+async def test_rooms_and_messages_are_read_from_upworks_nested_shape(tmp_path: Path) -> None:
+    port = adapter(tmp_path, FakeUpwork())
+    assert [room.conversation_id for room in await port.list_conversations()] == ["room-7"]
+    messages = await port.list_messages("room-7")
+    assert [(item.message_id, item.sender) for item in messages] == [
+        ("m1", "client"),
+        ("m2", "freelancer"),
+    ]
 
 
 async def test_messages_go_to_the_room(tmp_path: Path) -> None:

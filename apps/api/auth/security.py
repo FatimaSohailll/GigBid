@@ -6,7 +6,7 @@ import json
 import secrets
 from typing import Any
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 
 from apps.api.db import Repository
 
@@ -46,8 +46,13 @@ class TokenVault:
         await self._repository.store_oauth(user_id, provider, ciphertext)
 
     async def load(self, user_id: str, provider: str) -> dict[str, Any] | None:
+        """None when nothing is stored, or when it was stored under another key (the user then
+        connects again; a changed key must not crash every request)."""
         ciphertext = await self._repository.oauth_ciphertext(user_id, provider)
         if ciphertext is None:
             return None
-        value: dict[str, Any] = json.loads(self._fernet.decrypt(ciphertext))
+        try:
+            value: dict[str, Any] = json.loads(self._fernet.decrypt(ciphertext))
+        except InvalidToken:
+            return None
         return value

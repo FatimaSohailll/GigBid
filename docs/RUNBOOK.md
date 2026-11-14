@@ -24,6 +24,9 @@ is sent. Set `tracing.enabled` to false in `agent/config.yaml` to send nothing.
 3. Settings, Connected accounts, **Connect Upwork**. You sign in on Upwork's own page; GigBid
    stores the tokens encrypted and refreshes them before they expire.
 
+To check the connection without writing anything, run
+`uv run --locked --env-file .env python -m scripts.upwork_live_check "machine learning"`.
+
 A proposal reaches a client only after two approvals. The first lets GigBid ask Upwork for a
 preview, which sends nothing. The second, **Send on Upwork**, shows Upwork's Connects cost and
 balance and then sends it. Messages have no Upwork preview, so the reply approval is their only
