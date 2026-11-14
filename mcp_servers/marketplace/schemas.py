@@ -44,6 +44,12 @@ class SubmitProposalInput(_ToolInput):
     dry_run: DryRun = False
 
 
+class ConfirmProposalInput(_ToolInput):
+    proposal_id: ResourceId
+    idempotency_key: IdempotencyKey
+    dry_run: DryRun = False
+
+
 class SendMessageInput(_ToolInput):
     conversation_id: ResourceId
     body: str = Field(min_length=1, max_length=4000)

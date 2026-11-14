@@ -1,0 +1,9 @@
+{
+  "client_id": "https://fatimasohailll.github.io/GigBid/oauth/client-metadata.json",
+  "client_name": "GigBid",
+  "client_uri": "https://github.com/FatimaSohailll/GigBid",
+  "redirect_uris": ["http://localhost:8000/auth/upwork/callback"],
+  "grant_types": ["authorization_code", "refresh_token"],
+  "response_types": ["code"],
+  "token_endpoint_auth_method": "none"
+}

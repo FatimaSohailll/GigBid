@@ -18,8 +18,10 @@ graph TD;
 	compliance(compliance)
 	prepare_approval(prepare_approval)
 	submit(submit)
+	send_on_platform(send_on_platform)
 	learn(learn)
 	approval(approval)
+	platform_approval(platform_approval)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> scout;
 	analyst --> reconcile;
@@ -34,6 +36,8 @@ graph TD;
 	decide -.-> __end__;
 	decide -.-> pricing;
 	fit_matcher --> reconcile;
+	platform_approval -.-> learn;
+	platform_approval -.-> send_on_platform;
 	prepare_approval -.-> __end__;
 	prepare_approval -.-> approval;
 	pricing -.-> __end__;
@@ -45,8 +49,11 @@ graph TD;
 	scout -.-> analyst;
 	scout -.-> fit_matcher;
 	scout -.-> risk_assessor;
+	send_on_platform -.-> __end__;
+	send_on_platform -.-> learn;
 	submit -.-> __end__;
 	submit -.-> learn;
+	submit -.-> platform_approval;
 	verify_claims -.-> __end__;
 	verify_claims -.-> critic;
 	writer -.-> __end__;

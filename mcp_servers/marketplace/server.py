@@ -34,8 +34,15 @@ from agent.marketplace_port import (
     SubmissionMode,
     current_trace_id,
 )
+from agent.upwork_oauth import OAuthSettings
 from mcp_servers.marketplace.adapters.gigsim import GigSimAdapter, PerUserRateLimiter
+from mcp_servers.marketplace.adapters.upwork_live import (
+    McpUpworkTools,
+    UpworkDraftStore,
+    upwork_port_factory,
+)
 from mcp_servers.marketplace.schemas import (
+    ConfirmProposalInput,
     ConversationList,
     CreateProposalDraftInput,
     DryRunPreview,
@@ -48,6 +55,7 @@ from mcp_servers.marketplace.schemas import (
     SubmitProposalInput,
 )
 from mcp_servers.marketplace.store import IdempotencyKeyReused, ServerStore, fingerprint
+from mcp_servers.marketplace.upwork_tokens import VaultTokens
 from mcp_servers.tenant_auth import read_user_token
 from mcp_servers.tool_descriptions import TOOL_DESCRIPTIONS
 
@@ -395,6 +403,57 @@ def build_server(
 
         return await audited(tool, ctx, arguments, action)
 
+    @mcp.tool(annotations=IRREVERSIBLE, description=TOOL_DESCRIPTIONS["confirm_proposal"])
+    async def confirm_proposal(
+        request: ConfirmProposalInput,
+        ctx: Context[Any, Any, Any],
+    ) -> ProposalWriteResult:
+        """Send a prepared proposal. Only after the freelancer's second, separate approval."""
+        tool = "confirm_proposal"
+        arguments = request.model_dump()
+        payload = {"proposal_id": request.proposal_id}
+
+        async def action(port: MarketplacePort, call: CallContext) -> ProposalWriteResult:
+            if port.submission_mode is not SubmissionMode.PLATFORM_CONFIRMATION:
+                raise ToolError("invalid_request: this marketplace submits directly")
+            if request.dry_run:
+                proposal = await port.get_proposal(request.proposal_id)
+                cost = proposal.connects_cost or 0
+                balance = proposal.connects_balance
+                blockers = list(proposal.platform_notes)
+                if proposal.status != "awaiting_platform_confirmation":
+                    blockers.append(f"Proposal is '{proposal.status}', not waiting to be sent.")
+                if balance is not None and balance < cost:
+                    blockers.append("Not enough Connects.")
+                preview = DryRunPreview(
+                    tool=tool,
+                    payload={
+                        "job_id": proposal.job_id,
+                        "proposal_id": proposal.proposal_id,
+                        "cover_letter": proposal.cover_letter,
+                        "screening_answers": proposal.screening_answers,
+                        "bid_amount": proposal.bid_amount,
+                    },
+                    connects_cost=cost,
+                    connects_balance=balance if balance is not None else 0,
+                    connects_balance_after=(balance if balance is not None else 0) - cost,
+                    can_execute=not blockers,
+                    blockers=blockers,
+                    requires_platform_confirmation=True,
+                )
+                return ProposalWriteResult(dry_run=True, preview=preview)
+            return await once(
+                tool,
+                call,
+                request.idempotency_key,
+                payload,
+                ProposalWriteResult,
+                lambda: port.confirm_submission(request.proposal_id, request.idempotency_key),
+                "proposal",
+            )
+
+        return await audited(tool, ctx, arguments, action)
+
     @mcp.tool(annotations=IRREVERSIBLE, description=TOOL_DESCRIPTIONS["send_message"])
     async def send_message(
         request: SendMessageInput,
@@ -444,11 +503,7 @@ def gigsim_port_factory(
     base_url: str,
     config: MarketplaceConfig,
 ) -> PortFactory:
-    """Choose the adapter from config. One adapter instance is kept per user."""
-    if config.mode != "gigsim":
-        raise ValueError(
-            f"Marketplace mode '{config.mode}' has no adapter yet; the live adapter is Phase 13."
-        )
+    """The GigSim adapter, one instance per user."""
     limiter = PerUserRateLimiter(
         config.max_requests_per_minute,
         config.max_rate_limit_wait_seconds,
@@ -464,21 +519,76 @@ def gigsim_port_factory(
     return port_for
 
 
+class LiveUserVerifier(TokenVerifier):
+    """Live mode: each GigBid user acts as their own Upwork account, never a shared one."""
+
+    def __init__(self, signing_key: str) -> None:
+        self._signing_key = signing_key
+
+    async def verify_token(self, token: str) -> AccessToken | None:
+        signed = read_user_token(self._signing_key, token)
+        return AccessToken(token=token, client_id=signed[0], scopes=[]) if signed else None
+
+
+def upwork_live_port_factory(env: Mapping[str, str], config: MarketplaceConfig) -> PortFactory:
+    """Live Upwork, with each user's token from the encrypted vault the API fills at sign-in."""
+    from apps.api.auth.security import TokenVault
+    from apps.api.db import Repository, open_pool
+
+    settings = OAuthSettings.from_env(env)
+    if settings is None or not env.get("TOKEN_ENCRYPTION_KEY") or not env.get("DATABASE_URL"):
+        raise ValueError(
+            "Live mode needs MCP_UPWORK_URL, UPWORK_OAUTH_CLIENT_ID, UPWORK_OAUTH_REDIRECT_URI, "
+            "TOKEN_ENCRYPTION_KEY and DATABASE_URL"
+        )
+    pool = open_pool(env["DATABASE_URL"])
+    opened = asyncio.Lock()
+    vault: list[TokenVault] = []
+
+    async def shared_vault() -> TokenVault:
+        async with opened:
+            if not vault:
+                await pool.open()
+                vault.append(TokenVault(env["TOKEN_ENCRYPTION_KEY"], Repository(pool)))
+        return vault[0]
+
+    tokens = VaultTokens(shared_vault, settings)
+    drafts = UpworkDraftStore(
+        Path(env.get("MCP_MARKETPLACE_DB", "data/processed/marketplace_mcp.sqlite3"))
+    )
+    return upwork_port_factory(
+        lambda user_id: McpUpworkTools(
+            settings.mcp_url, tokens.for_user(user_id), config.request_timeout_seconds
+        ),
+        drafts,
+        config,
+    )
+
+
 def create_http_server(environ: Mapping[str, str] | None = None) -> FastMCP:
     """Build the bearer-protected Streamable HTTP server from the environment."""
     env = os.environ if environ is None else environ
-    users = parse_users(env.get("MCP_MARKETPLACE_USERS", ""))
+    config = get_config().marketplace
     host = env.get("MCP_MARKETPLACE_HOST", "127.0.0.1")
     port = int(env.get("MCP_MARKETPLACE_PORT", "8090"))
     public_url = env.get("MCP_MARKETPLACE_PUBLIC_URL", f"http://{host}:{port}")
+    verifier: TokenVerifier
+    if config.mode == "upwork_live":
+        signing_key = env.get("MCP_TENANT_SIGNING_KEY")
+        if not signing_key:
+            raise ValueError("Live mode needs MCP_TENANT_SIGNING_KEY to tell users apart")
+        port_for = upwork_live_port_factory(env, config)
+        verifier = LiveUserVerifier(signing_key)
+    else:
+        users = parse_users(env.get("MCP_MARKETPLACE_USERS", ""))
+        port_for = gigsim_port_factory(
+            users, env.get("GIGSIM_BASE_URL", "http://localhost:8081"), config
+        )
+        verifier = StaticBearerVerifier(users, env.get("MCP_TENANT_SIGNING_KEY"))
     return build_server(
-        gigsim_port_factory(
-            users,
-            env.get("GIGSIM_BASE_URL", "http://localhost:8081"),
-            get_config().marketplace,
-        ),
+        port_for,
         ServerStore(Path(env.get("MCP_MARKETPLACE_DB", "data/processed/marketplace_mcp.sqlite3"))),
-        token_verifier=StaticBearerVerifier(users, env.get("MCP_TENANT_SIGNING_KEY")),
+        token_verifier=verifier,
         auth=AuthSettings(
             issuer_url=AnyHttpUrl(public_url),
             resource_server_url=AnyHttpUrl(public_url),

@@ -31,6 +31,8 @@ class Tools:
             return {"content": "Built a churn model in Python."}
         if tool == "create_proposal_draft":
             return {"proposal": {"proposal_id": "p1", "status": "drafted"}}
+        if tool == "confirm_proposal" and arguments["request"].get("dry_run"):
+            return {"preview": {"connects_cost": 16, "connects_balance": 80, "blockers": []}}
         return {
             "proposal": {
                 "proposal_id": "p1",
@@ -120,6 +122,7 @@ async def test_submission_status_follows_the_marketplace(
     runtime = AgentRuntime(get_config(), None, Tools(confirm=confirm), None)  # type: ignore[arg-type]
     update = await approval.submit(submit_state(), runtime)  # type: ignore[arg-type]
     assert update["status"] is status
+    assert ("platform_preview" in update) is confirm
 
 
 def test_price_rationale_says_why_the_price_was_chosen() -> None:

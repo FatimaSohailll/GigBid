@@ -31,7 +31,7 @@ agent_tools:
   sync: [list_events, get_proposal]
   client_liaison: [list_conversations, list_messages, get_job, free_slots]
   github_ingest: [get_me, search_repositories, get_file_contents]
-  submission: [create_proposal_draft, submit_proposal, send_message, get_connects_balance, create_interview_hold, create_email_draft]
+  submission: [create_proposal_draft, submit_proposal, confirm_proposal, send_message, get_connects_balance, create_interview_hold, create_email_draft]
 
 models:
   active_profile: open

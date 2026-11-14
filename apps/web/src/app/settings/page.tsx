@@ -11,6 +11,7 @@ export default function SettingsPage() {
   const user = useResource(() => call(api.GET("/api/auth/me")), "me");
   const searches = useResource(() => call(api.GET("/api/searches")), "searches");
   const memory = useResource(() => call(api.GET("/api/memory")), "memory");
+  const upwork = useResource(() => call(api.GET("/api/upwork/status")), "upwork");
   const [floor, setFloor] = useState(0);
   const [budget, setBudget] = useState(0);
   const [autonomy, setAutonomy] = useState<Autonomy>("manual");
@@ -58,6 +59,21 @@ export default function SettingsPage() {
   async function removeSearch(id: string) {
     await call(api.DELETE("/api/searches/{search_id}", { params: { path: { search_id: id } } }));
     await searches.reload();
+  }
+
+  async function connectUpwork() {
+    setProblem(undefined);
+    try {
+      const { authorize_url } = await call(api.POST("/api/upwork/connect"));
+      window.location.assign(authorize_url); // Upwork's own sign-in page
+    } catch (error) {
+      setProblem(error instanceof Error ? error.message : "Upwork sign-in could not start.");
+    }
+  }
+
+  async function disconnectUpwork() {
+    await call(api.DELETE("/api/upwork/connect"));
+    await upwork.reload();
   }
 
   async function forget(kind: "style" | "outcome", key: string) {
@@ -142,7 +158,23 @@ export default function SettingsPage() {
         <p>
           {user.data?.marketplace === "gigsim" ? "GigSim simulator: connected" : user.data?.marketplace}
         </p>
-        <p className="muted small">Upwork: not available yet.</p>
+        {!upwork.data?.configured ? (
+          <p className="muted small">Upwork: sign-in is not configured on this server.</p>
+        ) : upwork.data.connected ? (
+          <p className="small">
+            Upwork: connected. Every proposal needs your approval twice before it is sent.{" "}
+            <button type="button" className="ghost" onClick={() => void disconnectUpwork()}>
+              Disconnect
+            </button>
+          </p>
+        ) : (
+          <p className="small">
+            Upwork: not connected.{" "}
+            <button type="button" className="primary" onClick={() => void connectUpwork()}>
+              Connect Upwork
+            </button>
+          </p>
+        )}
       </section>
 
       <section className="panel">

@@ -557,6 +557,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/upwork/connect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Connect
+         * @description Start sign-in. The browser goes to the returned address, which is Upwork's own page.
+         */
+        post: operations["connect_api_upwork_connect_post"];
+        /**
+         * Disconnect
+         * @description Forget the tokens. Revoking access on Upwork itself is done in Upwork's settings.
+         */
+        delete: operations["disconnect_api_upwork_connect_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/upwork/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status */
+        get: operations["status_api_upwork_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -1229,6 +1270,18 @@ export interface components {
             id: string;
             /** Status */
             status: string;
+        };
+        /** UpworkStartOut */
+        UpworkStartOut: {
+            /** Authorize Url */
+            authorize_url: string;
+        };
+        /** UpworkStatusOut */
+        UpworkStatusOut: {
+            /** Configured */
+            configured: boolean;
+            /** Connected */
+            connected: boolean;
         };
         /** UserOut */
         UserOut: {
@@ -2419,6 +2472,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ServiceStatus"];
+                };
+            };
+        };
+    };
+    connect_api_upwork_connect_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                gigbid_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpworkStartOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disconnect_api_upwork_connect_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                gigbid_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    status_api_upwork_status_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                gigbid_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpworkStatusOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

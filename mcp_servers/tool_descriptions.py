@@ -75,6 +75,11 @@ TOOL_DESCRIPTIONS = {
         "Send a message to a client in a conversation by conversation_id. Needs the "
         "freelancer's explicit approval. Set dry_run to true to only preview it."
     ),
+    "confirm_proposal": (
+        "Send a proposal that the marketplace has only prepared, by proposal_id. Use only where "
+        "submit_proposal returned requires_platform_confirmation, and only after the "
+        "freelancer's second, separate approval. Set dry_run to true to only preview the cost."
+    ),
     "submit_proposal": (
         "Send an existing draft proposal to the client by proposal_id and spend its Connects. "
         "Needs the freelancer's explicit approval. Set dry_run to true to only preview the "

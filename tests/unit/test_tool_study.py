@@ -231,9 +231,17 @@ def test_upwork_connects_as_one_user_only_when_configured() -> None:
     assert connection["upwork"]["headers"]["Authorization"] == "Bearer t"
 
 
+# Added after R&D question A was measured, for live Upwork's second approval (A4).
+ADDED_AFTER_STUDY = {"confirm_proposal"}
+
+
 def test_shipped_descriptions_are_exactly_what_was_measured() -> None:
     measured = {t["function"]["name"]: t["function"] for t in ToolSet("rewritten").definitions}
-    assert TOOL_DESCRIPTIONS == {name: tool["description"] for name, tool in measured.items()}
+    shipped = {
+        name: text for name, text in TOOL_DESCRIPTIONS.items() if name not in ADDED_AFTER_STUDY
+    }
+    assert shipped == {name: tool["description"] for name, tool in measured.items()}
+    assert ADDED_AFTER_STUDY <= set(TOOL_DESCRIPTIONS)
 
 
 def test_gigsim_submits_directly() -> None:

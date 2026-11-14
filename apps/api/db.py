@@ -190,6 +190,11 @@ class Repository:
         )
         return bytes(row["ciphertext"]) if row else None
 
+    async def delete_oauth(self, user_id: str, provider: str) -> None:
+        await self._run(
+            "delete from oauth_tokens where user_id=%s and provider=%s", (user_id, provider)
+        )
+
     # ---- Saved searches ------------------------------------------------------------------
 
     async def add_search(

@@ -6,7 +6,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException
 from pydantic import ValidationError
 
-from agent.nodes.approval import ApprovalDecision
+from agent.nodes.approval import PLATFORM_STAGE, ApprovalDecision
 from agent.nodes.client_liaison import ReplyDecision
 from apps.api.schemas.api import ApprovalDetail, ApprovalIn, ApprovalSummary, QueuedRun
 from apps.api.services import CurrentUser, Services, read_thread
@@ -66,6 +66,12 @@ async def decide(
         decision = _decision(run["kind"], body)
     except ValidationError as error:
         raise HTTPException(422, error.errors()[0]["msg"]) from None
+    if body.action == "edit":
+        _, payload = await read_thread(services, run["kind"], thread_id)
+        if payload and payload.get("stage") == PLATFORM_STAGE:
+            raise HTTPException(
+                422, "The marketplace has prepared this proposal; approve or reject it."
+            )
     if not await services.repository.claim_approval(user["id"], thread_id):
         raise HTTPException(409, "This approval has already been decided.")
     await services.queue.enqueue_job(
