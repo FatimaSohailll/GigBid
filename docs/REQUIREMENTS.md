@@ -84,7 +84,7 @@ proposal is built (`agent/single_agent.py`) and was run once on Groq for a DevSi
 | C5 | Interrupts with full payload; approve, edit, reject | `agent/nodes/approval.py`, `agent/nodes/critic.py`, `apps/api/routers/proposals.py`, `apps/web/src/app/studio/[id]` | Tested; deleted evidence is caught by the Critic and dropped on regeneration | `tests/integration/test_bid_graph.py`, `apps/web/tests/e2e/gigbid.spec.ts` | None |
 | C6 | Postgres checkpointer, crash and resume, replay | `agent/checkpoint.py`, `infra/docker-compose.yml` | Tested | `tests/integration/test_crash_recovery.py` kills real processes | Demo from the UI, Phase 9 |
 | C7 | Retries, timeouts, fallback model, dead-letter state | `agent/graphs/bid_graph.py`, `agent/llm.py` | Tested | `tests/integration/test_bid_graph.py`, `tests/unit/test_agent_units.py` | Fallback is now `llama-3.1-8b-instant` on Groq and is switched off in evaluations; not yet triggered against the live provider |
-| RQ-C | ReAct, supervisor and graph comparison on 50 jobs | None | Missing | None | Phase 14 |
+| RQ-C | ReAct, supervisor and graph comparison on 50 jobs | `evals/baselines.py`, `evals/runners/orchestration_compare.py` | Implemented, not run by the student's choice | `tests/unit/test_part_c_baselines.py` | Run on 50 jobs; needs about 150 job runs of model quota |
 
 ## Part D: Web interface
 

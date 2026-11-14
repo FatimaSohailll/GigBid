@@ -11,7 +11,7 @@ from typing import Any, Protocol
 
 from langgraph.types import Command
 
-from agent.guardrails import defences_off
+from agent.guardrails import defences_off, scan_outgoing_text
 from agent.handoffs import RiskFlag
 from agent.nodes.verifier import check_final_text
 from agent.runtime import AgentRuntime
@@ -39,6 +39,9 @@ class JobResult:
     unsupported_final_claims: list[str] = field(default_factory=list)
     final_check_tokens: int = 0
     final_check_cost_usd: float | None = None
+    compliance_caught: int = 0  # problems the design's own Compliance step found
+    compliance_issues_in_output: int = 0  # problems the shared scanner finds in the text sent
+    writes_attempted: list[str] = field(default_factory=list)
     tokens: int = 0
     cost_usd: float | None = None
     latency_seconds: float = 0.0
@@ -135,6 +138,12 @@ class GraphJobRunner:
         result = self._result(state, started)
         if state.get("drafts"):
             await self._check_final_text(state, result)
+            result.compliance_caught = sum(
+                len(verdict.violations) for verdict in state.get("compliance_verdicts", [])
+            )
+            result.compliance_issues_in_output = len(
+                scan_outgoing_text(state["drafts"][-1].cover_letter).findings
+            )
         return result
 
     async def _check_final_text(self, state: dict[str, Any], result: JobResult) -> None:
