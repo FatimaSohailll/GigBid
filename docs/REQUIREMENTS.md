@@ -59,7 +59,7 @@ proposal is built (`agent/single_agent.py`) and was run once on Groq for a DevSi
 | A4 | Upwork adapter, OAuth, encrypted per-user tokens, drafts only | `agent/marketplace_port.py` (submission mode only) | Deferred, not complete | None | Adapter and OAuth; needs an Upwork OAuth client |
 | A5 | Two third-party servers with trust rationale | `agent/mcp_client.py`, `docs/TOOLS.md` | Deferred, not complete | GitHub read and repository ingestion checked live; Upwork not connected | Stays incomplete until Upwork and GitHub are both verified; finish `docs/TOOLS.md` |
 | A6 | Per-agent allowlists, timeouts, retries, degraded mode | `agent/mcp_client.py`, `worker/tasks.py`, `/api/status` | Tested | `tests/integration/test_api_worker.py`, `apps/web/tests/e2e/gigbid.spec.ts` | None |
-| A7 | In-memory tests, Inspector screenshots, schema snapshot | `tests/contract/` | Partial, Marketplace Tested | `mcp_servers/marketplace/tests/`, `tests/contract/` | Other servers; screenshots by student |
+| A7 | In-memory tests, Inspector screenshots, schema snapshot | `tests/contract/`, `mcp_servers/*/tests/` | Tested | In-memory client tests for all three servers; schema snapshots in `tests/contract/` for all three; `tests/contract/test_tool_rules.py`; Inspector screenshots in `docs/TOOLS.md` | None |
 | RQ-A | Tool granularity study on 40 tasks | `evals/runners/tool_granularity.py`, `evals/results/tool_granularity.json`, `docs/RND_A_TOOL_GRANULARITY.md`, `mcp_servers/tool_descriptions.py` | Tested, measured on Qwen3 8B | `tests/unit/test_tool_study.py` | Include in the R&D report |
 
 ## Part B: Advanced RAG

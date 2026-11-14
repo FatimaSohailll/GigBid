@@ -29,6 +29,23 @@ The Workspace server uses a documented local backend, as A3 permits. It never se
 The Portfolio server also exposes the resource templates `portfolio://case/{id}` and
 `portfolio://proposal/{id}`, and the prompts `answer_screening_question` and `prove_requirement`.
 
+## MCP Inspector screenshots
+
+Taken with MCP Inspector v2.13.0 against each server running over Streamable HTTP with bearer
+auth, on DevSim data. Tokens are kept out of every image.
+
+| Server | What it shows | Image |
+|---|---|---|
+| Marketplace | The 12 tools | [marketplace_tools.jpg](images/inspector/marketplace_tools.jpg) |
+| Marketplace | `search_jobs` with its read-only, idempotent and open-world annotations, returning DevSim jobs | [marketplace_search_jobs.jpg](images/inspector/marketplace_search_jobs.jpg) |
+| Marketplace | `create_proposal_draft` with `dry_run: true`: a preview and `"proposal": null`, so nothing was saved | [marketplace_dry_run.jpg](images/inspector/marketplace_dry_run.jpg) |
+| Portfolio | The 3 tools | [portfolio_tools.jpg](images/inspector/portfolio_tools.jpg) |
+| Portfolio | `search_evidence` returning typed, dated, scored evidence | [portfolio_search_evidence.jpg](images/inspector/portfolio_search_evidence.jpg) |
+| Portfolio | Both resource templates, with `portfolio://case/model-serve` read | [portfolio_resources.jpg](images/inspector/portfolio_resources.jpg) |
+| Portfolio | Both prompts, with `prove_requirement` filled in; the requirement is delimited as data | [portfolio_prompts.jpg](images/inspector/portfolio_prompts.jpg) |
+| Workspace | The 3 tools | [workspace_tools.jpg](images/inspector/workspace_tools.jpg) |
+| Workspace | `free_slots` returning three working-hours slots | [workspace_free_slots.jpg](images/inspector/workspace_free_slots.jpg) |
+
 ## Third-party servers
 
 | Tool | Server | Read or write | Annotations | Auth |

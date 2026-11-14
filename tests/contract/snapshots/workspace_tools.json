@@ -6,6 +6,7 @@
       "openWorldHint": false,
       "readOnlyHint": false
     },
+    "description": "Save an email as a draft that is never sent automatically. Use for email, not for messages to a client on the marketplace.",
     "input": {
       "$defs": {
         "CreateEmailDraftInput": {
@@ -95,6 +96,7 @@
       "openWorldHint": false,
       "readOnlyHint": false
     },
+    "description": "Book a tentative interview hold on the calendar at a specific start time. Needs the freelancer's approval.",
     "input": {
       "$defs": {
         "CreateHoldInput": {
@@ -189,6 +191,7 @@
       "openWorldHint": false,
       "readOnlyHint": true
     },
+    "description": "Find open times on the freelancer's calendar within working hours, soonest first. Use before proposing or booking an interview.",
     "input": {
       "properties": {
         "count": {
