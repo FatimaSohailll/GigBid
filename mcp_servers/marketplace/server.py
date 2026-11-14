@@ -21,6 +21,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from agent.config import MarketplaceConfig, get_config
+from agent.logging_setup import install_log_masking
 from agent.marketplace_port import (
     ClientHistory,
     ConnectsBalance,
@@ -567,6 +568,7 @@ def upwork_live_port_factory(env: Mapping[str, str], config: MarketplaceConfig) 
 
 def create_http_server(environ: Mapping[str, str] | None = None) -> FastMCP:
     """Build the bearer-protected Streamable HTTP server from the environment."""
+    install_log_masking()
     env = os.environ if environ is None else environ
     config = get_config().marketplace
     host = env.get("MCP_MARKETPLACE_HOST", "127.0.0.1")

@@ -44,7 +44,7 @@ Data source: DevSim stand-in data, not GigSim. Deployed variant: `combo:decompos
 
 | Variant | Evidence Recall@5, whole job | Evidence Recall@5, per requirement | nDCG@10, per requirement | Unsupported claims per proposal | Judge score | Simulated reply rate | p95 latency (s) | Cost per proposal (USD) | Proposals measured |
 |---|---|---|---|---|---|---|---|---|---|
-| V0 | 0.093 | 0.4132 | 0.4636 | 0 | 3.5 | 0.25 | 104.22 | 0.004155 | 4 |
+| V0 | 0.093 | 0.4132 | 0.4636 | 0 | 3.8 | 0.4 | 137.26 | 0.004372 | 5 |
 | Your best | 0.3074 | 0.5755 | 0.6303 | not measured | not measured | not measured | not measured | not measured | not measured |
 
 Judge calibration, Cohen's kappa: not measured.

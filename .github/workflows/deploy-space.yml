@@ -1,0 +1,47 @@
+name: Deploy to Hugging Face Space
+
+# Publishes the current main branch to the Space, which builds deploy/space/Dockerfile on
+# Hugging Face's machines. Needs a repository secret HF_TOKEN (a write token) and a repository
+# variable HF_SPACE such as "your-name/gigbid". Run it from the Actions tab.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-space
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the settings
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
+        run: |
+          test -n "$HF_TOKEN" || (echo "Add the repository secret HF_TOKEN" && exit 1)
+          test -n "$HF_SPACE" || (echo "Add the repository variable HF_SPACE" && exit 1)
+      - name: Assemble what the Space builds
+        run: |
+          mkdir ../space
+          git archive HEAD | tar -x -C ../space
+          rm -rf ../space/evals/results ../space/.github
+          cp deploy/space/Dockerfile ../space/Dockerfile
+          cp deploy/space/README.md ../space/README.md
+      - name: Push to the Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
+        working-directory: ../space
+        run: |
+          git init -q -b main
+          git config user.name "GigBid deploy"
+          git config user.email "deploy@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy ${GITHUB_SHA::7}"
+          git push --force "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE}" main

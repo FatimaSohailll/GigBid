@@ -38,10 +38,9 @@ guards:
 api:
 	uv run --locked uvicorn apps.api.main:app --reload --port 8000
 
-# These fail on purpose until they are built, so nothing can pass without doing the work.
+# The whole stack: web, API, worker, MCP servers, DevSim, Postgres, Redis, Qdrant and Ollama.
 dev:
-	@echo make dev is not built yet. It arrives with the Docker stack in Phase 16.
-	@exit 1
+	docker compose -f infra/docker-compose.yml --env-file .env up --build
 
 seed:
 	uv run --locked python -m devsim.datagen --out data/processed/devsim
@@ -57,6 +56,7 @@ eval:
 	uv run --locked python -m evals.runners.gigsim_outcomes --judge
 	uv run --locked python -m evals.results_table
 
+# The stack in the background, ready for a reviewer: open the web app and sign in with DEMO_EMAIL.
 demo:
-	@echo make demo is not built yet. It needs the bid graph and web interface.
-	@exit 1
+	docker compose -f infra/docker-compose.yml --env-file .env up --build --detach --wait web api worker
+	@echo GigBid is running at http://localhost:3000. Sign in with DEMO_EMAIL and DEMO_PASSWORD from .env.

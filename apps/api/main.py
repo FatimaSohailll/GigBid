@@ -20,6 +20,7 @@ from agent.config import get_config
 from agent.graphs.bid_graph import build_bid_graph
 from agent.graphs.conversation_graph import build_conversation_graph
 from agent.llm import ModelRouter
+from agent.logging_setup import install_log_masking
 from agent.marketplace_port import current_trace_id
 from agent.memory.store import LongTermMemory
 from agent.runtime import AgentRuntime
@@ -83,6 +84,8 @@ async def build_services() -> tuple[ApiServices, Callable[[], Awaitable[None]]]:
 
 
 def create_app(services: ApiServices | None = None) -> FastAPI:
+    install_log_masking()
+
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         if services is not None:
@@ -106,7 +109,8 @@ def create_app(services: ApiServices | None = None) -> FastAPI:
             response: Response = await call_next(request)
         finally:
             current_trace_id.reset(token)
-        response.headers["X-Trace-Id"] = trace_id
+        # A request that resumes a run adopts that run's trace id (see adopt_trace).
+        response.headers["X-Trace-Id"] = request.state.trace_id
         return response
 
     @app.get("/health", tags=["system"])

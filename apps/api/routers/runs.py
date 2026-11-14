@@ -3,7 +3,7 @@
 import uuid
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from agent.tracing import trace_url
@@ -15,7 +15,7 @@ from apps.api.schemas.api import (
     RunOut,
     TraceLinkOut,
 )
-from apps.api.services import ApiServices, CurrentUser, Services, read_thread
+from apps.api.services import ApiServices, CurrentUser, Services, adopt_trace, read_thread
 from apps.api.streaming import event_stream
 
 router = APIRouter(prefix="/api/runs", tags=["runs"])
@@ -86,11 +86,12 @@ async def checkpoints(thread_id: str, user: CurrentUser, services: Services) -> 
 
 @router.post("/{thread_id}/replay", response_model=QueuedRun, status_code=202)
 async def replay(
-    thread_id: str, body: ReplayIn, user: CurrentUser, services: Services
+    thread_id: str, body: ReplayIn, user: CurrentUser, services: Services, request: Request
 ) -> QueuedRun:
     run = await services.repository.run(user["id"], thread_id)
     if run is None:
         raise HTTPException(404, "Run not found.")
+    adopt_trace(request, run["trace_id"])
     point = next(
         (
             item

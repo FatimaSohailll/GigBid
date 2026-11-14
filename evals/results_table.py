@@ -72,11 +72,12 @@ def replace_block(text: str, block: str) -> str:
     return pattern.sub(lambda _: f"{START}\n{block}\n{END}", text)
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    """argv defaults to the command line; callers inside another script pass their own."""
     options = argparse.ArgumentParser(description=__doc__)
     options.add_argument("--source", default="devsim")
     options.add_argument("--readme", type=Path, default=Path("README.md"))
-    arguments = options.parse_args()
+    arguments = options.parse_args(argv)
     block = build_block(get_config().rag.variant, arguments.source, RESULTS_DIR)
     text = arguments.readme.read_bytes().decode("utf-8")
     arguments.readme.write_bytes(replace_block(text, block).encode("utf-8"))

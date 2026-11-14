@@ -12,6 +12,7 @@ from langgraph.store.postgres.aio import AsyncPostgresStore
 
 from agent.checkpoint import checkpoint_serde
 from agent.config import get_config
+from agent.logging_setup import install_log_masking
 from agent.mcp_client import Toolbox, ToolGateway, github_connection
 from agent.runtime import AgentRuntime, default_runtime
 from apps.api.db import Repository, open_pool
@@ -27,6 +28,9 @@ from worker.tasks import (
     sync_tick,
     sync_user,
 )
+
+# arq configures its own log handlers; masking applies to every record it formats.
+install_log_masking()
 
 _JOB_TIMEOUT_SECONDS = 1_200
 FUNCTIONS = [
