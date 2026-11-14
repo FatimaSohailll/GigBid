@@ -132,7 +132,7 @@ async def learn(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
     job = state["job"]
     await runtime.memory.record_edits(state["user_id"], job["job_id"], state.get("style_edits", []))
     proposal_id = state.get("proposal_id")
-    if proposal_id:
+    if proposal_id and state.get("status") == ThreadStatus.SUBMITTED:
         await runtime.memory.record_submission(
             state["user_id"], proposal_id, job["category"], state["drafts"][-1].evidence_ids
         )
@@ -161,7 +161,23 @@ async def submit(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
             }
         },
     )
+    update: dict[str, Any] = {}
+    if submitted["proposal"].get("requires_platform_confirmation"):
+        # The marketplace only prepared it. Show its preview and wait for a second approval.
+        preview = await runtime.tools.call(
+            "submission",
+            "confirm_proposal",
+            {
+                "request": {
+                    "proposal_id": proposal_id,
+                    "idempotency_key": idempotency_key(state, "confirm", draft.version),
+                    "dry_run": True,
+                }
+            },
+        )
+        update["platform_preview"] = preview["preview"]
     return {
+        **update,
         "proposal_id": proposal_id,
         "status": (
             ThreadStatus.AWAITING_PLATFORM_CONFIRMATION
@@ -174,6 +190,64 @@ async def submit(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
                 status=submitted["proposal"]["status"],
                 recorded_at=datetime.now(UTC),
                 details={"connects_spent": submitted["proposal"]["connects_spent"]},
+            )
+        ],
+    }
+
+
+PLATFORM_STAGE = "platform_confirmation"
+
+
+def platform_payload(state: BidState) -> dict[str, Any]:
+    """The second approval: the same proposal, with what the marketplace says it will cost."""
+    return {
+        **approval_payload(state),
+        "stage": PLATFORM_STAGE,
+        "proposal_id": state["proposal_id"],
+        "dry_run_preview": state["platform_preview"],
+    }
+
+
+async def platform_approval(state: BidState) -> dict[str, Any]:
+    """Nothing reaches the client until this second, separate approval. Reads state only."""
+    decision = ApprovalDecision.model_validate(interrupt(platform_payload(state)))
+    approved = decision.action == "approve"
+    record = ApprovalRecord(
+        action=ApprovalAction.APPROVE if approved else ApprovalAction.REJECT,
+        user_id=state["user_id"],
+        decided_at=datetime.now(UTC),
+        reason=decision.reason or (None if approved else "Edited after the preview was prepared"),
+    )
+    return {
+        "approvals": [record],
+        "status": ThreadStatus.RUNNING if approved else ThreadStatus.REJECTED,
+    }
+
+
+async def send_on_platform(state: BidState, runtime: AgentRuntime) -> dict[str, Any]:
+    """Send the prepared proposal. The key is stable, so a crash and re-run cannot send twice."""
+    latest = state.get("approvals", [])[-1:]
+    if not latest or latest[0].action is not ApprovalAction.APPROVE:
+        raise PermissionError("Refusing to send without the second approval")
+    draft = state["drafts"][-1]
+    sent = await runtime.tools.call(
+        "submission",
+        "confirm_proposal",
+        {
+            "request": {
+                "proposal_id": state["proposal_id"],
+                "idempotency_key": idempotency_key(state, "confirm", draft.version),
+            }
+        },
+    )
+    return {
+        "status": ThreadStatus.SUBMITTED,
+        "outcomes": [
+            OutcomeRecord(
+                proposal_id=state["proposal_id"],
+                status=sent["proposal"]["status"],
+                recorded_at=datetime.now(UTC),
+                details={"connects_spent": sent["proposal"]["connects_spent"]},
             )
         ],
     }

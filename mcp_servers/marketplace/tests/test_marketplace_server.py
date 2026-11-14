@@ -110,7 +110,7 @@ READ_TOOLS = {
     "list_messages",
     "list_events",
 }
-WRITE_TOOLS = {"create_proposal_draft", "submit_proposal", "send_message"}
+WRITE_TOOLS = {"create_proposal_draft", "submit_proposal", "confirm_proposal", "send_message"}
 
 
 async def test_annotations_are_correct(session: ClientSession) -> None:
@@ -124,6 +124,7 @@ async def test_annotations_are_correct(session: ClientSession) -> None:
         assert not hints.readOnlyHint and hints.idempotentHint
     assert not tools["create_proposal_draft"].annotations.destructiveHint
     assert tools["submit_proposal"].annotations.destructiveHint
+    assert tools["confirm_proposal"].annotations.destructiveHint
     assert tools["send_message"].annotations.destructiveHint
 
 

@@ -90,6 +90,10 @@ class Proposal(_Record):
     created_at: datetime
     submitted_at: datetime | None = None
     requires_platform_confirmation: bool = False
+    # Filled by a marketplace that prepares a preview first (Upwork), for the final approval.
+    connects_cost: int | None = None
+    connects_balance: int | None = None
+    platform_notes: list[str] = Field(default_factory=list)
 
 
 class Conversation(_Record):
@@ -170,7 +174,8 @@ class SubmissionMode(StrEnum):
     """What "submit" means on this marketplace, so the graph need not know which one it uses."""
 
     DIRECT = "direct"  # GigSim: the marketplace receives the proposal
-    PLATFORM_CONFIRMATION = "platform_confirmation"  # Upwork: the user confirms the draft there
+    # Upwork: submit only prepares a preview; a second human approval confirms it.
+    PLATFORM_CONFIRMATION = "platform_confirmation"
 
 
 class MarketplacePort(Protocol):
@@ -207,6 +212,10 @@ class MarketplacePort(Protocol):
     ) -> Proposal: ...
 
     async def submit_proposal(self, proposal_id: str, idempotency_key: str) -> Proposal: ...
+
+    async def confirm_submission(self, proposal_id: str, idempotency_key: str) -> Proposal:
+        """Send a proposal that submit_proposal only prepared. PLATFORM_CONFIRMATION only."""
+        ...
 
     async def send_message(
         self,

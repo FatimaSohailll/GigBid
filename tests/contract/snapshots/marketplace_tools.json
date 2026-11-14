@@ -1,4 +1,256 @@
 {
+  "confirm_proposal": {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "description": "Send a proposal that the marketplace has only prepared, by proposal_id. Use only where submit_proposal returned requires_platform_confirmation, and only after the freelancer's second, separate approval. Set dry_run to true to only preview the cost.",
+    "input": {
+      "$defs": {
+        "ConfirmProposalInput": {
+          "additionalProperties": false,
+          "properties": {
+            "dry_run": {
+              "default": false,
+              "description": "If true, return what would be sent and what it costs, and send nothing.",
+              "title": "Dry Run",
+              "type": "boolean"
+            },
+            "idempotency_key": {
+              "description": "Unique per intended action. Reuse the same value when retrying it.",
+              "maxLength": 128,
+              "minLength": 8,
+              "pattern": "^[A-Za-z0-9_.:-]+$",
+              "title": "Idempotency Key",
+              "type": "string"
+            },
+            "proposal_id": {
+              "maxLength": 128,
+              "minLength": 1,
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          },
+          "required": [
+            "proposal_id",
+            "idempotency_key"
+          ],
+          "title": "ConfirmProposalInput",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "request": {
+          "$ref": "#/$defs/ConfirmProposalInput"
+        }
+      },
+      "required": [
+        "request"
+      ],
+      "title": "confirm_proposalArguments",
+      "type": "object"
+    },
+    "output": {
+      "$defs": {
+        "DryRunPreview": {
+          "properties": {
+            "blockers": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Blockers",
+              "type": "array"
+            },
+            "can_execute": {
+              "title": "Can Execute",
+              "type": "boolean"
+            },
+            "connects_balance": {
+              "title": "Connects Balance",
+              "type": "integer"
+            },
+            "connects_balance_after": {
+              "title": "Connects Balance After",
+              "type": "integer"
+            },
+            "connects_cost": {
+              "title": "Connects Cost",
+              "type": "integer"
+            },
+            "payload": {
+              "additionalProperties": true,
+              "title": "Payload",
+              "type": "object"
+            },
+            "requires_platform_confirmation": {
+              "default": false,
+              "title": "Requires Platform Confirmation",
+              "type": "boolean"
+            },
+            "tool": {
+              "title": "Tool",
+              "type": "string"
+            }
+          },
+          "required": [
+            "tool",
+            "payload",
+            "connects_cost",
+            "connects_balance",
+            "connects_balance_after",
+            "can_execute"
+          ],
+          "title": "DryRunPreview",
+          "type": "object"
+        },
+        "Proposal": {
+          "properties": {
+            "bid_amount": {
+              "title": "Bid Amount",
+              "type": "number"
+            },
+            "connects_balance": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Connects Balance"
+            },
+            "connects_cost": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Connects Cost"
+            },
+            "connects_spent": {
+              "default": 0,
+              "title": "Connects Spent",
+              "type": "integer"
+            },
+            "cover_letter": {
+              "title": "Cover Letter",
+              "type": "string"
+            },
+            "created_at": {
+              "format": "date-time",
+              "title": "Created At",
+              "type": "string"
+            },
+            "freelancer_id": {
+              "title": "Freelancer Id",
+              "type": "string"
+            },
+            "job_id": {
+              "title": "Job Id",
+              "type": "string"
+            },
+            "platform_notes": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Platform Notes",
+              "type": "array"
+            },
+            "proposal_id": {
+              "title": "Proposal Id",
+              "type": "string"
+            },
+            "requires_platform_confirmation": {
+              "default": false,
+              "title": "Requires Platform Confirmation",
+              "type": "boolean"
+            },
+            "screening_answers": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Screening Answers",
+              "type": "array"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "submitted_at": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Submitted At"
+            }
+          },
+          "required": [
+            "proposal_id",
+            "job_id",
+            "freelancer_id",
+            "cover_letter",
+            "bid_amount",
+            "status",
+            "created_at"
+          ],
+          "title": "Proposal",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "dry_run": {
+          "title": "Dry Run",
+          "type": "boolean"
+        },
+        "preview": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DryRunPreview"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "proposal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Proposal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "replayed": {
+          "default": false,
+          "title": "Replayed",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "dry_run"
+      ],
+      "title": "ProposalWriteResult",
+      "type": "object"
+    }
+  },
   "create_proposal_draft": {
     "annotations": {
       "destructiveHint": false,
@@ -135,6 +387,30 @@
               "title": "Bid Amount",
               "type": "number"
             },
+            "connects_balance": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Connects Balance"
+            },
+            "connects_cost": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Connects Cost"
+            },
             "connects_spent": {
               "default": 0,
               "title": "Connects Spent",
@@ -156,6 +432,13 @@
             "job_id": {
               "title": "Job Id",
               "type": "string"
+            },
+            "platform_notes": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Platform Notes",
+              "type": "array"
             },
             "proposal_id": {
               "title": "Proposal Id",
@@ -605,6 +888,30 @@
           "title": "Bid Amount",
           "type": "number"
         },
+        "connects_balance": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Connects Balance"
+        },
+        "connects_cost": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Connects Cost"
+        },
         "connects_spent": {
           "default": 0,
           "title": "Connects Spent",
@@ -626,6 +933,13 @@
         "job_id": {
           "title": "Job Id",
           "type": "string"
+        },
+        "platform_notes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Platform Notes",
+          "type": "array"
         },
         "proposal_id": {
           "title": "Proposal Id",
@@ -1403,6 +1717,30 @@
               "title": "Bid Amount",
               "type": "number"
             },
+            "connects_balance": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Connects Balance"
+            },
+            "connects_cost": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Connects Cost"
+            },
             "connects_spent": {
               "default": 0,
               "title": "Connects Spent",
@@ -1424,6 +1762,13 @@
             "job_id": {
               "title": "Job Id",
               "type": "string"
+            },
+            "platform_notes": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Platform Notes",
+              "type": "array"
             },
             "proposal_id": {
               "title": "Proposal Id",

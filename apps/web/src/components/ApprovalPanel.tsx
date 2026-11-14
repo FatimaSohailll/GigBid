@@ -10,6 +10,8 @@ export interface DryRunPreview {
   can_execute: boolean;
   blockers: string[];
   payload: Record<string, unknown>;
+  /** True when the marketplace only prepares the proposal and a second approval sends it. */
+  requires_platform_confirmation?: boolean;
 }
 
 interface Props {

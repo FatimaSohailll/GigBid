@@ -25,7 +25,17 @@ from agent.memory.store import LongTermMemory
 from agent.runtime import AgentRuntime
 from apps.api.auth.security import TokenVault
 from apps.api.db import Repository, open_pool
-from apps.api.routers import analytics, approvals, auth, jobs, messages, proposals, runs, settings
+from apps.api.routers import (
+    analytics,
+    approvals,
+    auth,
+    jobs,
+    messages,
+    proposals,
+    runs,
+    settings,
+    upwork,
+)
 from apps.api.services import ApiServices, marketplace_health_url
 from rag.index.corpus import CorpusStore
 
@@ -109,7 +119,7 @@ def create_app(services: ApiServices | None = None) -> FastAPI:
             return JSONResponse({"status": "degraded"}, status_code=503)
         return JSONResponse({"status": "ok", "service": "gigbid-api"})
 
-    for module in (auth, jobs, proposals, approvals, messages, runs, analytics, settings):
+    for module in (auth, jobs, proposals, approvals, messages, runs, analytics, settings, upwork):
         app.include_router(module.router)
     return app
 

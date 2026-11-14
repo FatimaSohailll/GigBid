@@ -71,6 +71,19 @@ def _after_approval(state: BidState) -> str:
     }[state["approvals"][-1].action]
 
 
+def _after_submit(state: BidState) -> str:
+    if failed(state):
+        return END
+    waiting = state.get("status") == ThreadStatus.AWAITING_PLATFORM_CONFIRMATION
+    return "platform_approval" if waiting else "learn"
+
+
+def _after_platform_approval(state: BidState) -> str:
+    return (
+        "send_on_platform" if state["approvals"][-1].action is ApprovalAction.APPROVE else "learn"
+    )
+
+
 def build_bid_graph(
     runtime: AgentRuntime,
     checkpointer: BaseCheckpointSaver[Any] | None = None,
@@ -90,11 +103,13 @@ def build_bid_graph(
         "compliance": compliance.run,
         "prepare_approval": approval.prepare,
         "submit": approval.submit,
+        "send_on_platform": approval.send_on_platform,
         "learn": approval.learn,
     }
     for name, function in work.items():
         graph.add_node(name, guarded(name, function, runtime))
     graph.add_node("approval", approval.approval)
+    graph.add_node("platform_approval", approval.platform_approval)
 
     graph.add_edge(START, "scout")
     graph.add_conditional_edges("scout", _after_scout, [*_ANALYSIS_NODES, END])
@@ -113,6 +128,10 @@ def build_bid_graph(
     graph.add_conditional_edges("compliance", _after_compliance, ["prepare_approval", END])
     graph.add_conditional_edges("prepare_approval", end_if_failed("approval"), ["approval", END])
     graph.add_conditional_edges("approval", _after_approval, ["submit", "compliance", "learn"])
-    graph.add_conditional_edges("submit", end_if_failed("learn"), ["learn", END])
+    graph.add_conditional_edges("submit", _after_submit, ["platform_approval", "learn", END])
+    graph.add_conditional_edges(
+        "platform_approval", _after_platform_approval, ["send_on_platform", "learn"]
+    )
+    graph.add_conditional_edges("send_on_platform", end_if_failed("learn"), ["learn", END])
     graph.add_edge("learn", END)
     return graph.compile(checkpointer=checkpointer)

@@ -16,6 +16,7 @@ output schemas and record to the append-only audit log.
 | `list_events` | Marketplace | Read | yes / no / yes | Bearer |
 | `create_proposal_draft` | Marketplace | Write (`idempotency_key`, `dry_run`) | no / no / yes | Bearer |
 | `submit_proposal` | Marketplace | Write, spends Connects (`idempotency_key`, `dry_run`) | no / yes / yes | Bearer |
+| `confirm_proposal` | Marketplace | Write, sends a proposal the marketplace only prepared; live Upwork only (`idempotency_key`, `dry_run`) | no / yes / yes | Bearer |
 | `send_message` | Marketplace | Write (`idempotency_key`, `dry_run`) | no / yes / yes | Bearer |
 | `search_evidence` | Portfolio | Read | yes / no / yes | Bearer, or stdio for a local host |
 | `get_case_study` | Portfolio | Read | yes / no / yes | Bearer, or stdio for a local host |
@@ -57,7 +58,25 @@ auth, on DevSim data. Tokens are kept out of every image.
 GitHub trust rationale: maintained by GitHub, used only by ingestion, restricted by a read-only
 token, the server's read-only mode and a name allowlist. Fetched repository text is untrusted data.
 
-Upwork trust rationale: Upwork's own server at `mcp.upwork.com`, reached only through the marketplace
-port with each user's encrypted OAuth token; every write stays a draft the user confirms on Upwork.
+Upwork trust rationale: Upwork's own server at `mcp.upwork.com`, reached only by the live adapter
+behind the marketplace port, with each user's own OAuth token kept encrypted; a proposal is sent
+only after two separate approvals in GigBid.
 
-Upwork's tool list needs a signed-in account, so its rows are added when that sign-in exists.
+Upwork's server lists 33 tools (checked with a signed-in account on 2026-11-14,
+[screenshot](images/inspector/upwork_tools.jpg)). GigBid's live adapter calls only these. Each call
+also passes the `org_uid` that `list_accounts` returns.
+
+| Upwork tool | Read or write (Upwork's annotations) | Used by GigBid for |
+|---|---|---|
+| `upwork__list_accounts` | Read | Finding the freelancer account (`role` TALENT) |
+| `upwork__find_jobs` (`search`, `get`) | Read | `search_jobs`, `get_job`, client record, Connects cost and balance |
+| `upwork__get_freelancer_dashboard` | Read | `get_connects_balance` when no job has reported it yet |
+| `upwork__get_messages` (`list_rooms`, `list_messages`) | Read | `list_conversations`, `list_messages` |
+| `upwork__manage_proposals` (`create`) | Write, destructive; returns a preview and sends nothing | `submit_proposal`, after the first approval |
+| `upwork__confirm_preview` (`confirm`, type `proposal`) | Write, destructive | `confirm_proposal`, after the second approval |
+| `upwork__send_message` (`send`) | Write, destructive; sends at once | `send_message`, after the reply approval |
+
+The other 26 Upwork tools (profile, contracts, milestones, offers, boosts, uploads, tool
+permissions and so on) are never called. Upwork has no price statistics and no event feed, so
+`get_price_stats` reports not found (pricing then uses the client's budget and your floor) and
+`list_events` is empty in live mode.

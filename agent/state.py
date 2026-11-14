@@ -155,6 +155,7 @@ class BidState(_ThreadState, total=False):
     critiques: Annotated[list[Critique], operator.add]
     compliance_verdicts: Annotated[list[ComplianceVerdict], operator.add]
     dry_run_preview: dict[str, Any]
+    platform_preview: dict[str, Any]  # what Upwork will send, shown at the second approval
     style_edits: Annotated[list[dict[str, Any]], operator.add]
     proposal_id: str
     outcomes: Annotated[list[OutcomeRecord], operator.add]

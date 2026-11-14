@@ -244,6 +244,9 @@ class GigSimAdapter:
         )
         return Proposal.model_validate(data)
 
+    async def confirm_submission(self, proposal_id: str, idempotency_key: str) -> Proposal:
+        raise MarketplaceRejected("GigSim submits directly; there is nothing to confirm.")
+
     async def send_message(
         self,
         conversation_id: str,

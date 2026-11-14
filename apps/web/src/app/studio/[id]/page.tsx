@@ -32,9 +32,11 @@ export default function StudioPage() {
 
   const draft = data.draft;
   const pending = data.pending_approval as
-    | { dry_run_preview: DryRunPreview; price_rationale: string }
+    | { dry_run_preview: DryRunPreview; price_rationale: string; stage?: string }
     | null
     | undefined;
+  // The second approval: Upwork has prepared the proposal and shows what sending will cost.
+  const onPlatform = pending?.stage === "platform_confirmation";
   const evidence = new Map(data.evidence?.map((item) => [item.evidence_id, item]));
   const evidenceFor = (claim: Schemas["ProposalClaim"]) =>
     (claim.evidence_ids ?? []).flatMap((item) => evidence.get(item) ?? []);
@@ -139,8 +141,14 @@ export default function StudioPage() {
               <ApprovalPanel
                 threadId={data.thread_id}
                 preview={pending.dry_run_preview}
-                approveLabel="Approve and submit"
-                editedText={text !== original ? text : null}
+                approveLabel={
+                  onPlatform
+                    ? "Send on Upwork"
+                    : pending.dry_run_preview.requires_platform_confirmation
+                      ? "Approve and prepare on Upwork"
+                      : "Approve and submit"
+                }
+                editedText={!onPlatform && text !== original ? text : null}
                 onDecided={() => {
                   setPolling(true);
                   void reload();

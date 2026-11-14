@@ -14,6 +14,21 @@ persona's portfolio on first use, so adding or deleting evidence affects only th
 Tracing needs `LANGSMITH_API_KEY`. Emails, phone numbers and card numbers are masked before a trace
 is sent. Set `tracing.enabled` to false in `agent/config.yaml` to send nothing.
 
+## Live mode: your own Upwork account
+
+1. Publish `docs/oauth/client-metadata.json` with GitHub Pages (Settings, Pages, deploy from the
+   `main` branch, `/docs` folder). Its address must equal the `client_id` written inside it.
+2. In `.env`: `UPWORK_OAUTH_CLIENT_ID` is that address, `UPWORK_OAUTH_REDIRECT_URI` is
+   `http://localhost:8000/auth/upwork/callback`, `TOKEN_ENCRYPTION_KEY` is a Fernet key, and
+   `MARKETPLACE_MODE=upwork_live`. The Marketplace server in live mode also needs `DATABASE_URL`.
+3. Settings, Connected accounts, **Connect Upwork**. You sign in on Upwork's own page; GigBid
+   stores the tokens encrypted and refreshes them before they expire.
+
+A proposal reaches a client only after two approvals. The first lets GigBid ask Upwork for a
+preview, which sends nothing. The second, **Send on Upwork**, shows Upwork's Connects cost and
+balance and then sends it. Messages have no Upwork preview, so the reply approval is their only
+gate. GigBid never uses Upwork's other tools, never scrapes and never drives a browser.
+
 ## Schedules and rate limits
 
 | Work | Schedule | Why |
