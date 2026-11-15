@@ -45,7 +45,8 @@ models:
         # Groq list prices, read from console.groq.com on 2026-11-10. Free-tier runs pay nothing.
         small: {provider: groq, model: openai/gpt-oss-20b, input_usd_per_million: 0.075, output_usd_per_million: 0.30}
         # The larger open model has its own daily Groq limit (llama-3.1-8b-instant was withdrawn).
-        small_fallback: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60}
+        # JSON schema output: with function calling it failed the Fit Matcher's schema 3 times in 3.
+        small_fallback: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60, structured_method: json_schema}
         strong: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60}
       nodes:
         scout: {tier: small, fallback: small_fallback}
@@ -68,7 +69,7 @@ models:
     open_small:
       tiers:
         small: {provider: groq, model: openai/gpt-oss-20b, input_usd_per_million: 0.075, output_usd_per_million: 0.30}
-        small_fallback: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60}
+        small_fallback: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60, structured_method: json_schema}
         strong: {provider: groq, model: openai/gpt-oss-20b, input_usd_per_million: 0.075, output_usd_per_million: 0.30}
         # The judge stays the same as in the open profile, so both configurations get one scorer.
         judge: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60}
@@ -88,6 +89,27 @@ models:
         single_agent: {tier: strong}
         case_builder: {tier: strong} # signature extension X3, during GitHub ingestion
         judge: {tier: judge}
+    # gpt-oss-120b everywhere, for evaluations run after gpt-oss-20b's free daily limit is spent.
+    # Run with MODEL_PROFILE=open_large; results say which profile made them.
+    open_large:
+      tiers:
+        strong: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60, structured_method: json_schema}
+      nodes:
+        scout: {tier: strong}
+        analyst: {tier: strong}
+        risk_assessor: {tier: strong}
+        fit_matcher: {tier: strong}
+        pricing: {tier: strong}
+        verifier: {tier: strong}
+        compliance: {tier: strong}
+        intent: {tier: strong}
+        writer: {tier: strong}
+        rewrite: {tier: strong}
+        critic: {tier: strong}
+        client_liaison: {tier: strong}
+        single_agent: {tier: strong}
+        case_builder: {tier: strong}
+        judge: {tier: strong}
     # Fully local, through the Ollama service in docker compose (MODEL_PROFILE=local). Qwen3 8B is
     # the model R&D question A measured; it is slower than Groq on a laptop CPU and has no API cost.
     local:

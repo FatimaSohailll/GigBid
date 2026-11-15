@@ -38,6 +38,8 @@ from evals.runners.rag_eval import RESULTS_DIR, write_result
 from rag.retriever import open_components
 
 DESIGNS = ("graph", "react", "supervisor")
+# The baselines call models directly, so the client waits out per-minute limits (Retry-After).
+BASELINE_RETRIES = 8
 
 
 async def build_runner(
@@ -49,12 +51,14 @@ async def build_runner(
     runtime = stack.runtime(persona, llm)
     toolbox = stack.toolbox(persona)
     if design == "react":
-        model = create_chat_model(config.model_for("single_agent")[0])
+        model = create_chat_model(config.model_for("single_agent")[0], BASELINE_RETRIES)
         tools = await toolbox.tools_for("react_baseline")
         return ReactJobRunner(runtime, tools, model, seed_key)
-    models = {role: create_chat_model(config.model_for(role)[0]) for role in ROLES}
+    models = {
+        role: create_chat_model(config.model_for(role)[0], BASELINE_RETRIES) for role in ROLES
+    }
     tools_by_role = {role: await toolbox.tools_for(role) for role in ROLES}
-    lead = create_chat_model(config.model_for("single_agent")[0])
+    lead = create_chat_model(config.model_for("single_agent")[0], BASELINE_RETRIES)
     return SupervisorJobRunner(runtime, tools_by_role, models, lead, seed_key)
 
 

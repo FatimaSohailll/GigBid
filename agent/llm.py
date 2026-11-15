@@ -47,8 +47,14 @@ def rate_limit_delay(error: Exception) -> float | None:
     return _DEFAULT_RATE_LIMIT_DELAY
 
 
-def create_chat_model(spec: ModelSpec) -> BaseChatModel:
-    return init_chat_model(spec.model, model_provider=spec.provider, temperature=0)
+def create_chat_model(spec: ModelSpec, max_retries: int | None = None) -> BaseChatModel:
+    """max_retries hands rate-limit waits to the provider's client, for agents built outside the
+    router (the R&D question C baselines); GigBid's own nodes wait in ModelRouter instead."""
+    if max_retries is None:
+        return init_chat_model(spec.model, model_provider=spec.provider, temperature=0)
+    return init_chat_model(
+        spec.model, model_provider=spec.provider, temperature=0, max_retries=max_retries
+    )
 
 
 def structured_runnable(model: BaseChatModel, spec: ModelSpec, schema: type[BaseModel]) -> Any:

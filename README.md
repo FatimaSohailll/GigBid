@@ -6,7 +6,8 @@ posts, keeps the freelancer's own style, and never sends anything without a huma
 It runs on DevSim (a simulated marketplace) for development and on the official Upwork MCP server
 for real use.
 
-> **Demo:** the 30-second GIF goes here (`docs/images/demo.gif`).
+![GigBid: a proposal's evidence, the dry-run preview and approval](docs/images/demo.gif)
+
 > **Live:** [gig-bid.vercel.app](https://gig-bid.vercel.app), on DevSim. The reviewer login is
 > given in the submission, not here.
 
@@ -79,9 +80,10 @@ Judge calibration, Cohen's kappa: -0.129 on 7 labelled proposals (the assignment
 
 ### Multi-agent comparison
 
-ReAct agent versus prebuilt supervisor versus the hand-built graph, on the same jobs. The table is
-filled from `evals/results/rqc_comparison_devsim.json` when the run completes; see
-[docs/RND_C_ORCHESTRATION.md](docs/RND_C_ORCHESTRATION.md) for the method.
+ReAct agent versus prebuilt supervisor versus the hand-built graph, on the same jobs. **Not
+completed:** the free-tier daily model limits ran out after the graph's first job and before either
+baseline finished one, so there is no comparison to report yet. Method, the partial run and the
+two baseline faults it exposed: [docs/RND_C_ORCHESTRATION.md](docs/RND_C_ORCHESTRATION.md).
 
 ### Public traces
 
@@ -91,8 +93,14 @@ Evaluation runs on DevSim; personal data is masked before a trace is sent.
   — Risk Assessor flags it, the decision skips, no proposal is written.
 - A Critic revision loop: [dev-data-0002](https://smith.langchain.com/public/a0e2194f-b63a-4a40-bc17-398a2950cb14/r)
   — three Critic passes, the most the graph allows, before Compliance.
-- An approved proposal: *link to be added*
-- A crash and resume: *link to be added*
+- An approved proposal: [dev-ai-0025, approved in the deployed app](https://smith.langchain.com/public/cbfa0f29-08eb-4fc3-a7b0-36709ffeb857/r)
+  — the graph resumes from its interrupt on my approval, submits once, then updates memory. The
+  analysis and drafting before the interrupt ran while tracing was still off on the server.
+- A crash and resume: no public trace. Durability is shown by
+  `tests/integration/test_crash_recovery.py`: a process stops at the approval interrupt and a new
+  process resumes the thread from its Postgres checkpoint; a process that crashes right after
+  submitting is resumed and the idempotency key turns the repeat into a replay, so the proposal is
+  submitted once.
 
 ## Run it
 
