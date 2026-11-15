@@ -7,7 +7,8 @@ It runs on DevSim (a simulated marketplace) for development and on the official 
 for real use.
 
 > **Demo:** the 30-second GIF goes here (`docs/images/demo.gif`).
-> **Live:** the public deployment link goes here, with the reviewer login given in the submission.
+> **Live:** [gig-bid.vercel.app](https://gig-bid.vercel.app), on DevSim. The reviewer login is
+> given in the submission, not here.
 
 AI-4016 assignment II. Everything measured here is on DevSim stand-in data, because the official
 GigSim and its data were not provided; result files say so in their `data_source` field.
@@ -64,10 +65,10 @@ Data source: DevSim stand-in data, not GigSim. Deployed variant: `combo:decompos
 
 | Variant | Evidence Recall@5, whole job | Evidence Recall@5, per requirement | nDCG@10, per requirement | Unsupported claims per proposal | Judge score | Simulated reply rate | p95 latency (s) | Cost per proposal (USD) | Proposals measured |
 |---|---|---|---|---|---|---|---|---|---|
-| V0 | 0.093 | 0.4132 | 0.4636 | 0 | 3.8 | 0.4 | 137.26 | 0.004372 | 5 |
-| Your best | 0.3074 | 0.5755 | 0.6303 | not measured | not measured | not measured | not measured | not measured | 0 |
+| V0 | 0.093 | 0.4132 | 0.4636 | 0 | 3.875 | 0.5 | 133.19 | 0.003988 | 8 |
+| Your best | 0.3074 | 0.5755 | 0.6303 | 0 | 4.3333 | 0.3333 | 145.73 | 0.003906 | 3 |
 
-Judge calibration, Cohen's kappa: -0.129.
+Judge calibration, Cohen's kappa: -0.129 on 7 labelled proposals (the assignment asks for 30).
 <!-- results:end -->
 
 - Retrieval variants, ablation and the hypothesis: [docs/RND_B_RETRIEVAL.md](docs/RND_B_RETRIEVAL.md).
