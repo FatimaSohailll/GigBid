@@ -86,10 +86,17 @@ ablation removes one stage of the best pipeline at a time. Per-requirement retri
 shipped pipeline, decomposition plus hybrid plus outcome boosts; the reranker lowered recall on this
 corpus and was not shipped (ADR 0004). Results by persona and job type: `docs/RND_B_RETRIEVAL.md`.
 
-**Model-based results (B3, B4, B5)** come from the paired sample run. The B5 table (V0 against the
-shipped variant: Recall@5, nDCG@10, unsupported claims, judge score, reply rate, p95 latency and
-cost per proposal) is generated into README.md by `python -m evals.results_table`, and is copied
-here when the sample is final.
+**Proposals on a paired sample (B3, B4, B5).** V0 and the shipped variant wrote proposals for the
+same 5 dev jobs with the same models and simulated-client seed (`docs/RND_B_RETRIEVAL.md`):
+
+<!-- results:start -->
+| | Jobs | Sent | Unsupported claims per proposal, draft | Final text | Judge | Reply rate | p95 (s) | USD per proposal |
+|---|---|---|---|---|---|---|---|---|
+| V0 | 5 | 5 | 0.4 | 0 | 3.8 | 0.4 | 137.26 | 0.004372 |
+| Shipped | 5 | 3 | 0 | 0 | 4.3333 | 0.3333 | 145.73 | 0.003906 |
+
+Source: `evals/results/outcomes_comparison_devsim.json`.
+<!-- results:end -->
 
 **Decisions** on the first sample of dev jobs:
 
@@ -101,13 +108,23 @@ here when the sample is final.
 Source: `evals/results/decision_devsim.json`.
 <!-- results:end -->
 
-**Judge calibration:** **pending** more labels; agreement on the first labelled items is in the
-generated table above and in `evals/results/judge_calibration_devsim.json`. Two disagreements are
-discussed in section 8.
+**Judge calibration:** only 7 proposals are labelled so far, against 30 asked for.
 
-**Where better retrieval did not raise the reply rate:** **pending** the best variant's proposals
-in the paired sample. **Shipped choice:** **pending** that comparison; retrieval alone favours
-decomposition plus hybrid plus outcome boosts.
+<!-- results:start -->
+Cohen's kappa -0.129 on 7 items; within one point on 0.7143 of them.
+Source: `evals/results/judge_calibration_devsim.json`.
+<!-- results:end -->
+
+The judge rewarded length and keyword coverage more than the human labels did (section 8), so its
+score is reported but not used to choose what ships.
+
+**Where better retrieval did not raise the reply rate:** the shipped variant lost both of V0's
+replies by not sending. Compliance blocked one draft (`dev-ai-0002`), and the decision skipped one
+job (`dev-data-0008`). On the 3 jobs both variants sent, V0 got no reply and the shipped variant one.
+Five jobs cannot separate the reply rates: one reply moves the rate by 20 points.
+
+**Shipped choice:** `combo:decompose+hybrid+outcome`, on retrieval quality, zero unsupported claims
+in drafts and lower cost per proposal; **not** on reply rate, which the sample cannot decide.
 
 ## 5. R&D question C: single agent, prebuilt supervisor, graph
 
@@ -133,13 +150,52 @@ pending** model quota.
 
 ## 8. Failure analysis
 
-`evals/runners/failure_analysis.py` sorts failed dev jobs into the assignment's taxonomy (missed
-evidence, wrong skip, mispriced, unsupported claim, generic opening, compliance miss, injection,
-tool error) from the saved rows, recording the field behind each. **Pending** the finished sample:
-the table of at least ten failures, the fix tried for each category and whether it worked.
+`evals/runners/failure_analysis.py` sorts every failed dev job in the saved rows into the
+assignment's taxonomy, recording the field behind each, with no model calls.
 
-**Judge versus my labels:** two proposals where the judge and the human label differed by two or
-more points are discussed here once labelling is complete.
+<!-- results:start -->
+| Primary category | Failed jobs | Pattern |
+|---|---|---|
+| Wrong bid or skip | 10 | 3 low-budget jobs and 1 partial fit bid; 6 jobs worth a bid skipped or watched |
+| Tool error | 5 | a node could not complete when the free-tier daily model limit ran out |
+| Mispriced | 3 | 2 priced above the fair band, 1 below; 7 jobs in all had a price outside it |
+
+18 failed jobs out of 48 checked. Source: `evals/results/failures_devsim.json`.
+<!-- results:end -->
+
+**Fixes tried.**
+
+- **Wrong bid on low budgets: fixed, and it worked.** The decision never compared the client's
+  budget with the freelancer's minimum project price, and the evaluation used a flat 50 USD floor
+  instead of each persona's own minimum. The decision now skips a job whose budget tops out below
+  the user's minimum (`agent/nodes/decision.py`, `tests/unit/test_decision_budget.py`), and the
+  evaluation uses each persona's minimum. The rule is deterministic and runs after every model
+  step, so re-scoring the saved decisions gives exactly what a re-run would decide:
+
+  <!-- results:start -->
+  Bid-or-skip precision 0.5556 to 0.8333, F1 0.5 to 0.5882; all 4 low-budget jobs now skip, and no
+  job worth a bid is skipped. Source: `evals/results/decision_rescored_devsim.json`.
+  <!-- results:end -->
+
+  DevSim's labels encode the same rule, so the gain on DevSim is expected by construction; the rule
+  is kept because it is the freelancer's own stated minimum.
+- **Tool errors: partly fixed.** The campaign now waits out a daily limit instead of crashing, and
+  the app's fallback model moved to gpt-oss-120b after Groq withdrew `llama-3.1-8b-instant`.
+  Evaluations keep fallbacks off on purpose, so these jobs still fail when the quota runs out.
+- **Jobs worth a bid skipped: not fixed.** Two of the six carry a planted instruction; the rows do
+  not record whether the fit score or the injection's risk score caused the skip. Next step: log
+  both on every decision, then decide whether a flagged injection should raise risk at all once
+  the text is delimited.
+- **Mispriced: not fixed.** Two good-fit jobs were priced 6 and 8 percent above the fair band and a
+  vague job 12 percent below it. Not investigated yet; the price rationale saved with each quote is
+  the place to start.
+
+**Judge versus my labels.** Two proposals differ by two points:
+
+- `dev-ai-0015`, a vague job: judge 2, me 4. The claim check removed 2 of 4 claims, leaving three
+  sentences; the judge marked it as thin, while I rated it as short but on the client's problem.
+- `dev-data-0008`, with a planted instruction: judge 5, me 3. It correctly ignored the instruction,
+  but it lists skills and never addresses the deliverable, a report for leadership.
 
 ## 9. Safety and platform respect
 

@@ -44,8 +44,8 @@ models:
       tiers:
         # Groq list prices, read from console.groq.com on 2026-11-10. Free-tier runs pay nothing.
         small: {provider: groq, model: openai/gpt-oss-20b, input_usd_per_million: 0.075, output_usd_per_million: 0.30}
-        # Open weights, separate Groq limits from the primary. Groq's model page lists no price.
-        small_fallback: {provider: groq, model: llama-3.1-8b-instant}
+        # The larger open model has its own daily Groq limit (llama-3.1-8b-instant was withdrawn).
+        small_fallback: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60}
         strong: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60}
       nodes:
         scout: {tier: small, fallback: small_fallback}
@@ -68,7 +68,7 @@ models:
     open_small:
       tiers:
         small: {provider: groq, model: openai/gpt-oss-20b, input_usd_per_million: 0.075, output_usd_per_million: 0.30}
-        small_fallback: {provider: groq, model: llama-3.1-8b-instant}
+        small_fallback: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60}
         strong: {provider: groq, model: openai/gpt-oss-20b, input_usd_per_million: 0.075, output_usd_per_million: 0.30}
         # The judge stays the same as in the open profile, so both configurations get one scorer.
         judge: {provider: groq, model: openai/gpt-oss-120b, input_usd_per_million: 0.15, output_usd_per_million: 0.60}

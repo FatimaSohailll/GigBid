@@ -5,7 +5,7 @@ from typing import Any
 import pytest
 from pydantic import BaseModel
 
-from agent.config import get_config, load_config
+from agent.config import ModelSpec, get_config, load_config
 from agent.graphs.common import guarded
 from agent.guardrails import defences_off, delimit_untrusted, mask_pii, scan_job_post
 from agent.handoffs import RiskFlag
@@ -68,21 +68,20 @@ async def test_a_rejected_model_reply_is_still_counted() -> None:
     assert calls[0].input_tokens == 1000
 
 
+UNPRICED = ModelSpec(provider="groq", model="an-unpriced-model")
+
+
 def test_a_model_without_a_price_has_unknown_cost() -> None:
-    spec = get_config().model_for("analyst")[1]
-    assert spec is not None
-    assert call_cost(spec, 10, 10) is None
+    assert call_cost(UNPRICED, 10, 10) is None
 
 
 def test_one_unpriced_call_makes_the_node_cost_unknown() -> None:
     primary = get_config().model_for("analyst")[0]
-    fallback = get_config().model_for("analyst")[1]
-    assert fallback is not None
     from agent.usage import ModelCall
 
     calls = [
         ModelCall(primary.model, 1, 1, call_cost(primary, 1, 1)),
-        ModelCall(fallback.model, 1, 1, call_cost(fallback, 1, 1)),
+        ModelCall(UNPRICED.model, 1, 1, call_cost(UNPRICED, 1, 1)),
     ]
     assert node_usage("analyst", calls, 1.0).cost_usd is None
 

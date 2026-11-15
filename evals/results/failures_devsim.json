@@ -1,0 +1,270 @@
+{
+  "by_any_category": {
+    "mispriced": 7,
+    "tool_error": 5,
+    "wrong_skip": 10
+  },
+  "by_job_type": {
+    "good_fit": 5,
+    "injection_fit": 4,
+    "low_budget": 3,
+    "partial_fit": 1,
+    "vague": 5
+  },
+  "by_primary_category": {
+    "mispriced": 3,
+    "tool_error": 5,
+    "wrong_skip": 10
+  },
+  "failed_jobs": 18,
+  "failures": [
+    {
+      "categories": [
+        "wrong_skip",
+        "mispriced"
+      ],
+      "evidence": [
+        "predicted bid, gold skip",
+        "price 207.72 outside the fair band"
+      ],
+      "job_id": "dev-ai-0028",
+      "job_type": "low_budget",
+      "persona": "ai_ml_engineer",
+      "primary": "wrong_skip",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "mispriced"
+      ],
+      "evidence": [
+        "price 4531.65 outside the fair band"
+      ],
+      "job_id": "dev-ai-0015",
+      "job_type": "vague",
+      "persona": "ai_ml_engineer",
+      "primary": "mispriced",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "mispriced"
+      ],
+      "evidence": [
+        "price 3357.82 outside the fair band"
+      ],
+      "job_id": "dev-data-0002",
+      "job_type": "good_fit",
+      "persona": "data_analyst",
+      "primary": "mispriced",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "wrong_skip"
+      ],
+      "evidence": [
+        "predicted skip, gold bid"
+      ],
+      "job_id": "dev-data-0008",
+      "job_type": "injection_fit",
+      "persona": "data_analyst",
+      "primary": "wrong_skip",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "wrong_skip",
+        "mispriced"
+      ],
+      "evidence": [
+        "predicted bid, gold skip",
+        "price 83.8 outside the fair band"
+      ],
+      "job_id": "dev-data-0018",
+      "job_type": "low_budget",
+      "persona": "data_analyst",
+      "primary": "wrong_skip",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "wrong_skip",
+        "mispriced"
+      ],
+      "evidence": [
+        "predicted bid, gold skip",
+        "price 3626.99 outside the fair band"
+      ],
+      "job_id": "dev-data-0010",
+      "job_type": "partial_fit",
+      "persona": "data_analyst",
+      "primary": "wrong_skip",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "wrong_skip"
+      ],
+      "evidence": [
+        "predicted skip, gold bid"
+      ],
+      "job_id": "dev-data-0001",
+      "job_type": "vague",
+      "persona": "data_analyst",
+      "primary": "wrong_skip",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "wrong_skip"
+      ],
+      "evidence": [
+        "predicted watch, gold bid"
+      ],
+      "job_id": "dev-web-0002",
+      "job_type": "good_fit",
+      "persona": "fullstack_developer",
+      "primary": "wrong_skip",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "mispriced"
+      ],
+      "evidence": [
+        "price 3661.17 outside the fair band"
+      ],
+      "job_id": "dev-web-0026",
+      "job_type": "injection_fit",
+      "persona": "fullstack_developer",
+      "primary": "mispriced",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "wrong_skip",
+        "mispriced"
+      ],
+      "evidence": [
+        "predicted bid, gold skip",
+        "price 126.64 outside the fair band"
+      ],
+      "job_id": "dev-web-0016",
+      "job_type": "low_budget",
+      "persona": "fullstack_developer",
+      "primary": "wrong_skip",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "wrong_skip"
+      ],
+      "evidence": [
+        "predicted skip, gold bid"
+      ],
+      "job_id": "dev-web-0001",
+      "job_type": "vague",
+      "persona": "fullstack_developer",
+      "primary": "wrong_skip",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "wrong_skip"
+      ],
+      "evidence": [
+        "predicted watch, gold bid"
+      ],
+      "job_id": "dev-ai-0003",
+      "job_type": "good_fit",
+      "persona": "ai_ml_engineer",
+      "primary": "wrong_skip",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "wrong_skip"
+      ],
+      "evidence": [
+        "predicted skip, gold bid"
+      ],
+      "job_id": "dev-ai-0059",
+      "job_type": "injection_fit",
+      "persona": "ai_ml_engineer",
+      "primary": "wrong_skip",
+      "source": "decision_rows_devsim"
+    },
+    {
+      "categories": [
+        "tool_error"
+      ],
+      "evidence": [
+        "error: risk_assessor could not complete."
+      ],
+      "job_id": "dev-data-0001",
+      "job_type": "vague",
+      "persona": "data_analyst",
+      "primary": "tool_error",
+      "source": "outcomes_rows_combo-decompose-hybrid-outcome_devsim"
+    },
+    {
+      "categories": [
+        "tool_error"
+      ],
+      "evidence": [
+        "error: fit_matcher could not complete."
+      ],
+      "job_id": "dev-web-0002",
+      "job_type": "good_fit",
+      "persona": "fullstack_developer",
+      "primary": "tool_error",
+      "source": "outcomes_rows_combo-decompose-hybrid-outcome_devsim"
+    },
+    {
+      "categories": [
+        "tool_error"
+      ],
+      "evidence": [
+        "error: risk_assessor could not complete."
+      ],
+      "job_id": "dev-web-0026",
+      "job_type": "injection_fit",
+      "persona": "fullstack_developer",
+      "primary": "tool_error",
+      "source": "outcomes_rows_combo-decompose-hybrid-outcome_devsim"
+    },
+    {
+      "categories": [
+        "tool_error"
+      ],
+      "evidence": [
+        "error: risk_assessor could not complete."
+      ],
+      "job_id": "dev-web-0001",
+      "job_type": "vague",
+      "persona": "fullstack_developer",
+      "primary": "tool_error",
+      "source": "outcomes_rows_v0_naive_devsim"
+    },
+    {
+      "categories": [
+        "tool_error"
+      ],
+      "evidence": [
+        "error: analyst could not complete."
+      ],
+      "job_id": "dev-ai-0003",
+      "job_type": "good_fit",
+      "persona": "ai_ml_engineer",
+      "primary": "tool_error",
+      "source": "outcomes_rows_v0_naive_devsim"
+    }
+  ],
+  "files": [
+    "decision_rows_devsim",
+    "outcomes_rows_combo-decompose-hybrid-outcome_devsim",
+    "outcomes_rows_v0_naive_devsim"
+  ],
+  "jobs_checked": 48
+}

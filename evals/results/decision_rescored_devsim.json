@@ -1,0 +1,54 @@
+{
+  "bid_or_skip_after": {
+    "f1": 0.5882,
+    "precision": 0.8333,
+    "recall": 0.4545
+  },
+  "bid_or_skip_before": {
+    "f1": 0.5,
+    "precision": 0.5556,
+    "recall": 0.4545
+  },
+  "changed": [
+    {
+      "after": "skip",
+      "before": "bid",
+      "budget_max": 340.45,
+      "floor": 500.0,
+      "gold": "skip",
+      "job_id": "dev-ai-0028",
+      "job_type": "low_budget"
+    },
+    {
+      "after": "skip",
+      "before": "bid",
+      "budget_max": 122.6,
+      "floor": 300.0,
+      "gold": "skip",
+      "job_id": "dev-data-0018",
+      "job_type": "low_budget"
+    },
+    {
+      "after": "skip",
+      "before": "bid",
+      "budget_max": 193.29,
+      "floor": 400.0,
+      "gold": "skip",
+      "job_id": "dev-web-0016",
+      "job_type": "low_budget"
+    },
+    {
+      "after": "skip",
+      "before": "watch",
+      "budget_max": 176.78,
+      "floor": 500.0,
+      "gold": "skip",
+      "job_id": "dev-ai-0031",
+      "job_type": "low_budget"
+    }
+  ],
+  "data_source": "devsim",
+  "jobs": 30,
+  "method": "budget-floor rule applied to saved decisions; no model calls",
+  "official_gigsim": false
+}
