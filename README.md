@@ -10,6 +10,14 @@ for real use.
 
 > **Live:** [gig-bid.vercel.app](https://gig-bid.vercel.app), on DevSim. The reviewer login is
 > given in the submission, not here.
+>
+> **Demo video (3 minutes):** [watch on Google Drive](https://drive.google.com/file/d/1EXlz_zZQ2A6QcmWqCF2DwaDhGEpyrs6U/view?usp=sharing)
+> — one job from inbox to approved proposal, a scam caught, a planted instruction ignored, and a
+> client reply handled.
+>
+> **Portfolio MCP server**, installable on its own:
+> `docker pull ghcr.io/fatimasohailll/gigbid-portfolio-mcp:latest`, set-up in
+> [mcp_servers/portfolio/README.md](mcp_servers/portfolio/README.md).
 
 AI-4016 assignment II. Everything measured here is on DevSim stand-in data, because the official
 GigSim and its data were not provided; result files say so in their `data_source` field.
@@ -80,10 +88,22 @@ Judge calibration, Cohen's kappa: -0.129 on 7 labelled proposals (the assignment
 
 ### Multi-agent comparison
 
-ReAct agent versus prebuilt supervisor versus the hand-built graph, on the same jobs. **Not
-completed:** the free-tier daily model limits ran out after the graph's first job and before either
-baseline finished one, so there is no comparison to report yet. Method, the partial run and the
-two baseline faults it exposed: [docs/RND_C_ORCHESTRATION.md](docs/RND_C_ORCHESTRATION.md).
+ReAct agent versus prebuilt supervisor versus the hand-built graph, on the same jobs, models
+(gpt-oss-120b) and scoring. **Not completed:** the free-tier daily model limits ran out after the
+graph's first job and before either baseline finished one, so this is not yet a comparison.
+
+<!-- results:start -->
+| Design | Jobs finished | Bid-or-skip accuracy | Unsupported claims per proposal | Reply rate | Tokens per job | p95 latency (s) | Cost per job (USD) |
+|---|---|---|---|---|---|---|---|
+| (a) ReAct agent, all tools | 0 | not run | not run | not run | not run | not run | not run |
+| (b) Prebuilt supervisor | 0 | not run | not run | not run | not run | not run | not run |
+| (c) GigBid graph | 1 | 1.0 | 0 | 1.0 | 21507 | 107.85 | 0.007152 |
+
+Source: `evals/results/rqc_graph_devsim.json`. One job answers nothing about the hypothesis.
+<!-- results:end -->
+
+Method, the hypothesis and the two baseline faults the attempt exposed:
+[docs/RND_C_ORCHESTRATION.md](docs/RND_C_ORCHESTRATION.md).
 
 ### Public traces
 
