@@ -117,6 +117,7 @@ async def test_each_agent_gets_only_its_allowlisted_tools(stack: Stack) -> None:
     assert submission == {
         "create_proposal_draft",
         "submit_proposal",
+        "confirm_proposal",  # live Upwork mode's second approval
         "send_message",
         "get_connects_balance",
     }
@@ -198,7 +199,9 @@ async def test_simulator_outage_is_reported_as_marketplace_unavailable(stack: St
     assert "marketplace_unavailable" in str(result)
 
 
-def test_live_mode_fails_clearly_until_its_adapter_exists() -> None:
+def test_the_simulator_factory_serves_gigsim_whatever_the_configured_mode() -> None:
+    # Live Upwork mode has its own adapter and server set-up, tested in
+    # tests/unit/test_upwork_live.py; this factory builds the GigSim adapter only.
     config = load_config(env={"MARKETPLACE_MODE": "upwork_live"}).marketplace
-    with pytest.raises(ValueError, match="Phase 13"):
-        gigsim_port_factory(USERS, "http://unused", config)
+    port_for = gigsim_port_factory(USERS, "http://unused", config)
+    assert type(port_for(next(iter(USERS.values())).user_id)).__name__ == "GigSimAdapter"

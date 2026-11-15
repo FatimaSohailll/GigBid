@@ -19,8 +19,17 @@ def persona_floor(persona: str, personas_dir: Path = PERSONAS_DIR) -> float:
     try:
         profile = json.loads((personas_dir / persona / "profile.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return DEFAULT_FLOOR_USD
+        # Before `make seed` writes the profiles (a fresh checkout, CI), read the same value from
+        # the DevSim catalog the profiles are generated from.
+        return _catalog_floor(persona)
     return float(profile.get("minimum_project_usd") or DEFAULT_FLOOR_USD)
+
+
+def _catalog_floor(persona: str) -> float:
+    from devsim.datagen.catalog import load_catalog
+
+    floors = {entry.persona_id: float(entry.floor_usd) for entry in load_catalog()}
+    return floors.get(persona, DEFAULT_FLOOR_USD)
 
 
 def eval_settings(persona: str) -> UserSettings:
