@@ -85,9 +85,14 @@ filled from `evals/results/rqc_comparison_devsim.json` when the run completes; s
 
 ### Public traces
 
-- A skipped scam: *link to be added*
+Evaluation runs on DevSim; personal data is masked before a trace is sent.
+
+- A skipped scam: [dev-ai-0008, "test task before hiring"](https://smith.langchain.com/public/b3bf6397-ec73-43f8-8937-b305d81cd4c0/r)
+  — Risk Assessor flags it, the decision skips, no proposal is written.
+- A Critic revision loop: [dev-data-0002](https://smith.langchain.com/public/a0e2194f-b63a-4a40-bc17-398a2950cb14/r)
+  — three Critic passes, the most the graph allows, before Compliance.
 - An approved proposal: *link to be added*
-- A Critic revision loop: *link to be added*
+- A crash and resume: *link to be added*
 
 ## Run it
 
