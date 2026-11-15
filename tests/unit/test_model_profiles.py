@@ -24,5 +24,12 @@ def test_the_comparison_changes_only_the_writing_nodes_and_keeps_one_judge() -> 
     large, small = models("open"), models("open_small")
     assert large["judge"] == small["judge"]
     changed = {node for node in large if large[node] != small[node]}
-    assert changed == {"writer", "rewrite", "critic", "client_liaison", "single_agent"}
+    assert changed == {
+        "writer",
+        "rewrite",
+        "critic",
+        "client_liaison",
+        "single_agent",
+        "case_builder",
+    }
     assert all(small[node] == "openai/gpt-oss-20b" for node in changed)

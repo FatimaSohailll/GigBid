@@ -61,6 +61,7 @@ models:
         critic: {tier: strong}
         client_liaison: {tier: strong}
         single_agent: {tier: strong} # Part A deliverable and R&D question C baseline
+        case_builder: {tier: strong} # signature extension X3, during GitHub ingestion
         judge: {tier: strong} # evaluation only
     # The second open configuration the assignment asks to compare: gpt-oss-20b everywhere, so
     # Writer, Critic and Client Liaison lose the larger model. Run with MODEL_PROFILE=open_small.
@@ -85,6 +86,7 @@ models:
         critic: {tier: strong}
         client_liaison: {tier: strong}
         single_agent: {tier: strong}
+        case_builder: {tier: strong} # signature extension X3, during GitHub ingestion
         judge: {tier: judge}
     # Fully local, through the Ollama service in docker compose (MODEL_PROFILE=local). Qwen3 8B is
     # the model R&D question A measured; it is slower than Groq on a laptop CPU and has no API cost.
@@ -107,6 +109,7 @@ models:
         critic: {tier: strong}
         client_liaison: {tier: strong}
         single_agent: {tier: strong}
+        case_builder: {tier: strong} # signature extension X3, during GitHub ingestion
         judge: {tier: strong}
     # Optional. Used only where it beats the open profile enough to justify its cost.
     paid:
@@ -128,6 +131,7 @@ models:
         critic: {tier: strong}
         client_liaison: {tier: strong}
         single_agent: {tier: strong} # Part A deliverable and R&D question C baseline
+        case_builder: {tier: strong} # signature extension X3, during GitHub ingestion
         judge: {tier: strong} # evaluation only
 
 rag:
@@ -150,6 +154,7 @@ rag:
   github_max_file_bytes: 40000
   github_max_depth: 3
   github_code_extensions: [.py, .ts, .tsx, .js, .jsx, .go, .rs, .java, .sql]
+  github_case_studies: true # X3: draft one verified case study per imported repository
 
 verification:
   supported_coverage: 0.75

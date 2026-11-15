@@ -51,7 +51,8 @@ def table_row(label: str, variant: str, source: str, results: Path) -> str:
 
 
 def build_block(best: str, source: str, results: Path) -> str:
-    kappa = _load(results, f"judge_calibration_{source}.json").get("cohen_kappa")
+    calibration = _load(results, f"judge_calibration_{source}.json")
+    kappa, items = calibration.get("cohen_kappa"), calibration.get("items")
     origin = "official GigSim" if source == "gigsim" else "DevSim stand-in data, not GigSim"
     lines = [
         f"Data source: {origin}. Deployed variant: `{best}`.",
@@ -60,7 +61,12 @@ def build_block(best: str, source: str, results: Path) -> str:
         table_row("V0", "v0_naive", source, results),
         table_row("Your best", best, source, results),
         "",
-        f"Judge calibration, Cohen's kappa: {MISSING if kappa is None else kappa}.",
+        (
+            f"Judge calibration, Cohen's kappa: {kappa} on {items} labelled proposals "
+            "(the assignment asks for 30)."
+            if kappa is not None
+            else f"Judge calibration, Cohen's kappa: {MISSING}."
+        ),
     ]
     return "\n".join(lines)
 

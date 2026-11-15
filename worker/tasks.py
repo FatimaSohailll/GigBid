@@ -5,6 +5,7 @@ idempotency keys, so a worker restart never double-analyses or double-submits.
 """
 
 import asyncio
+import logging
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -18,6 +19,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 from redis.asyncio import Redis
 
+from agent.case_builder import build_case_study
 from agent.graphs.bid_graph import build_bid_graph
 from agent.graphs.conversation_graph import build_conversation_graph
 from agent.mcp_client import ToolRateLimited, ToolServerUnavailable
@@ -33,6 +35,7 @@ from rag.ingest.loaders import UploadMetadata, load_upload
 from rag.ingest.pipeline import ingest_documents, provision_tenant, remove_item
 from rag.types import RagComponents
 
+logger = logging.getLogger(__name__)
 _WEEK_DAYS = 7
 _POSITIVE_STATUSES = {"viewed", "replied", "interview", "hired", "lost"}
 
@@ -392,7 +395,24 @@ async def ingest_github(
     components = services.rag()
     documents = await read_repository(gateway, owner, repo, components.config)
     await services.on_portfolio(ingest_documents, documents, user_id, components)
-    await services.repository.set_upload_status(upload_id, "indexed")
+    status = "indexed"
+    if components.config.github_case_studies and documents:
+        # X3: one case study per repository, every claim verified against its code. A failure
+        # here (a provider limit, say) leaves the repository indexed without it.
+        try:
+            built = await build_case_study(documents, owner, repo, services.runtime_for(user))
+        except Exception:
+            logger.warning("Case study for %s/%s was not built", owner, repo, exc_info=True)
+            status = "indexed_case_study_skipped"
+        else:
+            if built.document is not None:
+                await services.on_portfolio(
+                    ingest_documents, [built.document], user_id, components, False
+                )
+                status = "indexed_with_case_study"
+            else:
+                status = "indexed_case_study_not_verified"
+    await services.repository.set_upload_status(upload_id, status)
 
 
 async def delete_evidence(ctx: dict[str, Any], user_id: str, item_id: str) -> None:

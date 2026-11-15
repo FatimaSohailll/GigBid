@@ -157,11 +157,51 @@ def test_smoke_gate_passes_good_results() -> None:
     )
 
 
-def test_calibration_refuses_blank_labels(tmp_path: Path) -> None:
+def test_calibration_needs_labels_and_valid_scores(tmp_path: Path) -> None:
     path = tmp_path / "labels.csv"
-    path.write_text("item_id,human_overall\na,\n", encoding="utf-8")
-    with pytest.raises(ValueError, match="blank"):
+    path.write_text("item_id,human_overall\na,\nb,4\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="at least 2"):
+        read_labels(path)  # blank rows are waiting, not labels
+    path.write_text("item_id,human_overall\na,3\nb,7\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="1 to 5"):
         read_labels(path)
+
+
+def test_export_is_blind_and_keeps_labels_when_run_again(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import csv
+
+    from evals.runners import judge_calibration
+
+    results, data = tmp_path / "results", tmp_path / "data"
+    (data / "marketplace").mkdir(parents=True)
+    results.mkdir()
+    jobs = [{"job_id": f"j{n}", "title": f"T{n}", "description": "D"} for n in range(3)]
+    (data / "marketplace" / "jobs.json").write_text(json.dumps(jobs), encoding="utf-8")
+    monkeypatch.setattr(judge_calibration, "RESULTS_DIR", results)
+    rows = results / "outcomes_rows_v0_naive_devsim.jsonl"
+
+    def add(job: str) -> None:
+        row = {"persona": "p", "job_id": job, "submitted": True, "cover_letter": f"L {job}"}
+        with rows.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps({**row, "judge_overall": 4, "error": None}) + "\n")
+
+    labels, key = tmp_path / "labels.csv", tmp_path / "key.json"
+    add("j0")
+    judge_calibration.export("outcomes_rows_*_devsim.jsonl", data, labels, key, force=False)
+    with labels.open(encoding="utf-8", newline="") as handle:
+        first = list(csv.DictReader(handle))
+    assert "v0_naive" not in first[0]["item_id"]  # the variant is hidden
+    labels.write_text(
+        labels.read_text(encoding="utf-8").replace(",\n", ",5\n", 1), encoding="utf-8"
+    )
+
+    add("j1")
+    judge_calibration.export("outcomes_rows_*_devsim.jsonl", data, labels, key, force=False)
+    with labels.open(encoding="utf-8", newline="") as handle:
+        second = {row["item_id"]: row["human_overall"] for row in csv.DictReader(handle)}
+    assert len(second) == 2 and second[first[0]["item_id"]] == "5"
 
 
 def test_table_labels_devsim_and_marks_missing_values(tmp_path: Path) -> None:

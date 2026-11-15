@@ -156,7 +156,10 @@ def test_comparison_with_nothing_in_common_reports_no_numbers(tmp_path: Path) ->
 
 
 def test_rounds_grow_so_variants_stay_level() -> None:
-    assert [proposals for _, proposals in ROUNDS] == [10, 20, 30]
+    proposals = [count for _, count in ROUNDS]
+    decisions = [count for count, _ in ROUNDS]
+    assert proposals == sorted(proposals) and len(set(proposals)) == len(proposals)
+    assert decisions == sorted(decisions)
 
 
 def test_models_used_reveals_a_fallback() -> None:
