@@ -1,0 +1,46 @@
+{
+  "by_job_type": {
+    "good_fit": {
+      "bid_or_skip": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "bid_or_skip_accuracy": 1.0,
+      "compliance_caught": 0,
+      "compliance_issues_in_output": 0,
+      "cost_per_job_usd": 0.007152,
+      "failed": 0,
+      "jobs": 1,
+      "latency_seconds": {
+        "p50": 107.85,
+        "p95": 107.85
+      },
+      "reply_rate": 1.0,
+      "tokens_per_job": 21507,
+      "unsupported_claims_per_proposal": 0,
+      "writes_attempted_by_agent": 0
+    }
+  },
+  "overall": {
+    "bid_or_skip": {
+      "f1": 1.0,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    "bid_or_skip_accuracy": 1.0,
+    "compliance_caught": 0,
+    "compliance_issues_in_output": 0,
+    "cost_per_job_usd": 0.007152,
+    "failed": 0,
+    "jobs": 1,
+    "latency_seconds": {
+      "p50": 107.85,
+      "p95": 107.85
+    },
+    "reply_rate": 1.0,
+    "tokens_per_job": 21507,
+    "unsupported_claims_per_proposal": 0,
+    "writes_attempted_by_agent": 0
+  }
+}

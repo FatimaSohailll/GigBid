@@ -65,9 +65,11 @@ It writes `evals/results/case_builder_devsim.json`.
 
 ## Results
 
-**Not run yet.** Each case study costs one strong-model call plus one claim check per sentence, and
-the free-tier model quota was spent on the Part B sample first. The table is filled from the result
-file when the run completes, with the number of projects actually used.
+**Not run.** Each case study costs one strong-model call plus one claim check per sentence, and on
+15 November 2026 the free-tier daily limits of both Groq models were spent on Parts B, C and E
+first. The table is filled from the result file when the run completes, with the number of projects
+actually used. What is verified so far is the mechanism, by tests: unsupported sentences are
+removed and a thin case study is refused (`tests/unit/test_case_builder.py`).
 
 | Projects | Built rate | Verified claim rate | Claims removed per case study | Skill precision | Skill recall | Tokens per case study |
 |---|---|---|---|---|---|---|

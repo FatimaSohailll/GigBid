@@ -60,16 +60,38 @@ because the portfolio index allows one process at a time.
 
 ## Results
 
-**Not run yet.** The assignment asks for 50 jobs per design. On Groq's free tier the small model
-allows about 200,000 tokens a day, and the Part B sample came first because Parts B and C both
-depend on it. The section below is filled from the result files when the run finishes, with the
-number of jobs actually run; if it is fewer than 50, the reason is the free-tier limit.
+**Not completed: the comparison has no result.** On 15 November 2026 the free-tier daily limits of
+both Groq models (200,000 tokens each) ran out before the two baselines finished a job, so only the
+graph has a row. One job from one design answers nothing about the hypothesis, and none of it is
+claimed as a finding.
 
-| Design | Jobs | Bid-or-skip accuracy | Unsupported claims per proposal | Compliance caught / reached client | Reply rate | Tokens per job | p95 latency (s) |
+| Design | Jobs | Bid-or-skip accuracy | Unsupported claims per proposal | Compliance caught / reached client | Reply rate | Tokens per job | Latency (s) |
 |---|---|---|---|---|---|---|---|
-| (a) ReAct | | | | | | | |
-| (b) Supervisor | | | | | | | |
-| (c) Graph | | | | | | | |
+| (a) ReAct | 0 | | | | | | |
+| (b) Supervisor | 0 | | | | | | |
+| (c) Graph | 1 (`dev-ai-0002`, good fit) | 1.0 | 0 | 0 / 0 | 1.0 | 21507 | 107.85 |
+
+The graph row ran with `MODEL_PROFILE=open_large` (gpt-oss-120b for every node), because
+gpt-oss-20b's daily limit was already spent; source `evals/results/rqc_graph_devsim.json`.
+
+**What the attempt did find.** The first runs against the real provider exposed two faults in the
+baselines that the unit tests, which use a fake model, could not:
+
+1. The ReAct agent asked for its final answer in the provider's JSON mode while also offering
+   tools, which Groq refuses ("json mode cannot be combined with tool/function calling"). It now
+   returns the answer as a tool call (`ToolStrategy`, `evals/baselines.py`).
+2. The baselines call their models directly, so a per-minute rate limit ended the whole run,
+   while GigBid's own nodes wait it out in the model router. The baseline models now let the
+   provider's client retry after the wait Groq asks for (`BASELINE_RETRIES`).
+
+Both are fairness fixes: without them the baselines would have scored as failures for reasons
+unrelated to their design.
+
+**To finish it**, when the daily limits have reset (resumable; the graph row is kept):
+
+```bash
+MODEL_PROFILE=open_large uv run --locked --env-file .env python -m evals.runners.orchestration_compare --limit 10
+```
 
 ## Threats to validity
 

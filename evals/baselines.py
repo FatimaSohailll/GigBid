@@ -12,6 +12,7 @@ import time
 from typing import Any, Literal
 
 from langchain.agents import create_agent
+from langchain.agents.structured_output import ToolStrategy
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 from langchain_core.tools import BaseTool
@@ -184,8 +185,12 @@ class ReactJobRunner(BaselineRunner):
         max_steps: int = 40,
     ) -> None:
         super().__init__(runtime, seed_key)
+        # The answer arrives as a tool call: Groq refuses JSON mode combined with tools.
         self._agent: Any = create_agent(
-            model, tools, system_prompt=load_prompt("react_baseline"), response_format=FinalAnswer
+            model,
+            tools,
+            system_prompt=load_prompt("react_baseline"),
+            response_format=ToolStrategy(FinalAnswer),
         )
         self._max_steps = max_steps
 
