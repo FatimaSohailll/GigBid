@@ -21,6 +21,23 @@ outcome-aware ranking.
 
 ## Install with Docker
 
+The published image, from the GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/fatimasohailll/gigbid-portfolio-mcp:latest
+```
+
+Run it with your portfolio folder mounted read-only and a volume for the index:
+
+```bash
+docker run -i --rm -v /path/to/my-portfolio:/portfolio:ro -v gigbid-portfolio-data:/data ghcr.io/fatimasohailll/gigbid-portfolio-mcp:latest
+```
+
+In the Claude Desktop config below, use `ghcr.io/fatimasohailll/gigbid-portfolio-mcp:latest` as
+the image name.
+
+### Or build it yourself
+
 From a clone of this repository:
 
 ```bash

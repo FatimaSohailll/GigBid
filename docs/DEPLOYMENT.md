@@ -45,7 +45,7 @@ Values to set in the VM's `.env` (never commit it):
 | `DEMO_EMAIL`, `DEMO_PASSWORD` | The reviewer login, created with a persona on first start |
 | `API_DOMAIN` | The VM's DNS name from step 1.3 |
 | `WEB_APP_URL` | The Vercel address, once you have it (step 3) |
-| `LANGSMITH_API_KEY` | Optional, for traces |
+| `LANGSMITH_API_KEY` | Required for traces (R8): without it every run is untraced |
 
 Check it: `curl https://<API_DOMAIN>/health` should answer `{"status":"ok",...}`. The first start
 generates DevSim data and indexes the portfolios, which takes a few minutes.

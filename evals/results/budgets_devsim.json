@@ -2,13 +2,13 @@
   "data_source": "devsim",
   "note": "Latency includes waiting out the model provider's free-tier rate limits.",
   "optimisation_skip_early": {
-    "mean_tokens_proposal": 19407,
+    "mean_tokens_proposal": 17698,
     "mean_tokens_skipped_job": 3820,
     "measured": true,
-    "proposals": 5,
-    "share_avoided_per_skip": 0.8031,
+    "proposals": 11,
+    "share_avoided_per_skip": 0.7841,
     "skipped_jobs": 16,
-    "tokens_avoided_per_skip": 15586
+    "tokens_avoided_per_skip": 13878
   },
   "per_job_analysed": {
     "declared_p95_seconds": 60.0,
@@ -22,8 +22,8 @@
   "per_proposal": {
     "declared_p95_seconds": 180.0,
     "declared_usd": 0.01,
-    "jobs": 5,
-    "measured_mean_usd": 0.004372,
+    "jobs": 11,
+    "measured_mean_usd": 0.003966,
     "measured_p95_seconds": 118.27,
     "within_cost": true,
     "within_latency": true

@@ -25,7 +25,21 @@ The student remains accountable for every line in this repository.
 
 ## One thing the AI got wrong that I caught
 
-The assignment requires this to be the student's own finding. To be completed by the student.
+When I deployed GigBid to my Azure VM, I followed the setup steps Claude gave me, and the app
+worked: I could log in, check for jobs and approve a proposal. But when I opened a run in the run
+viewer to get a trace link for my submission, it said "Tracing is off, so this run has no trace."
+
+The deployment guide (`docs/DEPLOYMENT.md`) listed `LANGSMITH_API_KEY` as "Optional, for traces",
+and the steps I was given never asked me to set it on the VM. Locally I had the key in my `.env`,
+so tracing had always worked and nobody noticed. On the server, every run was going untraced,
+even though tracing is a requirement (R8, every run is traced), not an optional extra.
+
+I added the key to the VM's environment and re-ran `deploy/vm/setup.sh`, then checked it was set
+before testing again. Runs after that were traced. The cost of catching it late is visible in my
+approved-proposal trace: it only shows the steps after my approval (submit and learn), because the
+analysis and drafting ran before the key was added. The lesson for me: "it works" is not the same
+as "it meets the requirements", and a setting marked optional in a guide can still be required by
+the assignment.
 
 ## Errors the AI found in its own work
 
