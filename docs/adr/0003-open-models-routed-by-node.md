@@ -10,7 +10,7 @@ small, frequent work.
 ## Decision
 
 `gpt-oss-20b` on Groq for the frequent small steps, `gpt-oss-120b` for the Writer, Critic and
-Client Liaison, a `llama-3.1-8b-instant` fallback for cheap nodes, all set per node in
+Client Liaison, a `gpt-oss-120b` fallback for cheap nodes (it has its own daily limit; Groq withdrew `llama-3.1-8b-instant`, the first choice), all set per node in
 `agent/config.yaml`. A local profile runs Qwen3 8B through Ollama; a paid profile exists but is
 unused.
 

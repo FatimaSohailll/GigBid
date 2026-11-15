@@ -1,0 +1,25 @@
+{
+  "agreement_within_one": 0.7143,
+  "cohen_kappa": -0.129,
+  "data_source": "devsim",
+  "human": [
+    5,
+    4,
+    5,
+    5,
+    4,
+    4,
+    3
+  ],
+  "items": 7,
+  "items_required": 30,
+  "judge": [
+    4,
+    2,
+    4,
+    4,
+    4,
+    4,
+    5
+  ]
+}
